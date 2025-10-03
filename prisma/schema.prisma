@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Direcciones {
+  id        Int      @id @default(autoincrement())
+  direccion String
+  pisoId    Int
+  piso      Piso      @relation(fields: [pisoId], references: [id])
+  usuarios  Usuario[]
+  areas     Area[]   
+}
+
+model Area {
+  id          Int          @id @default(autoincrement())
+  nombre      String
+  direccionId Int
+  direccion   Direcciones  @relation(fields: [direccionId], references: [id])
+  usuarios    Usuario[]
+}
+
+model Piso {
+  id          Int           @id @default(autoincrement())
+  piso        String
+  direcciones Direcciones[]
+}
+
+model Usuario {
+  id            Int        @id @default(autoincrement())
+  cedula        String?   
+  nombre        String
+  apellido      String?
+  email         String?    @unique  
+  rolId         Int
+  direccionId   Int
+  areaId      Int? 
+
+  rol          Rol        @relation(fields: [rolId], references: [id])
+  direccion    Direcciones @relation(fields: [direccionId], references: [id])
+  area        Area?    @relation(fields: [areaId], references: [id])
+  equipos      Equipos[]  
+  ticketCreado Ticket[]   @relation("TicketCreado")
+  ticketCerrado Ticket[]  @relation("TicketCerrado")
+  ticketAnalista TicketEvento[] @relation("EventosAnalista")
+  ticketAnalistaEquipo TicketEquipo[] @relation("EquiposAnalista")
+}
+
+model Rol {
+  id     Int      @id @default(autoincrement())
+  rol    String
+  usuarios Usuario[]
+}
+
+model Ticket {
+  id                Int        @id @default(autoincrement())
+  titulo            String
+  descripcion       String
+  usuarioCreadorId  Int
+  usuarioCerradorId Int?
+  estadoId          Int
+  tipo              String
+  fecha_creacion    DateTime   @default(now())
+  fecha_cierre      DateTime?
+
+  estado          TicketEstado @relation(fields: [estadoId], references: [id])
+  usuarioCreador  Usuario      @relation("TicketCreado", fields: [usuarioCreadorId], references: [id])
+  usuarioCerrador Usuario?     @relation("TicketCerrado", fields: [usuarioCerradorId], references: [id])
+  ticketEvento    TicketEvento?
+  ticketEquipos   TicketEquipo[]
+}
+
+model TicketEstado {
+  id     Int      @id @default(autoincrement())
+  estado String   
+  ticket Ticket[]
+}
+
+model TicketEvento {
+  id          Int      @id @default(autoincrement())
+  ticketId    Int      @unique
+  fecha_evento DateTime
+  ubicacion   String
+  tipo_evento String
+  analistaId  Int
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  analista Usuario @relation("EventosAnalista", fields: [analistaId], references: [id])
+}
+
+model TicketEquipo {
+  id         Int     @id @default(autoincrement())
+  ticketId   Int
+  equipoId   Int
+  analistaId Int
+
+  ticket   Ticket  @relation(fields: [ticketId], references: [id])
+  equipo   Equipos @relation(fields: [equipoId], references: [id])
+  analista Usuario @relation("EquiposAnalista", fields: [analistaId], references: [id])
+}
+
+model TipoEquipo {
+  id         Int      @id @default(autoincrement())
+  nombre     String   @unique  
+  
+  equipos    Equipos[]
+}
+
+model Equipos {
+  id           Int        @id @default(autoincrement())
+  bienNacional String?    
+  serial       String?
+  observaciones String?
+  
+  tipoEquipoId Int
+  modeloId     Int
+  statusId     Int?
+  estadoId     Int?
+  usuarioId    Int?
+  especificacionesId Int?
+  
+  tipoEquipo      TipoEquipo              @relation(fields: [tipoEquipoId], references: [id])
+  modelo          Modelo                  @relation(fields: [modeloId], references: [id])
+  status          Status?                 @relation(fields: [statusId], references: [id])
+  estado          Estados?                @relation(fields: [estadoId], references: [id])
+  usuario         Usuario?                @relation(fields: [usuarioId], references: [id])
+  especificaciones EspecificacionesAdicionales? @relation(fields: [especificacionesId], references: [id])
+  
+  ticketEquipos TicketEquipo[]
+}
+
+model EspecificacionesAdicionales {
+  id               Int      @id @default(autoincrement())
+  memoriaRam       String?    
+  modulosRam       String?     
+  capacidadDisco   String?    
+  tipoDisco        String?  
+  procesador       String?  
+  
+  equipos          Equipos[] 
+}
+
+model Marca {
+  id      Int      @id @default(autoincrement())
+  nombre  String   @unique
+  
+  modelos Modelo[]  
+}
+
+model Modelo {
+  id      Int      @id @default(autoincrement())
+  nombre  String   @unique
+  marcaId Int     
+  
+  marca   Marca    @relation(fields: [marcaId], references: [id])
+  equipos Equipos[]
+}
+
+model Status {
+  id      Int      @id @default(autoincrement())
+  estado  String   
+  equipos Equipos[]
+}
+
+model Estados {
+  id      Int      @id @default(autoincrement())
+  nombre  String
+  equipos Equipos[]
+}
+
