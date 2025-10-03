@@ -95,7 +95,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           {
             direccion: "Presidencia",
             pisoId: 2,
-            areas: ["Museo"],
+            areas: ["Museo", "Seguridad Industrial", "Auditoría interna"],
           },
           {
             direccion: "Dirección de autorizaciones sanitarias de medicamentos",
@@ -166,7 +166,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           {
             direccion: "Presidencia",
             pisoId: 3,
-            areas: ["Despacho", "Seguridad industrial", "Auditoria interna"],
+            areas: ["Despacho", "Seguridad industrial", "Auditoría interna"],
           },
           {
             direccion: "Dirección de tecnología e informatica",
@@ -174,20 +174,20 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             areas: [
               "Dirección de informatica",
               "Area de soporte",
-              "Area de infraestructura",
-              "Area de programacion y base de datos",
+              "Área de infraestructura",
+              "Área de programación y base de datos",
             ],
           },
           {
             direccion: "Dirección de talento humano",
             pisoId: 3,
             areas: [
-              "Direccion",
+              "Dirección",
               "Secretaria de despacho",
               "Registro y control",
-              "Reclutamiento y seleccion",
+              "Reclutamiento y selección",
               "Coordinación de nómina",
-              "Clasificacion y remuneracion",
+              "Clasificación y remuneración",
               "Bienestar social",
             ],
           },
@@ -195,20 +195,20 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             direccion: "Dirección de administración",
             pisoId: 3,
             areas: [
-              "Direccion",
-              "Coordinacion de compras",
-              "Tesoreria",
+              "Dirección",
+              "Coordinación de compras",
+              "Tesorería",
               "Contabilidad",
             ],
           },
           {
-            direccion: "Direccion planificación y presupuesto",
+            direccion: "Dirección planificación y presupuesto",
             pisoId: 3,
             areas: [
-              "Direccion planificación y presupuesto",
-              "Coordinacion de presupuesto",
-              "Coordinacion de planificación",
-              "Coordinacion de organización",
+              "Dirección planificación y presupuesto",
+              "Coordinación de presupuesto",
+              "Coordinación de planificación",
+              "Coordinación de organización",
             ],
           },
           {
@@ -220,10 +220,10 @@ export default async function seedDirecciones(prisma: PrismaClient) {
               "Aula C",
               "Aula D",
               "Aula E",
-              "Aula bB",
+              "Aula B",
               "Campus virtual",
-              "Direccion de docencia",
-              "Desarrollo e innovacion",
+              "Dirección de docencia",
+              "Desarrollo e innovación",
               "Dirección de investigación desarrollo e innovación",
             ],
           },
@@ -235,21 +235,21 @@ export default async function seedDirecciones(prisma: PrismaClient) {
     
           // Planta Baja
           {
-            direccion: "Direccion de diagnostigo y vigilancia epidemiologica",
+            direccion: "Dirección de diagnostigo y vigilancia epidemiologica",
             pisoId: 4,
             areas: ["Red de laboratorio de salid publica", "Inmunocerologia viral"],
           },
           {
             direccion:
-              "Direccion general de diagnostico y vigilancia epidemiologica",
+              "Dirección general de diagnostico y vigilancia epidemiologica",
             pisoId: 4,
             areas: [
-              "Direccion de estadistica y analisis estrategico",
+              "Dirección de estadistica y analisis estrategico",
               "Labotario de programas especiales hepatitis y sida",
             ],
           },
           {
-            direccion: "Direccion medios de cultivo y reactivos",
+            direccion: "Dirección medios de cultivo y reactivos",
             pisoId: 4,
             areas: [
               "Division de medios de cultivos",
@@ -262,7 +262,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             areas: ["Oficina de atencion al ciudadano"],
           },
           {
-            direccion: "Direccion general de produccion",
+            direccion: "Dirección general de produccion",
             pisoId: 4,
             areas: [
               "Departamento de medios decultivos y rediactivos",
@@ -271,13 +271,13 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           },
           {
             direccion:
-              "Direccion de regulacion de productos de uso y consumo humano",
+              "Dirección de regulacion de productos de uso y consumo humano",
             pisoId: 4,
             areas: ["Unidad de manejo de muestras e integracion de resultados"],
           },
           {
             direccion:
-              "Direccion de laboratorio nacional de control de medicamentos,cosmeticos, productos medicos y otras tecnologias",
+              "Dirección de laboratorio nacional de control de medicamentos,cosmeticos, productos medicos y otras tecnologias",
             pisoId: 4,
             areas: [
               "Division de fisicoquimica de medicamentos (cuarto de patrones)",
@@ -286,20 +286,20 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           },
           {
             direccion:
-              "Direccion general de regulcion sanitaria de productos de uso y consumo humno",
+              "Dirección general de regulcion sanitaria de productos de uso y consumo humno",
             pisoId: 4,
-            areas: ["Direccion de vigilancia sanitaria"],
+            areas: ["Dirección de vigilancia sanitaria"],
           },
           {
-            direccion: "Direccion de seguridad y transporte",
+            direccion: "Dirección de seguridad y transporte",
             pisoId: 4,
             areas: ["Centro comuniccion y Monitoreo (cecom)"],
           },
           {
-            direccion: "Direccion general de diagnostico",
+            direccion: "Dirección general de diagnostico",
             pisoId: 4,
             areas: [
-              "Direccion general de diagnostico",
+              "Dirección general de diagnostico",
               "Departamento de virologia",
               "Ateccion al paciente",
             ],
@@ -312,7 +312,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             areas: ["Coordinacion de cocina"],
           },
           {
-            direccion: "Direccion general de seguridad y transporte",
+            direccion: "Dirección general de seguridad y transporte",
             pisoId: 5,
             areas: ["Coordinacion de seguridad"],
           },
@@ -332,9 +332,9 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             areas: ["Coordinacion de cultura"],
           },
           {
-            direccion: "Direccion de produccion",
+            direccion: "Dirección de produccion",
             pisoId: 5,
-            areas: ["Direccion procesamiento de agua y material de laboratorio"],
+            areas: ["Dirección procesamiento de agua y material de laboratorio"],
           },
           {
             direccion: "Cenavif",
@@ -362,7 +362,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           {
             direccion: "Regulacion sanitaria",
             pisoId: 6,
-            areas: ["Direccion de regulacion y consumo humano"],
+            areas: ["Dirección de regulacion y consumo humano"],
           },
           {
             direccion: "Dirección de administracion",
@@ -399,5 +399,5 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           });
     }
 
-    console.log("Direcciones creadas.");
+    console.log("Direcciónes creadas.");
 }
