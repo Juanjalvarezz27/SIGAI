@@ -744,7 +744,7 @@ export async function def() {
       },
       {
       usuario: { nombre: "Irma", apellido: "Gomez", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Reclutamiento y selección" },
-      equipos: [{ bienNacional: "20120", serial: "MXJ702078W" }, { bienNacional: "27732", serial: "C16D8BA000464" }, { bienNacional: "26063", serial: "A000403921" }, { bienNacional: "22612", serial: "17070044731" }, { bienNacional: "07N549502014", serial: "07N549502014" }]
+      equipos: [{ bienNacional: "20120", serial: "MXJ702078W" }, { bienNacional: "27732", serial: "C16D8BA000464" }, { bienNacional: "26063", serial: "A000403921" }, { bienNacional: "07N549502014", serial: "07N549502014" }]
       },
       {
       usuario: { nombre: "Isabel", apellido: "Cartaya", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Coordinación de compras" },
@@ -830,12 +830,560 @@ export async function def() {
       usuario: { nombre: "Keimmer", apellido: "Altuve (Nathan)", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
       equipos: [{ bienNacional: "26114", serial: "A59C6BA005855" }, { bienNacional: "31705", serial: "KBHC18K13030A" }]
       }, 
+      {
+      usuario: { nombre: "Luisana", apellido: "Orta", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Dirección de docencia" },
+      equipos: [{ bienNacional: "29679", serial: "CNG1476PYW" }, { bienNacional: "29185", serial: "3CQ144D9ZB" }, { bienNacional: "30981", serial: "GZK500L200600319" }, { bienNacional: "5048027", serial: "582770040" }]
+      },
+      {
+      usuario: { nombre: "Luis", apellido: "Rodriguez", rolId: 5, direccionNombre: "Presidencia", areaNombre: "Auditoría interna" },
+      equipos: [{ id:2172 }, { id:1177 }, { bienNacional: "27706", serial: "C090N0E02000000J" }, { id:1633 }, { bienNacional: "27683", serial: "A000679761" }, { bienNacional: "26152", serial: "C0BB9050T080E11" }, { bienNacional: "27686", serial: "C90N0E02000000J" }]
+      },
+      {
+      usuario: { nombre: "Luis", apellido: "Marquez", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Biblioteca" },
+      equipos: [{ bienNacional: "21090", serial: "MXJ72806GD" }, { bienNacional: "020663", serial: "CNN72419GV" }, { bienNacional: "44Y3462", serial: "44Y3462" }]
+      },
+      {
+      usuario: { nombre: "Luis", apellido: "Castañeda", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Reclutamiento y selección" },
+      equipos: [{ bienNacional: "26170", serial: "C0BB5090T08E811" }, { bienNacional: "26679", serial: "A000679685" }, { bienNacional: "27680", serial: "KBD624K10BB4A" }, { id:1657 }]
+      },
+      {
+      usuario: { nombre: "Liz", apellido: "Dosramos", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Dirección" },
+      equipos: [{ bienNacional: "24751", serial: "A000091972" }, { bienNacional: "26189", serial: "A59C6BA005273" }, { bienNacional: "16803", serial: "C0403116957" }, { bienNacional: "16432", serial: "4325234234" }]
+      },
+      {
+      usuario: { nombre: "Laury", apellido: "Calderon", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Contabilidad" },
+      equipos: [{ bienNacional: "29927", serial: "CNG1476WRB" }, { bienNacional: "29812", serial: "13Q145BC7T" }, { bienNacional: "21156", serial: "BC3370CVBUTE3E" }]
+      }, 
+      {
+      usuario: { nombre: "Mailyn", apellido: "Bello", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Contabilidad" },
+      equipos: [{ bienNacional: "22791", serial: "MX38340GW6" }, { id:1260 }, { bienNacional: "19990", serial: "B94540KGASX321" }, { bienNacional: "16683", serial: "432423423" }]
+      },
+      {
+      usuario: { nombre: "Marcos", apellido: "Plua", rolId: 5, direccionNombre: "Dirección planificación y presupuesto", areaNombre: "Coordinación de presupuesto" },
+      equipos: [{ bienNacional: "27628", serial: "A000679550" }, { bienNacional: "27657", serial: "C16D8BA000557" }, { bienNacional: "024659", serial: "778ACBA015005" }, { bienNacional: "020376", serial: "B94540KGASX37J" }, { bienNacional: "27481", serial: "13355498335" }, { id:1497 }]
+      },
+      {
+      usuario: { nombre: "Maritza", apellido: "Espinoza", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Clasificación y remuneración" },
+      equipos: [{ bienNacional: "024651", serial: "A000091910" }, { bienNacional: "26148", serial: "A59C6BA005331" }, { bienNacional: "ZM2520002645", serial: "ZM2520002645" }, { bienNacional: "020857", serial: "321321312" }, { bienNacional: "26984", serial: "21323436" }, { id:1486 }]
+      },
+      {
+      usuario: { nombre: "Marlene", apellido: "Graterol", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
+      equipos: [{ bienNacional: "27703", serial: "A000679695" }, { bienNacional: "27363", serial: "C16D8BA000506" }, { bienNacional: "27637", serial: "KBD624K14414A" }, { bienNacional: "27374", serial: "13355495291" }]
+      },
+      {
+      usuario: { nombre: "Maury", apellido: "Linares", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Registro y control" },
+      equipos: [{ bienNacional: "27667", serial: "C16D8BA000455" }, { bienNacional: "27651", serial: "A000679543" }, { bienNacional: "24723", serial: "KBAB23Q47191A" }, { id:1655 }]
+      },
+      {
+      usuario: { nombre: "Mayerling", apellido: "Velasquez", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Contabilidad" },
+      equipos: [{ bienNacional: "24632", serial: "V1980LW-B" }, { bienNacional: "29805", serial: "CNG1476WFY" }, { bienNacional: "19988", serial: "E-C012-03-5116" }, { bienNacional: "20357", serial: "3L065X26544" }]
+      },
+      {
+      usuario: { nombre: "Melissa", apellido: "Arria", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Dirección de investigación desarrollo e innovación" },
+      equipos: [{ bienNacional: "29200", serial: "CNG1466985" }, { bienNacional: "29183", serial: "3CQ144C2VY" }, { bienNacional: "25928", serial: "2547035" }, { id:1503 }, { bienNacional: "51864", serial: "8756756" }, { bienNacional: "021229", serial: "00144-020-545-902" }, { bienNacional: "29738", serial: "3CQ144C91K" }, { bienNacional: "25822", serial: "BAUVT0BHH2E6GZ" }, { bienNacional: "27509", serial: "13355496195" }, { bienNacional: "020258", serial: "MXJ702076S" }, { bienNacional: "020385", serial: "CNN6463PT" }, { bienNacional: "30980", serial: "GZK500L200600319" }, { bienNacional: "27553", serial: "13355498282" }, { id:2278 }, { bienNacional: "5048120-A", serial: "FSEE8HA015494" }, { bienNacional: "30283", serial: "K15001205009649" }, { bienNacional: "11768", serial: "12980159" }]
+      },
+      {
+      usuario: { nombre: "Melissa", apellido: "Arria (Sin Usuario)", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Dirección de investigación desarrollo e innovación" },
+      equipos: [{ bienNacional: "020136", serial: "MXJ702078P" }, { bienNacional: "25927", serial: "MJHXHNX" }, { bienNacional: "020800", serial: "MXD7270DBG" }, { bienNacional: "A000907258", serial: "A000907258" }, { bienNacional: "A000907234", serial: "A000907234" }]
+      },
+      {
+      usuario: { nombre: "Mercedes", apellido: "Vergara", rolId: 5, direccionNombre: "Presidencia piso 3", areaNombre: "Seguridad industrial" },
+      equipos: [{ bienNacional: "19225", serial: "214325463" }, { bienNacional: "26065", serial: "A000091536" }, { bienNacional: "24687", serial: "C0B2Y09000" }, { bienNacional: "27444", serial: "KBAB26Q41580A" }, { bienNacional: "20416", serial: "CN01F0195" }, { id:1542 }, { id:1623 }]
+      },
+      {
+      usuario: { nombre: "Mercedes", apellido: "Vergara (Sin Usuario)", rolId: 5, direccionNombre: "Presidencia piso 3", areaNombre: "Seguridad industrial" },
+      equipos: [{ id:224 }, { id:1622 }]
+      },
+      {
+      usuario: { nombre: "Miguel", apellido: "Dominguez", rolId: 5, direccionNombre: "Presidencia", areaNombre: "Auditoría interna" },
+      equipos: [{ bienNacional: "26085", serial: "A000403735" }, { bienNacional: "27736", serial: "C16D8BA000531" }, { bienNacional: "16370", serial: "C0403117008" }, { id:1629 }]
+      },
+      {
+      usuario: { nombre: "Mireya", apellido: "Santos", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Campus virtual" },
+      equipos: [{ bienNacional: "29764", serial: "CNG146699L" }, { bienNacional: "29734", serial: "3CQ143CFHS" }, { bienNacional: "19986", serial: "B94540AVBSX4WA" }, { bienNacional: "RP11299352", serial: "RP11299352" }]
+      },
+      {
+      usuario: { nombre: "Miriam", apellido: "Ramos", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Desarrollo e innovación" },
+      equipos: [{ bienNacional: "024586", serial: "110228A10018SP0130" }, { bienNacional: "26282", serial: "KBC523K10918A" }]
+      },
+      {
+      usuario: { nombre: "Mirian", apellido: "", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
+      equipos: [{ bienNacional: "27902", serial: "A000679656" }, { bienNacional: "27362", serial: "C16D8BA000512" }, { bienNacional: "27328", serial: "C16D8BA001979" }, { bienNacional: "27868", serial: "KBD624K11240A" }, { bienNacional: "31624", serial: "221716347188" }]
+      }, 
+      {
+      usuario: { nombre: "Norvelis", apellido: "", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Campus virtual" },
+      equipos: [{ bienNacional: "29760", serial: "CNG146693J" }, { bienNacional: "29701", serial: "3CQ144C300" }, { bienNacional: "25926", serial: "2785832" }, { bienNacional: "18402", serial: "764533" }, { bienNacional: "024596", serial: "VNB3B81091" }]
+      },
+      {
+      usuario: { nombre: "Oneida", apellido: "Roman", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Biblioteca" },
+      equipos: [{ bienNacional: "25903", serial: "MJMLZZX" }, { bienNacional: "25914", serial: "ZT14H4LC203502B" }, { bienNacional: "31011047201", serial: "31011047201" }]
+      },
+      {
+      usuario: { nombre: "Pierangela", apellido: "Alvarez", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Dirección" },
+      equipos: [{ bienNacional: "28746", serial: "CNG1476Q6G" }, { bienNacional: "26157", serial: "A59C6BA007365" }, { bienNacional: "26258", serial: "KBC220K10645A" }, { bienNacional: "21535", serial: "W-AB073662322" }]
+      },
+      {
+      usuario: { nombre: "Rafael", apellido: "Diaz", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Dirección de docencia" },
+      equipos: [{ bienNacional: "29750", serial: "CNG146692H" }, { bienNacional: "29735", serial: "3CQ144C264" }, { bienNacional: "25820", serial: "BAVT0BHH2E5T5" }, { id:1502 }, { bienNacional: "22963", serial: "20138478" }, { bienNacional: "27495", serial: "13355499220" }]
+      },
+      {
+      usuario: { nombre: "Richard", apellido: "Quijada", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      equipos: [{ bienNacional: "31895", serial: "A00136205" }, { id:1194 }, { id:1195 }, { id:247 }, { bienNacional: "27728", serial: "C16D8BA000471" }, { bienNacional: "31380", serial: "0065818882892" }, { bienNacional: "31496", serial: "KA19021E000811" }, { bienNacional: "31611", serial: "221716347224" }, { id:1915 }]
+      },
+      {
+      usuario: { nombre: "Rodolfo", apellido: "Martinez", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      equipos: [{ bienNacional: "29263", serial: "02EYHCLG205430A" }, { bienNacional: "27903", serial: "KBD624K10947A" }, { bienNacional: "27543", serial: "13355496312" }, { bienNacional: "29202", serial: "CNG1476Q73" }, { bienNacional: "26128", serial: "A59C6BA005286" }, { bienNacional: "26068", serial: "KBC518K11707A" }]
+      },
+      {
+      usuario: { nombre: "Ronayquel", apellido: "Peroza", rolId: 5, direccionNombre: "Presidencia piso 3", areaNombre: "Seguridad industrial" },
+      equipos: [{ bienNacional: "29571", serial: "CNG1476WEDL" }, { bienNacional: "20291", serial: "CNN6430J89" }, { bienNacional: "ZCA63B103291", serial: "ZCA63B103291" }]
+      },
+      {
+      usuario: { nombre: "Rosa", apellido: "Rueda", rolId: 5, direccionNombre: "Dirección planificación y presupuesto", areaNombre: "Coordinación de planificación" },
+      equipos: [{ bienNacional: "27626", serial: "A000674566" }, { bienNacional: "024641", serial: "778ACBA007752" }, { bienNacional: "27627", serial: "KBD624K10815A" }, { bienNacional: "16741", serial: "432423423423" }]
+      },
+      {
+      usuario: { nombre: "Rossming", apellido: "Gonzalez", rolId: 5, direccionNombre: "Dirección planificación y presupuesto", areaNombre: "Dirección planificación y presupuesto" },
+      equipos: [{ bienNacional: "27622", serial: "A000679683" }, { bienNacional: "27671", serial: "C0BB809150000105" }, { bienNacional: "27631", serial: "KBD624K509A" }, { bienNacional: "18961", serial: "32423423" }, { id:1495 }, { id:1496 }, { bienNacional: "023710", serial: "CNGSC05196" }, { bienNacional: "16743", serial: "KL0441125477" }, { bienNacional: "16740", serial: "KL0441125482" }, { bienNacional: "16760", serial: "RP11299343" }, { bienNacional: "020816", serial: "MXL7270D92" }, { bienNacional: "27675", serial: "C16D8DA000457" }, { bienNacional: "27654", serial: "KBD624K14526A" }, { bienNacional: "020738", serial: "MXL7270D9L" }, { bienNacional: "27664", serial: "C16D81A001993" }, { bienNacional: "27619", serial: "KBD624K10912A" }, { bienNacional: "020382", serial: "CNN64623KW" }, { bienNacional: "020691", serial: "CNN724191G" }]
+      },
+      {
+      usuario: { nombre: "Sin", apellido: "Usuario", rolId: 5, direccionNombre: "Presidencia", areaNombre: "Auditoría interna" },
+      equipos: [{ bienNacional: "020736", serial: "MXL7270D9T" }, { bienNacional: "27733", serial: "C16D8BA000498" }, { id:227 }, { bienNacional: "30096", serial: "2079001008315" }, { bienNacional: "27681", serial: "A000679762" }, { bienNacional: "29556", serial: "3CQ144DCNQ" }, { bienNacional: "27682", serial: "KBD709K12897A" }, { id:1626 }, { id:1630 }, { bienNacional: "27711", serial: "A000679693" }, { bienNacional: "023811", serial: "ETLE10D0929510459" }, { bienNacional: "27712", serial: "KBD624K1887A" }, { bienNacional: "29559", serial: "3CQ143CF9L" }, { id:234 }, { bienNacional: "16777", serial: "KL0441123011" }]
+      },
+      {
+      usuario: { nombre: "Sin", apellido: "Usuario", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Secretaría de despacho" },
+      equipos: [{ bienNacional: "020854", serial: "MXL7270DBS" }, { bienNacional: "26193", serial: "A59C6BA005315" }, { bienNacional: "30093", serial: "212079001005343" }, { bienNacional: "021721", serial: "CND1D01042" }]
+      },
+      {
+      usuario: { nombre: "Sin", apellido: "Usuario", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Coordinación de nómina" },
+      equipos: [{ bienNacional: "26059", serial: "A000403865" }, { bienNacional: "29704", serial: "3CQ144C2MMS" }, { bienNacional: "017090204652", serial: "017090204652" }]
+      },
+      {
+      usuario: { nombre: "Sin", apellido: "Usuario", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Clasificación y remuneración" },
+      equipos: [{ bienNacional: "27701", serial: "A000679700" }, { bienNacional: "27665", serial: "C16D8BA000479" }, { bienNacional: "27698", serial: "KBD624K10841A" }, { bienNacional: "32021", serial: "230331-0560768" }, { bienNacional: "26979", serial: "21323434" }]
+      },
+      {
+      usuario: { nombre: "Sin", apellido: "Usuario", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Tesorería" },
+      equipos: [{ bienNacional: "24744", serial: "C0BY090000000" }, { id: 2482 }, { bienNacional: "KBAB23Q46996A", serial: "KBAB23Q46996A" }, { id:2484 }, { bienNacional: "22929", serial: "TH85Q134C2" }, { bienNacional: "22927", serial: "TH850134CP" }]
+      },
+      {
+      usuario: { nombre: "Sin", apellido: "Usuario", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Contabilidad" },
+      equipos: [{ id:2241 }, { bienNacional: "26204", serial: "C0BB5090T080E011" }, { bienNacional: "26090", serial: "C090M0E0202000H" }, { id:2485 }]
+      },
+      {
+      usuario: { nombre: "Sistema", apellido: "Biométrico", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Reclutamiento y selección" },
+      equipos: [{ bienNacional: "25183", serial: "ZT14H9NB909932V" }, { bienNacional: "27713", serial: "A000679675" }, { bienNacional: "27037", serial: "ZM2520001129" }, { bienNacional: "27480", serial: "13355498334" }, { bienNacional: "31466", serial: "PM1H0000RS" }, { id:1914 }]
+      },
+      {
+      usuario: { nombre: "Teresa", apellido: "Cohen", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Secretaría de despacho" },
+      equipos: [{ bienNacional: "29921", serial: "CNG1476PZB" }, { bienNacional: "020161", serial: "CNN6430J87" }, { bienNacional: "024652", serial: "KBAB23Q47595A" }, { id:1482 }, { bienNacional: "ZF5610651369", serial: "ZF5610651369" }, { id:1650 }]
+      },
+      {
+      usuario: { nombre: "Thaynes", apellido: "Olivares", rolId: 5, direccionNombre: "Dirección de administración", areaNombre: "Tesorería" },
+      equipos: [{ bienNacional: "29803", serial: "CNG14669669" }, { bienNacional: "29811", serial: "3CQ144C280" }, { bienNacional: "20222", serial: "B94540KGASX34E" }, { bienNacional: "14868", serial: "5-91451000532" }, { id:1492 }]
+      },
+      {
+      usuario: { nombre: "Tomas", apellido: "Díaz", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      equipos: [{ bienNacional: "31893", serial: "M242023220014" }, { id:1190 }, { bienNacional: "27729", serial: "C16D8BA000478" }, { id:243 }, { bienNacional: "31605", serial: "221716347219" }, { bienNacional: "27316", serial: "A000679750" }, { bienNacional: "26230", serial: "KBC525K10340A" }, { bienNacional: "28013", serial: "JP400113070382" }]
+      },
+      {
+      usuario: { nombre: "Tomas", apellido: "Díaz (Arianyela)", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      equipos: [{ id:2184 }, { bienNacional: "26188", serial: "A59C6BA005309" }, { bienNacional: "27897", serial: "KBD624K10943A" }]
+      },
+      {
+      usuario: { nombre: "Tomas", apellido: "Díaz (Enyely)", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      equipos: [{ bienNacional: "30386", serial: "A000901737" }]
+      },
+      {
+      usuario: { nombre: "Yeltza", apellido: "Velasquez", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Bienestar social" },
+      equipos: [{ bienNacional: "19834", serial: "MXJ70207DQ" }, { bienNacional: "27353", serial: "KBD624K14488A" }, { bienNacional: "20689", serial: "CNN72418ZH" }]
+      },
+      {
+      usuario: { nombre: "Yenixe", apellido: "Rodriguez", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Dirección de docencia" },
+      equipos: [{ bienNacional: "29762", serial: "CNG1476PHX" }, { bienNacional: "29738", serial: "3CQ144C91K" }, { bienNacional: "25822", serial: "BAUVT0BHH2E6GZ" }, { bienNacional: "29762", serial: "133355496195" }, { bienNacional: "023642", serial: "CN976A51BV" }]
+      },
+      {
+      usuario: { nombre: "Yurbi", apellido: "Amundaraim", rolId: 5, direccionNombre: "Dirección de talento humano", areaNombre: "Coordinación de nómina" },
+      equipos: [{ bienNacional: "27699", serial: "A000679773" }, { bienNacional: "27666", serial: "C16D8BA000520" }, { bienNacional: "27650", serial: "KBD709K13017A" }, { bienNacional: "26983", serial: "21323435" }, { bienNacional: "20120530017998", serial: "20120530017998" }, { bienNacional: "27398", serial: "13355499895" }]
+      },
+      {
+      usuario: { nombre: "Zaleidy", apellido: "Matos", rolId: 5, direccionNombre: "Dirección general de investigación y docencia", areaNombre: "Biblioteca" },
+      equipos: [{ bienNacional: "25925", serial: "MJMMKFF" }, { bienNacional: "25915", serial: "ZT14H4LC203226X" }, { bienNacional: "30979", serial: "GZK500L200600319" }, { bienNacional: "32016", serial: "230331-0560764" }]
+      },  
 
+      //Planta Baja
+      {
+      usuario: { nombre: "Belkis", apellido: "Pinto", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Red de laboratorio de salud pública" },
+      equipos: [{ bienNacional: "29683", serial: "CNG1476VML" }, { bienNacional: "29266", serial: "02EYHCLG205262N" }, { bienNacional: "29375", serial: "543256363" }, { id:1502 }]
+      },
+      {
+      usuario: { nombre: "Blanca", apellido: "Marquez", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "021712", serial: "MXL8210G0P" }, { bienNacional: "28965", serial: "3CQ144C2H6" }, { bienNacional: "27809", serial: "KBD624K10849A" }, { bienNacional: "27516", serial: "13355494913" }]
+      },
+      {
+      usuario: { nombre: "Angi", apellido: "Nuñez", rolId: 5, direccionNombre: "Coordinación de atención al ciudadano", areaNombre: "Oficina de atención al ciudadano" },
+      equipos: [{ bienNacional: "27904", serial: "A000679629" }, { bienNacional: "27908", serial: "C16D8BA000509" }, { bienNacional: "165113", serial: "C0403121809" }, { bienNacional: "14887", serial: "759145100532" }, { bienNacional: "06GM26023604", serial: "06GM26023604" }]
+      },
+      {
+      usuario: { nombre: "Blas", apellido: "Sanchez", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías ", areaNombre: "División de fisicoquímica de medicamentos (Oficina de la jefatura de división)" },
+      equipos: [{ bienNacional: "27863", serial: "A000679605" }, { bienNacional: "2879", serial: "C16D8BA000480" }, { bienNacional: "021701", serial: "BC3370DVBVL06OA" }, { bienNacional: "04928", serial: "RP11281281" }, { bienNacional: "18914", serial: "061635013797" }, { bienNacional: "ZF5610655649", serial: "ZF5610655649" }]
+      }, 
+      {
+      usuario: { nombre: "Cenia", apellido: "Monsalbe", rolId: 5, direccionNombre: "Dirección de regulación de productos de uso y consumo humano", areaNombre: "Unidad de manejo de muestras e integración de resultados" },
+      equipos: [{ bienNacional: "20365", serial: "3L0650X31197" }, { bienNacional: "27592", serial: "13355496070" }, { bienNacional: "27591", serial: "13355496073" }, { bienNacional: "26109", serial: "A59C6BA005761" }, { bienNacional: "26049", serial: "A000403825" }, { bienNacional: "26165", serial: "T9CSSYNYYLLUNNJ" }, { bienNacional: "26048", serial: "KBC525K10195A" }, { bienNacional: "301097", serial: "212077001021871" }, { bienNacional: "29583", serial: "CNG1476VRR" }, { bienNacional: "29607", serial: "3CQ144C3DD" }, { bienNacional: "20364", serial: "B94540KGASX338" }, { bienNacional: "020362", serial: "MXJ702076L" }, { bienNacional: "025169", serial: "ZT14H9NB909922B" }, { bienNacional: "024776", serial: "KBAB26Q41601A" }, { bienNacional: "11125", serial: "RP10797518" }, { id:1510 }, { bienNacional: "024777", serial: "A0000919964" }, { bienNacional: "024781", serial: "778ACBA014997" }, { bienNacional: "25990", serial: "KBC518K11062A" }, { bienNacional: "20120620005038", serial: "20120620005038" }, { bienNacional: "MAE510378", serial: "MAE510378" }, { bienNacional: "021519", serial: "211HR11151" }, { bienNacional: "29582", serial: "234235235" }, { bienNacional: "29639", serial: "43656765" }, { bienNacional: "25991", serial: "A0004093810" }]
+      },
+      {
+      usuario: { nombre: "Gilma", apellido: "Moreno", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)", areaNombre: "División de fisicoquímica de medicamentos (Área instrumental I)" },
+      equipos: [{ bienNacional: "CN-0HN22V-FCC00-96G-E2PI-A07", serial: "CN-0HN22V-FCC00-96G-E2PI-A07" }, { bienNacional: "K15001295020045", serial: "K15001295020045" }, { bienNacional: "221208-0940098", serial: "221208-0940098" }, { bienNacional: "X5E8220271", serial: "X5E8220271" }, { bienNacional: "19949", serial: "MXJ7020793" }, { bienNacional: "024722", serial: "778ACBA015001" }, { bienNacional: "26102", serial: "KBC525K10460A" }, { bienNacional: "021717", serial: "58277-00066" }, { bienNacional: "021698", serial: "803MXXD12045" }, { bienNacional: "26217", serial: "A000403867" }, { id:1674 }, { bienNacional: "020144", serial: "MXJ702079Z" }, { bienNacional: "022920", serial: "CNC807PNPM" }, { bienNacional: "020146", serial: "B94540KGASX31Y" }, { bienNacional: "221202-0940928", serial: "221202-0940928" }, { bienNacional: "32187", serial: "WCAPENFKH93Q3" }, { bienNacional: "32187", serial: "CN-020WVC-TV100-34E-037B-A21" }, { bienNacional: "32187", serial: "CN-00FRXW-PRC00-1C7-00XM-A00" }, { bienNacional: "32187", serial: "CN-0DMV3P-CH400-1CS-06EO-A01" }, { bienNacional: "32022", serial: "230331-0560765" }, { bienNacional: "024023", serial: "MXL0050Q55" }, { bienNacional: "024022", serial: "CNC935R7MR" }, { bienNacional: "PU-V101010656", serial: "PU-V101010656" }, { bienNacional: "221208-0940097", serial: "221208-0940097" }, { bienNacional: "19934", serial: "MXJ702078R" }, { bienNacional: "19939", serial: "CNN64622RW" }, { bienNacional: "020093", serial: "B94540AVBSX4XS" }, { bienNacional: "04964", serial: "RP11299359" }, { bienNacional: "15461", serial: "PB0228320419" }, { bienNacional: "14392", serial: "CNBRB26361" }, { bienNacional: "26251", serial: "A000403750" }, { bienNacional: "020064", serial: "CNN64623KS" }, { bienNacional: "29930", serial: "856634523" }]
+      },
+      {
+      usuario: { nombre: "Gilma", apellido: "Moreno", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)", areaNombre: "División de fisicoquímica de medicamentos (Área instrumental II)" },
+      equipos: [{ bienNacional: "31735", serial: "TN292023030161" }, { bienNacional: "AC2643020056A", serial: "AC2643020056A" }, { id:1932}, { bienNacional: "210472500143", serial: "210472500143" }]
+      },
+      {
+      usuario: { nombre: "Gilma", apellido: "Moreno", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)", areaNombre: "División de fisicoquímica de medicamentos (Área de transcripción)" },
+      equipos: [{ bienNacional: "29929", serial: "CNG146696R" }, { bienNacional: "29906", serial: "3CQ144DD2B" }, { bienNacional: "26250", serial: "KBC525K10746A" }, { bienNacional: "29577", serial: "CNG1476TXZ" }, { bienNacional: "26136", serial: "A59C6BA008038" }, { bienNacional: "29918", serial: "432563645" }, { bienNacional: "26241", serial: "A000403725" }, { bienNacional: "024030", serial: "MY19H9NSA14811M" }, { bienNacional: "17931", serial: "ZM5527023270" }, { bienNacional: "27388", serial: "13355496160" }, { bienNacional: "29925", serial: "CNG1476W46" }, { bienNacional: "29560", serial: "3CQ143B0H9" }, { bienNacional: "020069", serial: "B94540KGASX32YA" }, { bienNacional: "18400", serial: "075030008204" }, { bienNacional: "ZF5X1A104270", serial: "ZF5X1A104270" }, { bienNacional: "024796", serial: "A000091962" }, { bienNacional: "29907", serial: "3CQ144C2MM" }, { bienNacional: "27864", serial: "KBD624K11234A" }, { bienNacional: "13075", serial: "RP11274436" }, { bienNacional: "CH9382131", serial: "CH9382131" }, { bienNacional: "20120620007465", serial: "20120620007465" }, { bienNacional: "26031", serial: "A000403760" }, { bienNacional: "26174", serial: "A59C6BA005308" }, { bienNacional: "26030", serial: "KBC523K10917A" }, { bienNacional: "020066", serial: "3L0651X26627" }, { bienNacional: "26277", serial: "A000403938" }, { id:1353 }, { bienNacional: "TH-025PGG-37171-16L-1979", serial: "TH-025PGG-37171-16L-1979" }, { bienNacional: "17932", serial: "KL0441126592" }, { bienNacional: "29917", serial: "CNG1476VV6L" }, { bienNacional: "0246660", serial: "778ACBA015011" }, { bienNacional: "17890", serial: "ZCA638400933" }, { bienNacional: "17934", serial: "KL044112500R" }, { bienNacional: "29602", serial: "CNG1476V71" }, { bienNacional: "26150", serial: "A59C6BA004262" }, { bienNacional: "26222", serial: "KBC518K11703A" }, { bienNacional: "27523", serial: "13355496088" }, { bienNacional: "ZF58106Z4281", serial: "ZF58106Z4281" }, { bienNacional: "29933", serial: "CNG1476WGC" }, { bienNacional: "29905", serial: "3CQ144C29L" }, { bienNacional: "26228", serial: "KBC523K10914A" }, { bienNacional: "CH9409002", serial: "CH9409002" }, { bienNacional: "17080", serial: "ZM3916903361" }, { bienNacional: "020063", serial: "MXJ70207B0" }]
+      },
+      {
+      usuario: { nombre: "Gilma", apellido: "Moreno", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)", areaNombre: "División de fisicoquímica de medicamentos (Oficina de la jefatura de división)" },
+      equipos: [{ bienNacional: "27871", serial: "A000679608" }, { bienNacional: "27877", serial: "C16D8BA000508" }, { bienNacional: "27872", serial: "KBD624K10828A" }, { bienNacional: "13007", serial: "IP112811285" }, { bienNacional: "2013062500037", serial: "2013062500037" }, { bienNacional: "19071", serial: "MNQ32218" }]
+      },
+      {
+      usuario: { nombre: "Coromoto", apellido: "Pineda", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)", areaNombre: "División de fisicoquímica de medicamentos (Oficina de la jefatura de división)" },
+      equipos: [{ bienNacional: "31819", serial: "A001332499" }, { id:1359 }, { bienNacional: "31820", serial: "KBHC12K16789A" }]
+      }, 
+      {
+      usuario: { nombre: "Gladys", apellido: "Amelis", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Laboratorio de programas especiales hepatitis y sida" },
+      equipos: [{ bienNacional: "024698", serial: "A0009195" }, { bienNacional: "024688", serial: "778ABA015000" }, { bienNacional: "024697", serial: "KBAB26Q41603A" }, { bienNacional: "020443", serial: "9532AY0BC523700673" }, { bienNacional: "020626", serial: "J5V057981" }, { bienNacional: "ZF5610651361", serial: "ZF5610651361" }]
+      },
+      {
+      usuario: { nombre: "Gladys", apellido: "Amelis", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Laboratorio de programas especiales hepatitis y sida" },
+      equipos: [{ bienNacional: "27774", serial: "A000679606" }, { bienNacional: "27758", serial: "C16D8BA000475" }, { bienNacional: "27771", serial: "KBD624K10821A" }, { bienNacional: "30265", serial: "1432900503375" }, { bienNacional: "2013062500795", serial: "2013062500795" }]
+      },
+      {
+      usuario: { nombre: "Gladys", apellido: "Amelis", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Laboratorio de programas especiales hepatitis y sida" },
+      equipos: [{ bienNacional: "27772", serial: "A000679588" }, { bienNacional: "27759", serial: "C16D8BA000535" }, { bienNacional: "27773", serial: "KBD624K10909A" }, { bienNacional: "27501", serial: "13355499214" }]
+      },
+      {
+      usuario: { nombre: "Gladys", apellido: "Amelis", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Laboratorio de programas especiales hepatitis y sida" },
+      equipos: [{ bienNacional: "27770", serial: "A000679540" }, { bienNacional: "27756", serial: "C16D8BA000491" }, { bienNacional: "27775", serial: "KBD624K10829A" }, { bienNacional: "20130530004975", serial: "20130530004975" }, { bienNacional: "28035", serial: "NXV90713" }]
+      },
+      {
+      usuario: { nombre: "Gladys", apellido: "Amelis", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Laboratorio de programas especiales hepatitis y sida" },
+      equipos: [{ bienNacional: "27768", serial: "A000679568" }, { bienNacional: "27757", serial: "C16D8BA000507" }, { bienNacional: "024165", serial: "PUAV095300653" }]
+      },
+      {
+      usuario: { nombre: "Gladys", apellido: "Amelis", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Laboratorio de programas especiales hepatitis y sida" },
+      equipos: [{ bienNacional: "25005", serial: "CCP56312091066009" }, { bienNacional: "2013062500795", serial: "2013062500795" }]
+      },
+      {
+      usuario: { nombre: "Gloria", apellido: "Correa", rolId: 5, direccionNombre: "Dirección general de producción (planta baja)", areaNombre: "Departamento de medios de cultivos y reactivos" },
+      equipos: [{ bienNacional: "29590", serial: "CNG1476TW" }, { bienNacional: "29235", serial: "3CQ145B9PH" }, { bienNacional: "16522", serial: "C0403117036" }]
+      },
+      {
+      usuario: { nombre: "Greimar", apellido: "Ortega", rolId: 5, direccionNombre: "Dirección general de producción (planta baja)", areaNombre: "Departamento de medios de cultivos y reactivos" },
+      equipos: [{ bienNacional: "020794", serial: "MXL7270DBH" }]
+      },
+      {
+      usuario: { nombre: "Henrry", apellido: "Sanchez", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "11044", serial: "534654645" }, { bienNacional: "30259", serial: "219CA33000078" }]
+      },
+      {
+      usuario: { nombre: "Julio", apellido: "Zambrano", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "27314", serial: "A000091925" }, { bienNacional: "27361", serial: "C16D9BA000518" }, { bienNacional: "27315", serial: "KBD624K14490A" }]
+      },
+      {
+      usuario: { nombre: "Leonardo", apellido: "Guerrera", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "31827", serial: "A001332944" }, { bienNacional: "31828", serial: "KBHC12K16936A" }, { bienNacional: "024044", serial: "090701-0660459" }, { bienNacional: "30350", serial: "1434100505623" }]
+      },
+      {
+      usuario: { nombre: "Juan Carlos", apellido: "Brea", rolId: 5, direccionNombre: "Coordinación de atención al ciudadano", areaNombre: "Oficina de atención al ciudadano" },
+      equipos: [{ bienNacional: "29856", serial: "CNG1476VCX" }, { bienNacional: "29839", serial: "3CQ143CF4F" }, { bienNacional: "27028", serial: "ZM2520002642" }, { bienNacional: "27436", serial: "13355498907" }]
+      },
+      {
+      usuario: { nombre: "Lisbeth", apellido: "Rivas", rolId: 5, direccionNombre: "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)", areaNombre: "División de fisicoquímica de medicamentos (Cuarto de patrones)" },
+      equipos: [{ bienNacional: "25989", serial: "A000403808" }, { bienNacional: "022925", serial: "809NDYG9J514" }, { bienNacional: "25133", serial: "WE1692042371" }, { bienNacional: "020070", serial: "2391321423" }]
+      },
+      {
+      usuario: { nombre: "Lairet", apellido: "Rauseo", rolId: 5, direccionNombre: "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)", areaNombre: "Dirección de vigilancia sanitaria" },
+      equipos: [{ bienNacional: "29646", serial: "CNG1476PZH" }, { bienNacional: "279876", serial: "C16D89BA000469" }, { bienNacional: "020174", serial: "B994540KGASX0WD" }, { bienNacional: "021331", serial: "W-AB07366532" }, { bienNacional: "021937", serial: "6563423432" }]
+      }, 
+      {
+      usuario: { nombre: "Magalis", apellido: "Castro", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "27808", serial: "A000679722" }, { bienNacional: "27810", serial: "C16D8BA001980" }, { bienNacional: "020781", serial: "BC3370BVBUMK07" }, { bienNacional: "30339", serial: "1434300504855" }]
+      },
+      {
+      usuario: { nombre: "Maria Gabriela", apellido: "Ungulo", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "27804", serial: "A000679657" }, { bienNacional: "27817", serial: "C16D8BA000522" }, { bienNacional: "27805", serial: "KBD624K14524A" }, { bienNacional: "30349", serial: "143270050193" }, { id:1535 }]
+      },
+      {
+      usuario: { nombre: "Michell", apellido: "Barreto", rolId: 5, direccionNombre: "Dirección medios de cultivo y reactivos", areaNombre: "División de medios de cultivos" },
+      equipos: [{ bienNacional: "024671", serial: "A000092029" }, { bienNacional: "020697", serial: "CNN72419DS" }, { bienNacional: "16910", serial: "C040311527" }, { id:1658 }, { id:1506 }]
+      },
+      {
+      usuario: { nombre: "Marisol", apellido: "Marquez", rolId: 5, direccionNombre: "Dirección general de producción (planta baja)", areaNombre: "Departamento de medios de cultivos y reactivos" },
+      equipos: [{ bienNacional: "29785", serial: "CNG146698Q" }, { bienNacional: "29810", serial: "3CQ143CFHT" }, { bienNacional: "022998", serial: "BC3370GVBWV1P9" }, { bienNacional: "27429", serial: "13355499096" }, {id:1482 }]
+      },
+      {
+      usuario: { nombre: "Maria", apellido: "Centeno", rolId: 5, direccionNombre: "Dirección general de producción (planta baja)", areaNombre: "Departamento de medios de cultivos y reactivos" },
+      equipos: [{ bienNacional: "020780", serial: "MXL72405S3" }, { bienNacional: "020720", serial: "CNN72419GS" }, { bienNacional: "16372", serial: "C0403116790" }, { id:1663 }]
+      },
+      {
+      usuario: { nombre: "Michelle", apellido: "Barreto", rolId: 5, direccionNombre: "Dirección general de producción (planta baja)", areaNombre: "Departamento de medios de cultivos y reactivos" },
+      equipos: [{ bienNacional: "28950", serial: "CNG1476V0L" }, { bienNacional: "28964", serial: "3CQ144C29C" }, { bienNacional: "28951", serial: "34242342342" }, { id:1807 }, { bienNacional: "024046", serial: "0907010660458" }]
+      },
+      {
+      usuario: { nombre: "Maria", apellido: "Martinez", rolId: 5, direccionNombre: "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)", areaNombre: "Dirección de vigilancia sanitaria" },
+      equipos: [{ bienNacional: "27857", serial: "A000679767" }, { bienNacional: "26117", serial: "A59C6BA005806" }, { bienNacional: "27858", serial: "KBD624K10967A" }]
+      },
+      {
+      usuario: { nombre: "Mirta", apellido: "Puente", rolId: 5, direccionNombre: "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)", areaNombre: "Dirección de vigilancia sanitaria" },
+      equipos: [{ bienNacional: "29783", serial: "CNG1476PXQ" }, { bienNacional: "26130", serial: "A59C6BA005785" }, { bienNacional: "16386", serial: "C0403116787" }, { bienNacional: "0294633", serial: "A000091923" }, { bienNacional: "020830", serial: "MXL7270D8Z" }, { bienNacional: "26158", serial: "A59C6BA008041" }, { bienNacional: "020252", serial: "B9949540AVBSX4XR" }, { bienNacional: "27829", serial: "A000679574" }, { bienNacional: "27840", serial: "C16D8BA000468" }, { bienNacional: "27830", serial: "KBD624K10822A" }, { bienNacional: "31610", serial: "221716347225" }, { id:1512 }, { id:1895 }, { bienNacional: "12997", serial: "MX1CD8F1MG" }, { bienNacional: "020403", serial: "CNB1B01139" }, { bienNacional: "023814", serial: "etle10d092951015a98503" }, { bienNacional: "020713", serial: "CNN72419GL" }, { bienNacional: "020096", serial: "CNN6430K1R" }, { bienNacional: "26171", serial: "A59C6BA005268" }, { bienNacional: "26112", serial: "A59C6BA005827" }, { bienNacional: "022880", serial: "HA17HVKS205940D" }, { bienNacional: "25814", serial: "ZUHJHTMC400115W" }, { bienNacional: "28949", serial: "5634543534" }, { bienNacional: "26242", serial: "KBC518K11702A" }, { bienNacional: "29374", serial: "9823754932" }, { bienNacional: "17842", serial: "ZM5527023267" }, { bienNacional: "020649", serial: "FJP1Y81U1S71X01914OA40" }, { bienNacional: "024787", serial: "KBAB23Q47075A" }, { bienNacional: "16722", serial: "ZM5327085965" }]
+      }, 
+      {
+      usuario: { nombre: "Neribet", apellido: "Ruiz", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Red de laboratorio de salud pública" },
+      equipos: [{ bienNacional: "020752", serial: "MXL7270DB4" }, { bienNacional: "27845", serial: "C16D8BA001976" }, { bienNacional: "27795", serial: "KBD624K10036A" }, { bienNacional: "27400", serial: "13355499893" }]
+      },
+      {
+      usuario: { nombre: "Steffany", apellido: "Diaz", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "27340", serial: "2600+J21:N21" }, { bienNacional: "27359", serial: "C16D8BA000528" }, { bienNacional: "024680", serial: "KBAB26Q42232A" }, { bienNacional: "13069", serial: "RP113081" }]
+      },
+      {
+      usuario: { nombre: "Noraidys", apellido: "Porras", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "024681", serial: "A000092074" }, { bienNacional: "273312", serial: "C16D8BA000532" }, { bienNacional: "27347", serial: "KBD624K14510A" }, { bienNacional: "27346", serial: "A000679737" }, { bienNacional: "16619", serial: "MXD41808P6" }, { bienNacional: "27358", serial: "C16D8BA000516" }, { bienNacional: "14234", serial: "TH-094PCU-37171-21B-1207" }, { bienNacional: "27423", serial: "13355499099" }, { bienNacional: "27425", serial: "13355499098" }, { bienNacional: "14994", serial: "34243243245" }, { bienNacional: "13771", serial: "7591451200185" }, { id:1503 }, { bienNacional: "32370", serial: "Q77Y321373" }, { bienNacional: "32371", serial: "Q77Y371911" }]
+      },
+      {
+      usuario: { nombre: "Rosaria", apellido: "Quevara", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "27388", serial: "A000679729" }, { bienNacional: "024696", serial: "T9AKM5NQH4LUNNJ" }, { bienNacional: "27339", serial: "KBD624K10911A" }]
+      },
+      {
+      usuario: { nombre: "Nathalie", apellido: "Rizzi", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "27800", serial: "A00679742" }, { bienNacional: "27812", serial: "C16D8BA000608" }, { bienNacional: "28858", serial: "32544543" }, { id:1504 }]
+      },
+      {
+      usuario: { nombre: "Nairys", apellido: "Gimenez", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "025795", serial: "A000092016" }, { bienNacional: "024761", serial: "778ACBA015026" }, { bienNacional: "27807", serial: "KBD624K18836A" }, { bienNacional: "021538", serial: "W-AB073662323" }, { bienNacional: "18982", serial: "00040DF5DA5" }, { bienNacional: "30345", serial: "1432000600701" }]
+      },
+      {
+      usuario: { nombre: "Oswaldo", apellido: "Graterol", rolId: 5, direccionNombre: "Dirección general de producción (planta baja)", areaNombre: "Sección de reactivos y colorantes" },
+      equipos: [{ bienNacional: "29799", serial: "CNG1476TWC" }, { bienNacional: "29819", serial: "3CQ144C90Q" }, { bienNacional: "020923", serial: "BC3370BGAUH0C6" }, { bienNacional: "27404", serial: "13355499888" }, { bienNacional: "021928", serial: "43534534" }]
+      },
+      {
+      usuario: { nombre: "Rafael", apellido: "Rodriguez", rolId: 5, direccionNombre: "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)", areaNombre: "Dirección de vigilancia sanitaria" },
+      equipos: [{ bienNacional: "26285", serial: "A000403726" }, { bienNacional: "26201", serial: "A59C6BA005797" }, { bienNacional: "26266", serial: "KBC521K13208A" }]
+      }, 
+      {
+      usuario: { nombre: "Yenizet", apellido: "Blanco", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "27348", serial: "A000679753" }, { bienNacional: "27360", serial: "C16D8BA000466" }, { bienNacional: "27349", serial: "KBD624K18817A" }]
+      },
+      {
+      usuario: { nombre: "Steffany", apellido: "Diaz", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "27340", serial: "2600+J21:N21" }, { bienNacional: "27359", serial: "C16D8BA000528" }, { bienNacional: "024680", serial: "KBAB26Q42232A" }, { bienNacional: "13069", serial: "RP113081" }]
+      },
+      {
+      usuario: { nombre: "Rosaria", apellido: "Quevara", rolId: 5, direccionNombre: "Dirección de diagnóstico y vigilancia epidemiológica", areaNombre: "Inmunocerología viral" },
+      equipos: [{ bienNacional: "27388", serial: "A000679729" }, { bienNacional: "024696", serial: "T9AKM5NQH4LUNNJ" }, { bienNacional: "27339", serial: "KBD624K10911A" }]
+      },
+      {
+      usuario: { nombre: "Yuraima", apellido: "Materan", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "27806", serial: "A000679666" }, { bienNacional: "27818", serial: "C0BB809150000105" }, { bienNacional: "27801", serial: "KBD624K10961A" }, { bienNacional: "30333", serial: "1434300504876" }]
+      },
+      {
+      usuario: { nombre: "Tahismar", apellido: "Aquino", rolId: 5, direccionNombre: "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)", areaNombre: "Dirección de estadística y análisis estratégico" },
+      equipos: [{ bienNacional: "28783", serial: "CNG1476WMG" }, { bienNacional: "28770", serial: "3CK134C9LY" }, { bienNacional: "17440", serial: "0402345104" }, { bienNacional: "30356", serial: "1434100503767" }]
+      },
+      {
+      usuario: { nombre: "Vanderlin", apellido: "Cumana", rolId: 5, direccionNombre: "Dirección medios de cultivo y reactivos", areaNombre: "Unidad de control de calidad de medios y reactivos" },
+      equipos: [{ bienNacional: "29787", serial: "CNG1476PKD" }, { bienNacional: "29817", serial: "3CQ144C4WQ" }, { bienNacional: "24703", serial: "KBAB26Q41578A" }, { bienNacional: "07775", serial: "DH1014840" }]
+      },
+      {
+      usuario: { nombre: "Yenny", apellido: "Urdaneta", rolId: 5, direccionNombre: "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)", areaNombre: "Dirección de vigilancia sanitaria" },
+      equipos: [{ bienNacional: "26281", serial: "A000403930" }, { bienNacional: "26163", serial: "A59C5BA005766" }, { bienNacional: "259988", serial: "KBC523K10965A" }, { bienNacional: "020094", serial: "3L0651X29570" }]
+      },
+      {
+      usuario: { nombre: "Ydalid", apellido: "Alvarez", rolId: 5, direccionNombre: "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)", areaNombre: "Dirección de vigilancia sanitaria" },
+      equipos: [{ bienNacional: "299642", serial: "CNG1476TSN" }, { bienNacional: "29664", serial: "3CQ143B0ZT" }, { bienNacional: "31617", serial: "221716341398" }, { id:1514 }]
+      },
+      {
+      usuario: { nombre: "Wilmer", apellido: "Caruci", rolId: 5, direccionNombre: "Dirección de seguridad y transporte", areaNombre: "Centro comunicación y monitoreo (CECOM)" },
+      equipos: [{ bienNacional: "27644", serial: "A000679686" }, { bienNacional: "28012", serial: "432423524534" }, { bienNacional: "023495", serial: "018060056583" }, { bienNacional: "31618", serial: "22176341397" }, { bienNacional: "31512", serial: "NA9RLLR1" }, { bienNacional: "27642", serial: "A000679584" }, { bienNacional: "28694", serial: "5647675656" }, { bienNacional: "27024", serial: "ZM2620007225" }, { bienNacional: "31545", serial: "AW22151A0626" }, { bienNacional: "28742", serial: "CNG1476PGM" }, { bienNacional: "30121", serial: "AW40N1SM18071377" }, { bienNacional: "26234", serial: "KBC525K10152A" }, { bienNacional: "31547", serial: "AW22151A0627" }]
+      }, 
+      {
+      usuario: { nombre: "Maria", apellido: "Sanchez", rolId: 5, direccionNombre: "Dirección general de diagnóstico", areaNombre: "Dirección general de diagnóstico" },
+      equipos: [{ bienNacional: "27796", serial: "A000679777" }, { bienNacional: "27813", serial: "C16D8BA000511" }, { bienNacional: "27797", serial: "KBD624K10857" }, { bienNacional: "27581", serial: "5346543" }, { bienNacional: "19288", serial: "8754542342" }]
+      },
+      {
+      usuario: { nombre: "Lieska", apellido: "Rodriguez", rolId: 5, direccionNombre: "Dirección general de diagnóstico", areaNombre: "Dirección general de diagnóstico" },
+      equipos: [{ bienNacional: "30031", serial: "4703006710" }, { bienNacional: "30032", serial: "MMT3FAA0027030026F3B00" }, { bienNacional: "30030", serial: "1708MR049868" }, { bienNacional: "27580", serial: "13355495050" }, { bienNacional: "31692", serial: "A001332809" }, { bienNacional: "27799", serial: "KBD624K10825A" }, { bienNacional: "020039", serial: "3L0651X26251" }, { bienNacional: "30191", serial: "X5NQ063259" }, { bienNacional: "18942", serial: "061635010039" }, { bienNacional: "024668", serial: "A000092042" }, { bienNacional: "021695", serial: "803MX0A12036" }, { bienNacional: "16378", serial: "C0403116803" }, { bienNacional: "28832", serial: "CNG1476PGX" }, { bienNacional: "28774", serial: "3CQ144DCNJ" }, { bienNacional: "020106", serial: "B94540KGASX0V2A" }, { bienNacional: "27412", serial: "87563456353" }, { bienNacional: "19998", serial: "3L0650X29182" }, { bienNacional: "19263", serial: "9876544235" }, { bienNacional: "24763", serial: "A000091982" }, { bienNacional: "24667", serial: "778ACBA015008" }, { bienNacional: "13027", serial: "863464363" }, { bienNacional: "25794", serial: "414114003249" }, { bienNacional: "26023", serial: "A000403821" }, { bienNacional: "17238", serial: "MJ17HCJY402943H" }, { bienNacional: "16475", serial: "C0403115246" }, { bienNacional: "14867", serial: "591451000532" }, { bienNacional: "25793", serial: "41J114003264" }, { bienNacional: "024790", serial: "778ACBA015049" }, { bienNacional: "020150", serial: "B94540KGASX31MA" }, { bienNacional: "27573", serial: "13355495060" }, { bienNacional: "30264", serial: "1434100505655" }, { bienNacional: "25828", serial: "41J114500648" }, { bienNacional: "024775", serial: "A000091916" }, { bienNacional: "19996", serial: "CNN604012Y" }, { bienNacional: "27045", serial: "ZM2520001123" }, { bienNacional: "13002", serial: "46365434523453" }, { bienNacional: "30260", serial: "1434100505468" }]
+      },
+      {
+      usuario: { nombre: "Pierina", apellido: "D'Angelo", rolId: 5, direccionNombre: "Dirección general de diagnóstico", areaNombre: "Departamento de virología" },
+      equipos: [{ bienNacional: "27792", serial: "A000679529" }, { bienNacional: "27724", serial: "C16D8BA000494" }, { bienNacional: "27793", serial: "KBD624K1418A" }, { bienNacional: "11798", serial: "RP11299355" }, { bienNacional: "27484", serial: "133554988331" }]
+      }, 
 
+      //Sotano
+      {
+      usuario: { nombre: "Francisca", apellido: "Canchica", rolId: 5, direccionNombre: "Servicio médico", areaNombre: "Servicio médico" },
+      equipos: [{ bienNacional: "27802", serial: "A000679667" }, { bienNacional: "020672", serial: "CNN7140JDQ" }, { bienNacional: "16070", serial: "C0403117011" }]
+      },
+      {
+      usuario: { nombre: "Danny", apellido: "Hernandez", rolId: 5, direccionNombre: "SUNEP", areaNombre: "Secretaría general" },
+      equipos: [{ bienNacional: "020128", serial: "MXJ702077J" }, { bienNacional: "18529", serial: "CNC6120QRY" }, { bienNacional: "16098", serial: "C0403116809" }, { bienNacional: "27408", serial: "13355499177" }]
+      },
+      {
+      usuario: { nombre: "Alejandro", apellido: "Bastidas", rolId: 5, direccionNombre: "Dirección de talento humano (sotano)", areaNombre: "Coordinación de cultura" },
+      equipos: [{ bienNacional: "29673", serial: "CNG1476TWP" }, { bienNacional: "29708", serial: "3CQ144C90T" }, { bienNacional: "31625", serial: "221716347194" }]
+      },
+      {
+      usuario: { nombre: "Abihail", apellido: "Marinez", rolId: 5, direccionNombre: "Dirección de producción", areaNombre: "Dirección procesamiento de agua y material de laboratorio" },
+      equipos: [{ bienNacional: "024176", serial: "MXL0050TWS" }, { bienNacional: "024145", serial: "MY19H9NZ125496E" }, { bienNacional: "30462", serial: "7591186002016" }, { bienNacional: "021945", serial: "321312312" }]
+      },
+      {
+      usuario: { nombre: "Caren", apellido: "Romero", rolId: 5, direccionNombre: "Dirección de producción", areaNombre: "Dirección procesamiento de agua y material de laboratorio" },
+      equipos: [{ bienNacional: "29854", serial: "CNN1476V11" }, { bienNacional: "29846", serial: "3CQ143CDNR" }, { bienNacional: "25167", serial: "ZT14H9NB908748D" }, { bienNacional: "30105", serial: "212079001008313" }, { id:1695 }]
+      }, 
+      {
+      usuario: { nombre: "Zoraida", apellido: "Alvarado", rolId: 5, direccionNombre: "Dirección administración (sotano)", areaNombre: "Coordinación de cocina" },
+      equipos: [{ bienNacional: "29793", serial: "CNG1476Q8B" }, { bienNacional: "024747", serial: "778ACBA007749" }, { bienNacional: "31382", serial: "0065818882891" }, { bienNacional: "024038", serial: "090701-0660466" }]
+      },
+      {
+      usuario: { nombre: "Rito", apellido: "Gonzalez", rolId: 5, direccionNombre: "Dirección administración (sotano)", areaNombre: "Coordinación de cocina" },
+      equipos: [{ bienNacional: "29216", serial: "CNG1476Q9F" }, { bienNacional: "29913", serial: "3CQ143B1FN" }, { bienNacional: "021516", serial: "21THR11478" }, { bienNacional: "19232", serial: "9876453" }]
+      },
+      {
+      usuario: { nombre: "Julio", apellido: "Moreno", rolId: 5, direccionNombre: "Dirección general de seguridad y transporte", areaNombre: "Coordinación de seguridad" },
+      equipos: [{ bienNacional: "27715", serial: "A000679731" }, { bienNacional: "27731", serial: "C16D8BA000495" }, { bienNacional: "020652", serial: "FJP1Y81U1S71X01920OA0000" }, { bienNacional: "30502", serial: "CN07O1773D" }, { bienNacional: "29014", serial: "75545343" }, { bienNacional: "021927", serial: "2342342" }, { bienNacional: "28748", serial: "CNG14669CW" }, { bienNacional: "28753", serial: "3CQ144C9JJ" }, { bienNacional: "024041", serial: "090701-0660462" }, { bienNacional: "020237", serial: "3121231223" }, { bienNacional: "29013", serial: "1435234235" }, { bienNacional: "023000", serial: "3CQ828NVB" }, { bienNacional: "020412", serial: "CND1D01055" }, { bienNacional: "25131", serial: "WE1692042373" }]
+      },
+      {
+      usuario: { nombre: "Moya", apellido: "", rolId: 5, direccionNombre: "Dirección de producción", areaNombre: "Dirección procesamiento de agua y material de laboratorio" },
+      equipos: [{ bienNacional: "29858", serial: "CNG1476TVM" }, { bienNacional: "020212", serial: "MXJ70207CQ" }, { bienNacional: "024702", serial: "778ACBA006992" }, { bienNacional: "024782", serial: "KBAB26Q41647A" }, { bienNacional: "024689", serial: "A000091897" }, { bienNacional: "29844", serial: "3CQ143CFJ0" }]
+      },
+      {
+      usuario: { nombre: "Lilibeth", apellido: "Leottao", rolId: 5, direccionNombre: "CENAVIF", areaNombre: "Caja de ahorro" },
+      equipos: [{ id:2295 }, { id:2296 }, { bienNacional: "23797", serial: "95101782585" }, { bienNacional: "32015", serial: "230331-0560766" }]
+      }, 
 
-
-
-
+      //Area Externa
+      {
+      usuario: { nombre: "Carmen", apellido: "Martinez", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "27855", serial: "A000679668" }, { bienNacional: "27882", serial: "C16D8BA000578" }, { bienNacional: "31994", serial: "02007046667556" }, { bienNacional: "19979", serial: "936741832" }]
+      },
+      {
+      usuario: { nombre: "Carmen", apellido: "Figueroa", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "19938", serial: "MXJ70207BS" }, { bienNacional: "26187", serial: "A59C6BA005327" }, { bienNacional: "27856", serial: "KBD624K11233A" }, { bienNacional: "17881", serial: "KL0441122300" }]
+      },
+      {
+      usuario: { nombre: "Cesar", apellido: "Albarran", rolId: 5, direccionNombre: "Administracion", areaNombre: "Coordinación de almacén" },
+      equipos: [{ bienNacional: "29681", serial: "CNG1476W74" }, { bienNacional: "29711", serial: "3CQ144C9LL" }, { bienNacional: "022793", serial: "BC3370GVBW838Y" }, { bienNacional: "27396", serial: "13355499892" }]
+      },
+      {
+      usuario: { nombre: "Aleiram", apellido: "Chaurio", rolId: 5, direccionNombre: "Departamento de micología", areaNombre: "Área de diagnóstico" },
+      equipos: [{ bienNacional: "31897", serial: "A001336216" }, { id:1433 }, { id:505 }, { bienNacional: "24037", serial: "090701-0660465" }]
+      },
+      {
+      usuario: { nombre: "Carmen", apellido: "Estévez", rolId: 5, direccionNombre: "Bioterio", areaNombre: "Dirección" },
+      equipos: [{ bienNacional: "27334", serial: "A000670589" }, { bienNacional: "24139", serial: "MY19H9NZ125176P" }, { bienNacional: "20170", serial: "B94540KGASX31Z" }, { bienNacional: "27409", serial: "13355499175" }, { id:1440 }, { bienNacional: "20295", serial: "CNN6430HYL" }, { bienNacional: "24699", serial: "778ACBA015025" }, { bienNacional: "21319", serial: "HA17HVBQ114194Y" }, { bienNacional: "17583", serial: "ZM4314503652" }, { id:1518 }]
+      }, 
+      {
+      usuario: { nombre: "Dulce", apellido: "Navarro", rolId: 5, direccionNombre: "Oficina de infraestructura y proyecto", areaNombre: "Electricidad" },
+      equipos: [{ bienNacional: "28954", serial: "CNG1476WB8" }, { bienNacional: "29265", serial: "02EYYCLG205549R" }, { bienNacional: "21089", serial: "BC3370BVBUI4I6" }]
+      },
+      {
+      usuario: { nombre: "Felipe", apellido: "Diaz", rolId: 5, direccionNombre: "Administracion", areaNombre: "Coordinación de almacén" },
+      equipos: [{ bienNacional: "29697", serial: "CNG1476Q5X" }, { bienNacional: "29182", serial: "3CQ144C4DX" }, { bienNacional: "31372", serial: "0065818882459" }, { bienNacional: "27542", serial: "13355496313" }, {id:502 }, { id:1705 }, { id:1706 }, { bienNacional: "020433", serial: "CNGD1F00339" }, { bienNacional: "29774", serial: "3CQ145B9PB" }, { bienNacional: "29709", serial: "3CQ144D9J3" }, { bienNacional: "024730", serial: "A000092064" }, { bienNacional: "26015", serial: "A000403891" }, { bienNacional: "25779", serial: "367AL19CA012989" }, { bienNacional: "021028", serial: "E8BY257217" }, { id:1515 }, { bienNacional: "32079", serial: "223A1M9003204" }, { bienNacional: "32030", serial: "2EH32268" }]
+      },
+      {
+      usuario: { nombre: "Evelyn", apellido: "Gonzalez", rolId: 5, direccionNombre: "Bioterio", areaNombre: "Secretaría" },
+      equipos: [{ bienNacional: "29850", serial: "CNG1476V84" }, { bienNacional: "29847", serial: "3CQ143CF4N" }, { bienNacional: "24164", serial: "PUAV10010115211" }, { bienNacional: "25658", serial: "13355496041" }, { bienNacional: "18930", serial: "061635013790" }]
+      },
+      {
+      usuario: { nombre: "Edgar", apellido: "Mujica", rolId: 5, direccionNombre: "Bioterio", areaNombre: "Mecánica" },
+      equipos: [{ bienNacional: "19316", serial: "06DT25016004" }, { bienNacional: "24739", serial: "A000091950" }, { bienNacional: "20343", serial: "CNN64622RS" }, { bienNacional: "24778", serial: "KBAB23Q47501A" }, { bienNacional: "27465", serial: "13355496406" }]
+      }, 
+      {
+      usuario: { nombre: "Jorge", apellido: "Torres", rolId: 5, direccionNombre: "Oficina de infraestructura y proyecto", areaNombre: "Asistente de dirección" },
+      equipos: [{ bienNacional: "24657", serial: "A000091999" }, { bienNacional: "26205", serial: "A59C6BA005786" }, { bienNacional: "29831", serial: "CNG1466932" }, { bienNacional: "27842", serial: "C16D8BA000467" }, { bienNacional: "16374", serial: "C0403116805" }, { bienNacional: "20050", serial: "3L0651X26575" }, { bienNacional: "29835", serial: "CNG147TYC" }, { bienNacional: "21722", serial: "CND1R74187" }]
+      },
+      {
+      usuario: { nombre: "Gabriel", apellido: "Gomez", rolId: 5, direccionNombre: "Oficina de infraestructura y proyecto", areaNombre: "Electrónica" },
+      equipos: [{ bienNacional: "29693", serial: "CNG1476W7X" }, { bienNacional: "28751", serial: "3CQ145BCFW" }, { bienNacional: "20735", serial: "BC3370BVBUMJZ8A" }]
+      },
+      {
+      usuario: { nombre: "Iliana", apellido: "Osal", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "26269", serial: "A000403812" }, { bienNacional: "27717", serial: "C16D8BA000470" }, { bienNacional: "31993", serial: "0200704666757" }, { bienNacional: "021539", serial: "4357434" }, { bienNacional: "19238", serial: "3242355" }]
+      },
+      {
+      usuario: { nombre: "Liria", apellido: "Urdaneta", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "26209", serial: "A000403907" }, { bienNacional: "26160", serial: "A59C6BA005216" }, { bienNacional: "17820", serial: "ZM5527023263" }, { bienNacional: "27451", serial: "13355499936" }]
+      },
+      {
+      usuario: { nombre: "Jennifer", apellido: "Cantillos", rolId: 5, direccionNombre: "Departamento de micología", areaNombre: "Área de diagnóstico" },
+      equipos: [{ bienNacional: "30376", serial: "A000907103" }, { bienNacional: "20017", serial: "CNN6430J84" }, { bienNacional: "24676", serial: "KBAB23Q46998A" }]
+      },
+      {
+      usuario: { nombre: "Leinder", apellido: "Leon", rolId: 5, direccionNombre: "Departamento de micología", areaNombre: "Atención al paciente" },
+      equipos: [{ bienNacional: "26249", serial: "A000403948" }, { bienNacional: "26178", serial: "A59C6BA005764" }, { bienNacional: "32018", serial: "230331-0560760" }]
+      }, 
+      {
+      usuario: { nombre: "Roberto", apellido: "Hernandez", rolId: 5, direccionNombre: "Oficina de infraestructura y proyecto", areaNombre: "Dirección" },
+      equipos: [{ bienNacional: "27624", serial: "A000679554" }, { bienNacional: "28771", serial: "3CQ144C3BM" }, { bienNacional: "26046", serial: "KBC220K11144A" }, { bienNacional: "16692", serial: "ZM5327085980" }, { bienNacional: "27514", serial: "13355494912" }, { bienNacional: "27578", serial: "13355495053" }, { bienNacional: "21697", serial: "803MXHB12009" }, { bienNacional: "20111", serial: "3L0651X26630" }, { bienNacional: "26233", serial: "A000403960" }, { bienNacional: "32355", serial: "240632510744" }, { bienNacional: "20055", serial: "MXJ602076Q" }, { bienNacional: "24844", serial: "A000092055" }, { bienNacional: "24279", serial: "YC5RH9LZ603605X" }, { bienNacional: "26058", serial: "KBC220K12722A" }, { bienNacional: "20058", serial: "3L0651X26435" }, { bienNacional: "24238", serial: "21DQS01511" }, { bienNacional: "23001", serial: "CNWDF42917" }]
+      },
+      {
+      usuario: { nombre: "Nelitza", apellido: "Reyes", rolId: 5, direccionNombre: "Oficina de infraestructura y proyecto", areaNombre: "Dirección" },
+      equipos: [{ bienNacional: "28826", serial: "CNG1476VC8" }, { bienNacional: "29825", serial: "3CQ144C3S2" }, { bienNacional: "16469", serial: "K0403116631" }, { bienNacional: "20054", serial: "2132143123" }, { bienNacional: "20910", serial: "CND1N08481" }]
+      },
+      {
+      usuario: { nombre: "Raquel", apellido: "Machado", rolId: 5, direccionNombre: "Administracion", areaNombre: "Caja" },
+      equipos: [{ bienNacional: "31843", serial: "A001333867" }, { bienNacional: "31844", serial: "KBHC12K12662A" }, { bienNacional: "20219", serial: "3L0651X26585" }, { bienNacional: "18426", serial: "E8BY157228" }, { bienNacional: "29775", serial: "CNG1476PJY" }, { bienNacional: "25815", serial: "ZUHJHTKC401586T" }, { bienNacional: "31373", serial: "0065818882455" }, { bienNacional: "32163", serial: "9L2213A00105" }]
+      },
+      {
+      usuario: { nombre: "Mariela", apellido: "Tovar", rolId: 5, direccionNombre: "Administracion", areaNombre: "Coordinación de almacén" },
+      equipos: [{ bienNacional: "29699", serial: "CNG1476PVF" }, { bienNacional: "28707", serial: "3CQ144C4L8" }, { bienNacional: "16694", serial: "KD0441122304" }]
+      },
+      {
+      usuario: { nombre: "Natali", apellido: "Rios", rolId: 5, direccionNombre: "Administracion", areaNombre: "Coordinación de almacén" },
+      equipos: [{ bienNacional: "26025", serial: "A000403741" }, { bienNacional: "29777", serial: "3CQ144C91N" }, { bienNacional: "020102", serial: "B94540AVBSX4WEA" }, { bienNacional: "32165", serial: "9L2213A00108" }]
+      },
+      {
+      usuario: { nombre: "Richard", apellido: "Alvarado", rolId: 5, direccionNombre: "Administracion", areaNombre: "Coordinación de almacén" },
+      equipos: [{ bienNacional: "29778", serial: "CNG146691J" }, { bienNacional: "26173", serial: "A59C6BA005275" }, { bienNacional: "26014", serial: "KBC523K10961A" }, { bienNacional: "020884", serial: "070527-1291870" }]
+      },
+      {
+      usuario: { nombre: "Maribel", apellido: "Dolande", rolId: 5, direccionNombre: "Departamento de micología", areaNombre: "Dirección" },
+      equipos: [{ bienNacional: "31919", serial: "A001336193" }, { bienNacional: "32112", serial: "223B5B6000723" }, { bienNacional: "32019", serial: "230331-0560762" }, { bienNacional: "30379", serial: "A000907189" }, { bienNacional: "30384", serial: "D72E6BA000514" }, { bienNacional: "17772", serial: "KL0441126590" }]
+      }, 
+      {
+      usuario: { nombre: "Ruben", apellido: "Monsalve", rolId: 5, direccionNombre: "Oficina de infraestructura y proyecto", areaNombre: "Infraestructura" },
+      equipos: [{ bienNacional: "27312", serial: "A000679716" }, { bienNacional: "28763", serial: "3CQ144DC0W" }, { bienNacional: "24738", serial: "KBAB23Q47506A" }]
+      },
+      {
+      usuario: { nombre: "Yatzury", apellido: "Olivar", rolId: 5, direccionNombre: "Administracion", areaNombre: "Caja" },
+      equipos: [{ bienNacional: "31845", serial: "A001332789" }, { bienNacional: "31846", serial: "KBHC12K16995A" }, { bienNacional: "30103", serial: "423534432" }, { id:2581 }, { bienNacional: "12526", serial: "21324234" }]
+      },
+      {
+      usuario: { nombre: "Rossana", apellido: "Martinez", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "27853", serial: "A000679652" }, { bienNacional: "27875", serial: "C16D8BA000529" }, { bienNacional: "16450", serial: "C0403117018" }, { bienNacional: "17818", serial: "KL044120614" }]
+      },
+      {
+      usuario: { nombre: "Victor", apellido: "Larez", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "26021", serial: "A000403895" }, { bienNacional: "27723", serial: "C16D8BA000530" }, { bienNacional: "20825", serial: "BC3370BVBUEDHHA" }, { bienNacional: "27381", serial: "13355495294" }]
+      },
+      {
+      usuario: { nombre: "Zuleidy", apellido: "Marrero", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "27821", serial: "A000679552" }, { bienNacional: "29823", serial: "3CQ144D9YX" }, { bienNacional: "26210", serial: "KBC220K12721A" }, { bienNacional: "20837", serial: "070527-1291912" }]
+      },
+      {
+      usuario: { nombre: "Zuraima", apellido: "Rodriguez", rolId: 5, direccionNombre: "Regulación sanitaria (area externa)", areaNombre: "Dirección de regulación y consumo humano" },
+      equipos: [{ bienNacional: "27851", serial: "A000679671" }, { bienNacional: "27878", serial: "C16D8BA000500" }, { bienNacional: "27854", serial: "KBD624K11231A" }, { bienNacional: "32085", serial: "21312312321" }, { bienNacional: "20082", serial: "3L0651X26535" }, { bienNacional: "27572", serial: "13355495061" }, { bienNacional: "18915", serial: "061635010047" }, { bienNacional: "30076", serial: "VNB6Z07941" }, { bienNacional: "25999", serial: "A000403744" }, { bienNacional: "20088", serial: "CNN64623KB" }, { bienNacional: "26020", serial: "KBC518K11066A" }, { bienNacional: "27434", serial: "13355498909" }, { bienNacional: "20839", serial: "070527-1290912" }, { bienNacional: "21930", serial: "8123612733431" }, { bienNacional: "19240", serial: "1243432" }, { bienNacional: "27716", serial: "KBD624K14531A" }, { bienNacional: "27822", serial: "KBD624K14407A" }, { bienNacional: "32142", serial: "CNB1S334QB" }, { bienNacional: "32114", serial: "223B5B6000717" }, { bienNacional: "31733", serial: "05XD3CUJ301063A" }, { bienNacional: "31551", serial: "18101HFDD31R8S" }]
+      },
+      {
+      usuario: { nombre: "Roselia", apellido: "Garcia", rolId: 5, direccionNombre: "Departamento de micología", areaNombre: "Secretaría" },
+      equipos: [{ bienNacional: "26231", serial: "A000403724" }, { bienNacional: "30374", serial: "FSEEAHA028282" }, { bienNacional: "18292", serial: "CNBK768953" }, { id:1516}, { bienNacional: "27488", serial: "13355498326" }]
+      },
+      {
+      usuario: { nombre: "Soyimar", apellido: "Abreu", rolId: 5, direccionNombre: "Departamento de micología", areaNombre: "Atención al paciente" },
+      equipos: [{ bienNacional: "26069", serial: "A000403884" }, { bienNacional: "30371", serial: "D72E6BA000529" }, { bienNacional: "30372", serial: "KBD917K11368A" }, { bienNacional: "25791", serial: "932843274823" }, { id:1711 }]
+      },
     ];
 
     // Crear Usuarios
@@ -851,10 +1399,9 @@ export async function def() {
           include: { areas: true }
         });
 
-        console.log("Dirección encontrada");
 
         if (!direccion) {
-          console.log(`❌ Dirección no encontrada para: ${dataUsuario.usuario.nombre}`);
+          console.log(`Dirección no encontrada para: ${dataUsuario.usuario.nombre}`);
           continue;
         }
 
@@ -864,9 +1411,8 @@ export async function def() {
           const area = direccion.areas.find(a => a.nombre === dataUsuario.usuario.areaNombre);
           if (area) {
             areaId = area.id;
-            console.log(`Área encontrada`);
           } else {
-            console.log(`⚠️ Área no encontrada: ${dataUsuario.usuario.areaNombre}`);
+            console.log(`Área no encontrada: ${dataUsuario.usuario.areaNombre}`);
           }
         }
 
@@ -886,7 +1432,6 @@ export async function def() {
         // 4. Asignar equipos
         let equiposAsignados = 0;
         for (const equipo of dataUsuario.equipos) {
-          console.log(`Buscando equipo:`, equipo);
           
           let result;
           
@@ -901,7 +1446,7 @@ export async function def() {
               console.log(`Equipo actualizado por ID: ${equipo.id}`);
               equiposAsignados += 1;
             } catch (error) {
-              console.log(`❌ Error actualizando equipo por ID ${equipo.id}:`, error);
+              console.log(`Error actualizando equipo por ID ${equipo.id}:`, error);
             }
           } else if (equipo.bienNacional && equipo.serial) {
             // Opción 2: Buscar por bienNacional y serial
@@ -915,19 +1460,18 @@ export async function def() {
                 where: whereCondition,
                 data: { usuarioId: usuario.id }
               });
-              
-              console.log(`Equipos actualizados: ${result.count}`);
+            
               equiposAsignados += result.count;
               
               if (result.count === 0) {
-                console.log(`⚠️ Equipo no encontrado con bienNacional: ${equipo.bienNacional} y serial: ${equipo.serial}`);
+                console.log(`Equipo no encontrado con bienNacional: ${equipo.bienNacional} y serial: ${equipo.serial}`);
               }
               
             } catch (error) {
               console.log(`Error actualizando equipo:`, error);
             }
           } else {
-            console.log(`❌ Equipo sin formato válido:`, equipo);
+            console.log(`Equipo sin formato válido:`, equipo);
           }
         }
         console.log(`✅ Total equipos asignados a ${usuario.nombre}: ${equiposAsignados}`);

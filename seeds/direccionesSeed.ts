@@ -164,7 +164,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
     
           // Piso 3
           {
-            direccion: "Presidencia",
+            direccion: "Presidencia piso 3",
             pisoId: 3,
             areas: ["Despacho", "Seguridad industrial", "Auditoría interna"],
           },
@@ -173,7 +173,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             pisoId: 3,
             areas: [
               "Dirección de informatica",
-              "Area de soporte",
+              "Área de soporte",
               "Área de infraestructura",
               "Área de programación y base de datos",
             ],
@@ -183,7 +183,7 @@ export default async function seedDirecciones(prisma: PrismaClient) {
             pisoId: 3,
             areas: [
               "Dirección",
-              "Secretaria de despacho",
+              "Secretaría de despacho",
               "Registro y control",
               "Reclutamiento y selección",
               "Coordinación de nómina",
@@ -235,31 +235,31 @@ export default async function seedDirecciones(prisma: PrismaClient) {
     
           // Planta Baja
           {
-            direccion: "Dirección de diagnostigo y vigilancia epidemiologica",
+            direccion: "Dirección de diagnóstico y vigilancia epidemiológica",
             pisoId: 4,
-            areas: ["Red de laboratorio de salid publica", "Inmunocerologia viral"],
+            areas: ["Red de laboratorio de salud pública", "Inmunocerología viral"],
           },
           {
             direccion:
-              "Dirección general de diagnostico y vigilancia epidemiologica",
+              "Dirección general de diagnóstico y vigilancia epidemiológica (planta baja)",
             pisoId: 4,
             areas: [
-              "Dirección de estadistica y analisis estrategico",
-              "Labotario de programas especiales hepatitis y sida",
+              "Dirección de estadística y análisis estratégico",
+              "Laboratorio de programas especiales hepatitis y sida",
             ],
           },
           {
             direccion: "Dirección medios de cultivo y reactivos",
             pisoId: 4,
             areas: [
-              "Division de medios de cultivos",
+              "División de medios de cultivos",
               "Unidad de control de calidad de medios y reactivos",
             ],
           },
           {
-            direccion: "Cordinaccion de atencion al ciudadano",
+            direccion: "Coordinación de atención al ciudadano",
             pisoId: 4,
-            areas: ["Oficina de atencion al ciudadano"],
+            areas: ["Oficina de atención al ciudadano"],
           },
           {
             direccion: "Dirección general de produccion",
@@ -271,73 +271,83 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           },
           {
             direccion:
-              "Dirección de regulacion de productos de uso y consumo humano",
+              "Dirección de regulación de productos de uso y consumo humano",
             pisoId: 4,
-            areas: ["Unidad de manejo de muestras e integracion de resultados"],
+            areas: ["Unidad de manejo de muestras e integración de resultados"],
           },
           {
             direccion:
-              "Dirección de laboratorio nacional de control de medicamentos,cosmeticos, productos medicos y otras tecnologias",
+              "Dirección de laboratorio nacional de control de medicamentos,cosméticos, productos médicos y otras tecnologías (planta baja)",
             pisoId: 4,
             areas: [
-              "Division de fisicoquimica de medicamentos (cuarto de patrones)",
-              "Division de fisicoquimica de medicamentos (oficina de la jefatura de division)",
+              "División de fisicoquímica de medicamentos (Cuarto de patrones)",
+              "División de fisicoquímica de medicamentos (Oficina de la jefatura de división)",
+              "División de fisicoquímica de medicamentos (Área de transcripción)",
+              "División de fisicoquímica de medicamentos (Área instrumental I)",
+              "División de fisicoquímica de medicamentos (Área instrumental II)",
             ],
           },
           {
             direccion:
-              "Dirección general de regulcion sanitaria de productos de uso y consumo humno",
+              "Dirección general de regulación sanitaria de productos de uso y consumo humano (planta baja)",
             pisoId: 4,
             areas: ["Dirección de vigilancia sanitaria"],
           },
           {
             direccion: "Dirección de seguridad y transporte",
             pisoId: 4,
-            areas: ["Centro comuniccion y Monitoreo (cecom)"],
+            areas: ["Centro comunicación y monitoreo (CECOM)"],
           },
           {
-            direccion: "Dirección general de diagnostico",
+            direccion: "Dirección general de diagnóstico",
             pisoId: 4,
             areas: [
-              "Dirección general de diagnostico",
-              "Departamento de virologia",
+              "Dirección general de diagnóstico",
+              "Departamento de virología",
               "Ateccion al paciente",
+            ],
+          },
+           {
+            direccion: "Dirección general de producción (planta baja)",
+            pisoId: 4,
+            areas: [
+              "Departamento de medios de cultivos y reactivos", "Sección de reactivos y colorantes",
             ],
           },
     
           // Sotano
           {
-            direccion: "Dirección administracion",
+            direccion: "Dirección administración (sotano)",
             pisoId: 5,
-            areas: ["Coordinacion de cocina"],
+            areas: ["Coordinación de cocina"],
           },
           {
             direccion: "Dirección general de seguridad y transporte",
             pisoId: 5,
-            areas: ["Coordinacion de seguridad"],
+            areas: ["Coordinación de seguridad"],
           },
           {
-            direccion: "Servicio medico",
+            direccion: "Servicio médico",
             pisoId: 5,
-            areas: ["Servicio medico"],
+            areas: ["Servicio médico"],
           },
           {
-            direccion: "Sunep",
+            direccion: "SUNEP",
             pisoId: 5,
-            areas: ["Secretaria general"],
+            areas: ["Secretaría general"],
           },
           {
-            direccion: "Dirección de talento humano",
+            direccion: "Dirección de talento humano (sotano)",
             pisoId: 5,
-            areas: ["Coordinacion de cultura"],
+            areas: ["Coordinación de cultura"],
           },
           {
-            direccion: "Dirección de produccion",
+            direccion: "Dirección de producción",
             pisoId: 5,
             areas: ["Dirección procesamiento de agua y material de laboratorio"],
           },
           {
-            direccion: "Cenavif",
+            direccion: "CENAVIF",
             pisoId: 5,
             areas: ["Caja de ahorro"],
           },
@@ -357,25 +367,23 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           {
             direccion: "Administracion",
             pisoId: 6,
-            areas: ["Caja"],
+            areas: [
+              "Caja",
+              "Coordinación de almacén",
+            ],
           },
           {
-            direccion: "Regulacion sanitaria",
+            direccion: "Regulación sanitaria (area externa)",
             pisoId: 6,
-            areas: ["Dirección de regulacion y consumo humano"],
+            areas: ["Dirección de regulación y consumo humano"],
           },
           {
-            direccion: "Dirección de administracion",
-            pisoId: 6,
-            areas: ["Coordinacion de almacen"],
-          },
-          {
-            direccion: "Departamento de micologia",
+            direccion: "Departamento de micología",
             pisoId: 6,
             areas: [
               "Secretaría",
               "Dirección",
-              "Área de diagnostico",
+              "Área de diagnóstico",
               "Atención al paciente",
             ],
           },
