@@ -3,7 +3,7 @@ import seedEquipos from "../../seeds/equiposSeed"
 import seedDirecciones from "../../seeds/direccionesSeed"
 import seedMarcasModelos from "../../seeds/marcasModelosSeed"
 import seedEspecificacionesAdicionales from "../../seeds/especificacionesAdicionalesSeed"
-
+import bcrypt from "bcryptjs"
 
 export async function def() {
 
@@ -767,7 +767,7 @@ export async function def() {
       equipos: [{ bienNacional: "25821", serial: "MXL21415SB" }, { bienNacional: "25916", serial: "ZT14H4LC204038E" }, { bienNacional: "020130", serial: "B94540KGASX0VO" }, { bienNacional: "0321852", serial: "123214312" }]
       },
       {
-      usuario: { nombre: "Jose", apellido: "Cardenas", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
+      usuario: { nombre: "Jose", apellido: "Cardenas", rolId: 1, email:"admin@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
       equipos: [{ bienNacional: "31899", serial: "A001336194" }, { bienNacional: "27719", serial: "K16D8BA002035" }, { id:1189 }, { bienNacional: "31495", serial: "KA19021E000816" }, { bienNacional: "30467", serial: "101228-0402988" }, { bienNacional: "061635013784", serial: "061635013784" }, { bienNacional: "27330", serial: "C16D8BA000449" }, { bienNacional: "31891", serial: "A001336200" }, { id:1191 }]
       },
       {
@@ -1386,7 +1386,7 @@ export async function def() {
       },
     ];
 
-    // Crear Usuarios
+      // Crear Usuarios
     const createUsuarios = async () => {
       console.log("Iniciando creación de usuarios...");
       
@@ -1398,7 +1398,6 @@ export async function def() {
           where: { direccion: dataUsuario.usuario.direccionNombre },
           include: { areas: true }
         });
-
 
         if (!direccion) {
           console.log(`Dirección no encontrada para: ${dataUsuario.usuario.nombre}`);
@@ -1416,11 +1415,30 @@ export async function def() {
           }
         }
 
-        // 3. Crear usuario
+        // 3. HASHEAR CONTRASEÑA ANTES DE CREAR USUARIO
+        let hashedPassword = dataUsuario.usuario.password;
+        
+        // Solo hashear si la contraseña existe y no está ya hasheada
+        if (dataUsuario.usuario.password && !dataUsuario.usuario.password.startsWith('$2a$')) {
+          try {
+            hashedPassword = await bcrypt.hash(dataUsuario.usuario.password, 12);
+            console.log(`Contraseña hasheada para: ${dataUsuario.usuario.nombre}`);
+          } catch (error) {
+            console.log(`❌ Error hasheando contraseña para ${dataUsuario.usuario.nombre}:`, error);
+            // Mantener la contraseña original si hay error (fallback)
+            hashedPassword = dataUsuario.usuario.password;
+          }
+        } else if (dataUsuario.usuario.password) {
+          console.log(`⏭️ Contraseña ya hasheada para: ${dataUsuario.usuario.nombre}`);
+        }
+
+        // 4. Crear usuario con contraseña hasheada
         const usuario = await prismadb.usuario.create({
           data: {
             nombre: dataUsuario.usuario.nombre,
             apellido: dataUsuario.usuario.apellido,
+            email: dataUsuario.usuario.email, 
+            password: hashedPassword, // ← Ahora hasheada
             rolId: dataUsuario.usuario.rolId,
             direccionId: direccion.id,
             areaId: areaId
@@ -1429,7 +1447,7 @@ export async function def() {
 
         console.log(`Usuario creado: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
 
-        // 4. Asignar equipos
+        // 5. Asignar equipos (tu código existente)
         let equiposAsignados = 0;
         for (const equipo of dataUsuario.equipos) {
           

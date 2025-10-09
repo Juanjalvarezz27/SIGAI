@@ -1,10 +1,11 @@
 import { Poppins, Montserrat } from "next/font/google";
 import "./globals.css";
+import SessionProvider from "@/providers/SessionProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
   variable: "--font-poppins",
-  weight: "300"
+  weight: "300",
 });
 
 const montserrat = Montserrat({
@@ -12,22 +13,24 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
 });
 
+  // Layout incluye fuentes globales, estilos y el SessionProvider.
+
 export const metadata = {
-  title: "Sistema de Gestión de Tickets Informaticos",
-  description: "Sistema de Gestión de Tickets Informaticos",
+  title: "Sistema de Gestión de Analistas Informáticos",
+  description: "Sistema de Gestión de Analistas Informáticos",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="es"
-      className={`${poppins.variable} ${montserrat.variable}`}
-    >
-      <body className="antialiased">{children}</body>
+    <html lang="es" className={`${poppins.variable} ${montserrat.variable}`}>
+      <body className="antialiased">
+        {/* Envolver el children con la sesion*/}
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }
