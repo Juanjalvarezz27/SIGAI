@@ -1,20 +1,19 @@
 import Navbar from "@/components/Navbar";
 import Title from "@/components/Title"
 
-async function InventarioEquipos() {
+async function Personal () {
 
   return (
     <>
       <Navbar />
-      <Title text={"Inventario de Equipos"} />
 
       <div>
 
-        
+        <Title text={"Personal"} />
 
       </div>
     </>
   );
 }
 
-export default InventarioEquipos;
+export default Personal;

@@ -1,16 +1,20 @@
 import Navbar from "@/components/Navbar";
+import Title from "@/components/Title"
 
-async function AnalistaPage() {
- 
+async function Tickets () {
+
   return (
     <>
       <Navbar />
+      <Title text={"Tickets"} />
 
       <div>
-        <h1>ANALISTA</h1>
+
+        
+
       </div>
     </>
   );
 }
 
-export default AnalistaPage;
+export default Tickets;

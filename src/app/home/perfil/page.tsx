@@ -1,12 +1,12 @@
 import Navbar from "@/components/Navbar";
 import Title from "@/components/Title"
 
-async function InventarioEquipos() {
+async function Perfil () {
 
   return (
     <>
       <Navbar />
-      <Title text={"Inventario de Equipos"} />
+      <Title text={"Perfil"} />
 
       <div>
 
@@ -17,4 +17,4 @@ async function InventarioEquipos() {
   );
 }
 
-export default InventarioEquipos;
+export default Perfil;

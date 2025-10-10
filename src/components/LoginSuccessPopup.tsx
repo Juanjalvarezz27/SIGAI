@@ -3,7 +3,7 @@
 interface LoginSuccessPopupProps {
   isVisible: boolean
 }
-
+//Definimos que se muestre y no se muestre el PopUp
 export default function LoginSuccessPopup({ isVisible }: LoginSuccessPopupProps) {
   if (!isVisible) return null
 

@@ -13,7 +13,7 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
 });
 
-  // Layout incluye fuentes globales, estilos y el SessionProvider.
+// Layout incluye fuentes globales, estilos y el SessionProvider.
 
 export const metadata = {
   title: "Sistema de Gestión de Analistas Informáticos",

@@ -1,16 +1,20 @@
 import Navbar from "@/components/Navbar";
+import Title from "@/components/Title"
 
-async function SolicitantePage() {
+async function Trabajos () {
 
   return (
     <>
       <Navbar />
+      <Title text={"Trabajos"} />
 
       <div>
-        <h1>Solicitante</h1>
+
+        
+
       </div>
     </>
   );
 }
 
-export default SolicitantePage;
+export default Trabajos;
