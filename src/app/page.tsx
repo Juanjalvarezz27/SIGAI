@@ -10,9 +10,9 @@ import Navbar from "@/components/Navbar"
 // Mapeo de roles de usuario a sus rutas correspondientes después del login
 const roleRoutes: Record<string, string> = {
   admin: "/home",
-  supervisor: "/home/inventarioEquipos", 
-  analista: "/home/trabajos",
-  solicitante: "/home/tickets"
+  supervisor: "/home", 
+  analista: "/home",
+  solicitante: "/home"
 }
 
 // Roles válidos que tienen permitido el acceso al sistema

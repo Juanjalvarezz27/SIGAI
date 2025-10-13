@@ -5,12 +5,13 @@ import { getToken } from "next-auth/jwt";
 // Definición de rutas y roles permitidos - estructura más específica
 const roleRoutes: Record<string, string[]> = {
   "/home/personal": ["admin"],
-  "/solicitantes": ["supervisor"],
+  "/home/solicitantes": ["supervisor"],
   "/home/inventarioEquipos": ["admin", "supervisor", "analista"],
   "/home/tickets": ["admin", "supervisor", "solicitante", "analista"],
   "/home/eventosExternos": ["admin", "supervisor", "solicitante"],
   "/home/estadisticas": ["admin", "supervisor"],
   "/home/perfil": ["admin", "supervisor", "solicitante", "analista"],
+  "/home/trabajos": ["analista"],
 };
 
 // Rutas públicas sin verificación
@@ -96,5 +97,5 @@ export async function middleware(request: NextRequest) {
 
 // Configuración de rutas que activan el middleware
 export const config = {
-  matcher: ["/home/:path*", "/solicitantes"],
+  matcher: ["/home/:path*"],
 };
