@@ -1424,12 +1424,12 @@ export async function def() {
             hashedPassword = await bcrypt.hash(dataUsuario.usuario.password, 12);
             console.log(`Contraseña hasheada para: ${dataUsuario.usuario.nombre}`);
           } catch (error) {
-            console.log(`❌ Error hasheando contraseña para ${dataUsuario.usuario.nombre}:`, error);
+            console.log(`Error hasheando contraseña para ${dataUsuario.usuario.nombre}:`, error);
             // Mantener la contraseña original si hay error (fallback)
             hashedPassword = dataUsuario.usuario.password;
           }
         } else if (dataUsuario.usuario.password) {
-          console.log(`⏭️ Contraseña ya hasheada para: ${dataUsuario.usuario.nombre}`);
+          console.log(`Contraseña ya hasheada para: ${dataUsuario.usuario.nombre}`);
         }
 
         // 4. Crear usuario con contraseña hasheada

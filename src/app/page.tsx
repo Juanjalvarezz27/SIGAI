@@ -6,6 +6,7 @@ import LoginSuccessPopup from "@/components/LoginSuccessPopup"
 import imagenInicio from "@/assets/Inicio.png"
 import Image from "next/image"
 import Navbar from "@/components/Navbar"
+import { Eye, EyeOff } from "lucide-react"
 
 // Mapeo de roles de usuario a sus rutas correspondientes después del login
 const roleRoutes: Record<string, string> = {
@@ -24,7 +25,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
-
+  const [showPassword, setShowPassword] = useState(false)
 
   //Realiza la autenticación y redirige según el rol del usuario
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,6 +82,11 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Función para alternar visibilidad de contraseña
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
   }
 
   return (
@@ -143,22 +149,38 @@ export default function LoginPage() {
                     />
                   </div>
                   
-                  {/* Campo de contraseña */}
+                  {/* Campo de contraseña con botón separado */}
                   <div className="mt-4">
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                       Contraseña
                     </label>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      autoComplete="current-password"
-                      required
-                      className="appearance-none rounded relative block w-full px-3 py-2 border border-[#003366] placeholder-gray-500 text-gray-900 focus:outline-none focus:border-blue-400 focus:z-10 sm:text-sm"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="current-password"
+                          required
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-[#003366] placeholder-gray-500 text-gray-900 focus:outline-none focus:border-blue-400 focus:z-10 sm:text-sm"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={togglePasswordVisibility}
+                        className="px-3 py-2 border border-[#003366] rounded-xl text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
