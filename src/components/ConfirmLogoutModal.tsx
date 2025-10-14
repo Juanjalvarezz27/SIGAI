@@ -43,7 +43,7 @@ export default function ConfirmLogoutModal({
             {/* Botón Cancelar */}
             <button
               onClick={onClose}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors duration-200"
+              className="bg-gray-300 cursor-pointer transform transition-all duration-200 hover:scale-105 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md font-medium transition-colors duration-200"
             >
               Cancelar
             </button>
@@ -51,7 +51,7 @@ export default function ConfirmLogoutModal({
             {/* Botón Confirmar */}
             <button
               onClick={onConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md font-medium transition-colors duration-200"
+              className="bg-red-600 cursor-pointer transform transition-all duration-200 hover:scale-105 hover:bg-red-700 text-white px-6 py-2 rounded-md font-medium transition-colors duration-200"
             >
               Cerrar Sesión
             </button>

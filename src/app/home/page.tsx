@@ -70,7 +70,7 @@ async function Inicio() {
   
   // Filtrar rutas según el rol del usuario
   const availableRoutes = routes.filter(route => 
-    user?.rol && route.roles.includes(user.rol)
+    user?.rol && route.roles.includes(user.rol.rol)
   );
 
   return (

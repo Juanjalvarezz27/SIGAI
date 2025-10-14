@@ -11,6 +11,20 @@ declare module "next-auth" {
     rolId: number
     direccionId: number
     areaId?: number
+    direccion: {
+      id: number
+      direccion: string
+      pisoId: number
+      piso: {
+        id: number
+        piso: string
+      }
+    }
+    area?: {
+      id: number
+      nombre: string
+      direccionId: number
+    }
   }
 
   interface Session {
