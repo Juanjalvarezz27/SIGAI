@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prismadb from '@/lib/prismadb'
+import { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
+    const rolId = searchParams.get('rolId')
 
     // Validar parámetros
     if (page < 1 || limit < 1) {
@@ -22,9 +24,28 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
+    // Construir where clause CORREGIDO
+    const whereClause: Prisma.UsuarioWhereInput = {}
+
+    if (rolId === 'deshabilitados') {
+      // Mostrar todos los usuarios deshabilitados sin importar rol
+      whereClause.estado = 'Deshabilitado'
+    } else if (rolId === 'todos' || rolId === 'null') {
+      // Mostrar todos los usuarios activos (no filtrar por rol)
+      whereClause.estado = 'Activo'
+    } else if (rolId) {
+      // Mostrar usuarios activos del rol específico
+      whereClause.rolId = parseInt(rolId)
+      whereClause.estado = 'Activo'
+    } else {
+      // Por defecto mostrar solo activos
+      whereClause.estado = 'Activo'
+    }
+
     // Obtener usuarios con paginación
     const [usuarios, totalCount] = await Promise.all([
       prismadb.usuario.findMany({
+        where: whereClause,
         skip,
         take: limit,
         select: {
@@ -33,6 +54,7 @@ export async function GET(request: NextRequest) {
           apellido: true,
           cedula: true,
           email: true,
+          estado: true,
           rol: {
             select: {
               id: true,
@@ -41,12 +63,57 @@ export async function GET(request: NextRequest) {
           },
           direccion: {
             select: {
-              direccion: true
+              direccion: true,
+              piso: {
+                select: {
+                  piso: true
+                }
+              }
             }
           },
           area: {
             select: {
               nombre: true
+            }
+          },
+          equipos: {
+            select: {
+              id: true,
+              bienNacional: true,
+              serial: true,
+              tipoEquipo: {
+                select: {
+                  nombre: true
+                }
+              },
+              modelo: {
+                select: {
+                  nombre: true,
+                  marca: {
+                    select: {
+                      nombre: true
+                    }
+                  }
+                }
+              },
+              status: {
+                select: {
+                  estado: true
+                }
+              },
+              estado: {
+                select: {
+                  nombre: true
+                }
+              },
+              especificaciones: {
+                select: {
+                  memoriaRam: true,
+                  capacidadDisco: true,
+                  tipoDisco: true,
+                  procesador: true
+                }
+              }
             }
           }
         },
@@ -55,7 +122,9 @@ export async function GET(request: NextRequest) {
           { apellido: 'asc' }
         ]
       }),
-      prismadb.usuario.count()
+      prismadb.usuario.count({
+        where: whereClause
+      })
     ])
 
     const totalPages = Math.ceil(totalCount / limit)

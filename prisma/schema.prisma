@@ -31,25 +31,27 @@ model Piso {
 }
 
 model Usuario {
-  id                   Int            @id @default(autoincrement())
-  cedula               String?
-  nombre               String
-  apellido             String?
-  email                String?        @unique
-  rolId                Int
-  direccionId          Int
-  areaId               Int?
-  password             String?
-  equipos              Equipos[]
-  ticketCerrado        Ticket[]       @relation("TicketCerrado")
-  ticketCreado         Ticket[]       @relation("TicketCreado")
+  id          Int      @id @default(autoincrement())
+  cedula      String?
+  nombre      String
+  apellido    String?
+  email       String?  @unique
+  rolId       Int
+  direccionId Int
+  areaId      Int?
+  password    String?
+  estado      String   @default("Activo")
+  equipos     Equipos[]
+  ticketCerrado Ticket[] @relation("TicketCerrado")
+  ticketCreado Ticket[] @relation("TicketCreado")
   ticketAnalistaEquipo TicketEquipo[] @relation("EquiposAnalista")
-  ticketAnalista       TicketEvento[] @relation("EventosAnalista")
-  area                 Area?          @relation(fields: [areaId], references: [id])
-  direccion            Direcciones    @relation(fields: [direccionId], references: [id])
-  rol                  Rol            @relation(fields: [rolId], references: [id])
-}
+  ticketAnalista TicketEvento[] @relation("EventosAnalista")
+  area        Area?      @relation(fields: [areaId], references: [id])
+  direccion   Direcciones @relation(fields: [direccionId], references: [id])
+  rol         Rol         @relation(fields: [rolId], references: [id])
 
+  @@map("usuarios")
+}
 model Rol {
   id       Int       @id @default(autoincrement())
   rol      String

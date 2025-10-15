@@ -97,13 +97,13 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
         >
 
           {/* Toggle entre Usuario Activo, Usuario Nuevo y Actualizar Datos */}
-          <div className="flex items-center justify-center mb-6 cursor-pointer">
-            <div className="bg-gray-100 rounded-lg p-1 flex">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-gray-100 rounded-lg p-1 flex ">
               <button
                 type="button"
                 onClick={() => setModo('activo')}
                 disabled={loading}
-                className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+                className={` cursor-pointer px-4 py-2 rounded-md font-medium transition-all duration-200 ${
                   modo === 'activo'
                     ? 'bg-white text-[#001F3F] shadow-sm'
                     : 'text-gray-600 hover:text-gray-800 disabled:hover:text-gray-600'
@@ -115,7 +115,7 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
                 type="button"
                 onClick={() => setModo('actualizar')}
                 disabled={loading}
-                className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+                className={` cursor-pointer px-4 py-2 rounded-md font-medium transition-all duration-200 ${
                   modo === 'actualizar'
                     ? 'bg-white text-[#001F3F] shadow-sm'
                     : 'text-gray-600 hover:text-gray-800 disabled:hover:text-gray-600'
@@ -127,7 +127,7 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
                 type="button"
                 onClick={() => setModo('nuevo')}
                 disabled={loading}
-                className={`px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+                className={` cursor-pointer px-4 py-2 rounded-md font-medium transition-all duration-200 ${
                   modo === 'nuevo'
                     ? 'bg-white text-[#001F3F] shadow-sm'
                     : 'text-gray-600 hover:text-gray-800 disabled:hover:text-gray-600'

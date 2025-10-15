@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Normalizar y dividir la consulta en palabras
     const palabras = query.trim().toLowerCase().split(/\s+/).filter(palabra => palabra.length > 0)
-    const palabrasNormalizadas = palabras.map(palabra => 
+    const palabrasNormalizadas = palabras.map(palabra =>
       palabra.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     )
 
@@ -35,17 +35,17 @@ export async function GET(request: NextRequest) {
           AND: [
             {
               OR: [
-                { 
-                  nombre: { 
-                    startsWith: palabra, 
-                    mode: 'insensitive' 
-                  } 
+                {
+                  nombre: {
+                    startsWith: palabra,
+                    mode: 'insensitive'
+                  }
                 },
-                { 
-                  apellido: { 
-                    startsWith: palabra, 
-                    mode: 'insensitive' 
-                  } 
+                {
+                  apellido: {
+                    startsWith: palabra,
+                    mode: 'insensitive'
+                  }
                 },
                 {
                   nombre: {
@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
           apellido: true,
           cedula: true,
           email: true,
+          estado: true,
           rol: {
             select: {
               id: true,
@@ -78,7 +79,57 @@ export async function GET(request: NextRequest) {
           },
           direccion: {
             select: {
-              direccion: true
+              direccion: true,
+              piso: {
+                select: {
+                  piso: true
+                }
+              }
+            }
+          },
+          area: {
+            select: {
+              nombre: true
+            }
+          },
+          equipos: {
+            select: {
+              id: true,
+              bienNacional: true,
+              serial: true,
+              tipoEquipo: {
+                select: {
+                  nombre: true
+                }
+              },
+              modelo: {
+                select: {
+                  nombre: true,
+                  marca: {
+                    select: {
+                      nombre: true
+                    }
+                  }
+                }
+              },
+              status: {
+                select: {
+                  estado: true
+                }
+              },
+              estado: {
+                select: {
+                  nombre: true
+                }
+              },
+              especificaciones: {
+                select: {
+                  memoriaRam: true,
+                  capacidadDisco: true,
+                  tipoDisco: true,
+                  procesador: true
+                }
+              }
             }
           }
         },
@@ -130,7 +181,7 @@ export async function GET(request: NextRequest) {
     // Para 3 o más palabras, buscar cada palabra individualmente
     if (palabras.length >= 3) {
       const condicionesMultiplesPalabras: Prisma.UsuarioWhereInput[] = []
-      
+
       // Agregar condiciones para cada palabra
       palabras.forEach((palabra, index) => {
         const palabraNormalizada = palabrasNormalizadas[index]
@@ -164,6 +215,7 @@ export async function GET(request: NextRequest) {
         apellido: true,
         cedula: true,
         email: true,
+        estado: true, // Este ya estaba incluido
         rol: {
           select: {
             id: true,
@@ -172,7 +224,57 @@ export async function GET(request: NextRequest) {
         },
         direccion: {
           select: {
-            direccion: true
+            direccion: true,
+            piso: {
+              select: {
+                piso: true
+              }
+            }
+          }
+        },
+        area: {
+          select: {
+            nombre: true
+          }
+        },
+        equipos: {
+          select: {
+            id: true,
+            bienNacional: true,
+            serial: true,
+            tipoEquipo: {
+              select: {
+                nombre: true
+              }
+            },
+            modelo: {
+              select: {
+                nombre: true,
+                marca: {
+                  select: {
+                    nombre: true
+                  }
+                }
+              }
+            },
+            status: {
+              select: {
+                estado: true
+              }
+            },
+            estado: {
+              select: {
+                nombre: true
+              }
+            },
+            especificaciones: {
+              select: {
+                memoriaRam: true,
+                capacidadDisco: true,
+                tipoDisco: true,
+                procesador: true
+              }
+            }
           }
         }
       },

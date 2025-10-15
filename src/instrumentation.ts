@@ -2,5 +2,5 @@
 
 //Funcion def que se definio para la data del initDb
 export async function register() {
-  //await def();
+ // await def();
 }

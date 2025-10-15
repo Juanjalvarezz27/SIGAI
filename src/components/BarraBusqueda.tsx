@@ -5,19 +5,54 @@ import { Search, User } from "lucide-react"
 import axios from "axios"
 import debounce from 'lodash/debounce'
 
+interface Equipo {
+  id: number
+  bienNacional: string | null
+  serial: string | null
+  tipoEquipo: {
+    nombre: string
+  }
+  modelo: {
+    nombre: string
+    marca: {
+      nombre: string
+    }
+  }
+  status: {
+    estado: string
+  } | null
+  estado: {
+    nombre: string
+  } | null
+  especificaciones: {
+    memoriaRam: string | null
+    capacidadDisco: string | null
+    tipoDisco: string | null
+    procesador: string | null
+  } | null
+}
+
 interface Usuario {
   id: number
   nombre: string
-  apellido: string
+  apellido: string | null
   cedula: string | null
   email: string | null
+  estado: string 
   rol: {
     id: number
     rol: string
   }
   direccion: {
     direccion: string
+    piso: {
+      piso: string
+    }
   }
+  area: {
+    nombre: string
+  } | null
+  equipos: Equipo[]
 }
 
 interface BarraBusquedaProps {
@@ -32,9 +67,9 @@ function capitalizeFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-export default function BarraBusqueda({ 
-  onUsuarioSeleccionado, 
-  loading = false, 
+export default function BarraBusqueda({
+  onUsuarioSeleccionado,
+  loading = false,
   placeholder = "Escribe al menos 3 caracteres para buscar...",
   label = "Buscar Usuario"
 }: BarraBusquedaProps) {
@@ -127,13 +162,22 @@ export default function BarraBusqueda({
                 <div className="w-8 h-8 bg-[#A0C4FF] rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-[#001F3F]" />
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {usuario.nombre} {usuario.apellido}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {capitalizeFirstLetter(usuario.rol.rol)} • {usuario.direccion.direccion}
-                  </p>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {usuario.nombre} {usuario.apellido}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {capitalizeFirstLetter(usuario.rol.rol)} • {usuario.direccion.direccion}
+                      </p>
+                    </div>
+                    {usuario.estado === 'Deshabilitado' && (
+                      <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                        Deshabilitado
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
