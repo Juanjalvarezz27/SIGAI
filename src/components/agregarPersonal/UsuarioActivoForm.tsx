@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { Search, User, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { User, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
 import axios, { AxiosError } from "axios"
-import debounce from 'lodash/debounce'
+import BarraBusqueda from "../BarraBusqueda"
 
 interface Usuario {
   id: number
@@ -52,22 +52,19 @@ interface UsuarioActivoFormProps {
   onClose: () => void
 }
 
-// Función para capitalizar la primera letra
-function capitalizeFirstLetter(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
+const IconoValidacion = ({ valido }: { valido: boolean }) =>
+  valido ?
+    <CheckCircle size={16} className="text-green-500" /> :
+    <XCircle size={16} className="text-red-500" />
 
-export default function UsuarioActivoForm({ 
-  loading, 
-  onLoadingChange, 
-  onSuccess, 
-  onError, 
-  onClose 
+export default function UsuarioActivoForm({
+  loading,
+  onLoadingChange,
+  onSuccess,
+  onError,
+  onClose
 }: UsuarioActivoFormProps) {
-  const [busqueda, setBusqueda] = useState<string>('')
-  const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null)
-  const [buscando, setBuscando] = useState<boolean>(false)
   const [roles, setRoles] = useState<Rol[]>([])
   const [showPassword, setShowPassword] = useState({
     password: false,
@@ -128,43 +125,8 @@ export default function UsuarioActivoForm({
     }
   }
 
-  // Función debounced para buscar usuarios
-  const buscarUsuarios = useCallback(
-    debounce(async (query: string) => {
-      if (!query.trim() || query.length < 3) {
-        setUsuarios([])
-        setBuscando(false)
-        return
-      }
-
-      try {
-        setBuscando(true)
-        const response = await axios.get(`/api/admin/buscar-usuarios?q=${encodeURIComponent(query)}`)
-        setUsuarios(response.data.usuarios || [])
-      } catch (error: unknown) {
-        console.error('Error buscando usuarios:', error)
-        setUsuarios([])
-      } finally {
-        setBuscando(false)
-      }
-    }, 500),
-    []
-  )
-
-  // Efecto para buscar cuando cambia la búsqueda
-  useEffect(() => {
-    if (busqueda && busqueda.length >= 3) {
-      buscarUsuarios(busqueda)
-    } else {
-      setUsuarios([])
-    }
-  }, [busqueda, buscarUsuarios])
-
   const resetForm = () => {
-    setBusqueda('')
-    setUsuarios([])
     setUsuarioSeleccionado(null)
-    setBuscando(false)
     setFormData({
       cedula: '',
       email: '',
@@ -185,8 +147,6 @@ export default function UsuarioActivoForm({
       cedula: usuario.cedula || '',
       email: usuario.email || ''
     }))
-    setBusqueda('')
-    setUsuarios([])
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -261,83 +221,17 @@ export default function UsuarioActivoForm({
     formData.password === formData.confirmarPassword &&
     Object.values(validacionContraseña).every(Boolean)
 
-  const IconoValidacion = ({ valido }: { valido: boolean }) =>
-    valido ?
-      <CheckCircle size={16} className="text-green-500" /> :
-      <XCircle size={16} className="text-red-500" />
-
   return (
     <div ref={formRef} className="overflow-y-auto flex-1">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 w-11/12 mx-auto">
         {/* Buscador de usuarios */}
         {!usuarioSeleccionado && (
-          <div>
-            <label htmlFor="busqueda" className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar Usuario
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                id="busqueda"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md "
-                placeholder="Escribe al menos 3 caracteres para buscar..."
-                disabled={loading}
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            </div>
-
-            {/* Mensaje de mínimo caracteres */}
-            {busqueda && busqueda.length < 3 && (
-              <p className="mt-2 text-sm text-gray-500">
-                Escribe al menos 3 caracteres para buscar
-              </p>
-            )}
-
-            {/* Loader de búsqueda - SOLO se muestra cuando está buscando */}
-            {buscando && (
-              <div className="mt-4 flex justify-center">
-                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              </div>
-            )}
-
-            {/* Lista de resultados - SOLO se muestra cuando NO está buscando y hay resultados */}
-            {!buscando && usuarios.length > 0 && (
-              <div className="mt-2 border border-gray-200 rounded-md max-h-40 overflow-y-auto">
-                {usuarios.map(usuario => (
-                  <div
-                    key={usuario.id}
-                    onClick={() => handleSeleccionarUsuario(usuario)}
-                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#A0C4FF] rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-[#001F3F]" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {usuario.nombre} {usuario.apellido}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {capitalizeFirstLetter(usuario.rol.rol)} • {usuario.direccion.direccion}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Mensaje de no resultados - SOLO se muestra cuando NO está buscando y no hay resultados */}
-            {busqueda && busqueda.length >= 3 && !buscando && usuarios.length === 0 && (
-              <div className="mt-2 text-center text-gray-500">
-                No se encontraron usuarios
-              </div>
-            )}
-          </div>
+          <BarraBusqueda
+            onUsuarioSeleccionado={handleSeleccionarUsuario}
+            loading={loading}
+            placeholder="Escribe al menos 3 caracteres para buscar..."
+            label="Buscar Usuario"
+          />
         )}
 
         {/* Información del usuario seleccionado */}
@@ -352,7 +246,7 @@ export default function UsuarioActivoForm({
                   {usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}
                 </h3>
                 <p className="text-sm text-blue-700">
-                  Actual: {capitalizeFirstLetter(usuarioSeleccionado.rol.rol)} • {usuarioSeleccionado.direccion.direccion}
+                  Actual: {usuarioSeleccionado.rol.rol} • {usuarioSeleccionado.direccion.direccion}
                 </p>
               </div>
             </div>
@@ -372,7 +266,7 @@ export default function UsuarioActivoForm({
 
         {/* Formulario de datos */}
         {usuarioSeleccionado && (
-          <div className="space-y-4">
+          <div className="space-y-4 w-11/12 mx-auto">
             <div className="grid grid-cols-2 gap-4">
               {/* Campo Cédula */}
               <div>
@@ -540,7 +434,7 @@ export default function UsuarioActivoForm({
           <button
             type="button"
             onClick={onClose}
-            className="bg-gray-300 cursor-pointer transform transition-all duration-200 hover:scale-105 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gray-300 cursor-pointer transition-all duration-200  hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={loading}
           >
             Cancelar
@@ -548,7 +442,7 @@ export default function UsuarioActivoForm({
           <button
             type="submit"
             disabled={!isFormValid || loading}
-            className="bg-[#001F3F] cursor-pointer transform transition-all duration-200 hover:scale-105 hover:bg-[#003366] text-white px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#001F3F] cursor-pointer transition-all duration-200 hover:bg-[#003366] text-white px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Actualizando...' : 'Actualizar Rol'}
           </button>

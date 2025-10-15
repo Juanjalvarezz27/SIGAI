@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Users } from "lucide-react"
-import AddPersonalModal from "./AddPersonalModal"
+import AddPersonalModal from "./AddPersonalToggle"
 
 export default function AddPersonalButton() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
