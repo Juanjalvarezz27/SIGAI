@@ -5,6 +5,7 @@ import { Eye, EyeOff, CheckCircle, XCircle, Building, MapPin, Layers, ChevronDow
 import axios, { AxiosError } from "axios"
 import SelectModal from "./SelectModal"
 
+// Interfaces
 interface Piso {
   id: number
   piso: string
@@ -49,6 +50,7 @@ interface ValidacionContraseña {
   minuscula: boolean
   numero: boolean
   especial: boolean
+  maximo: boolean
 }
 
 interface UsuarioNuevoFormProps {
@@ -65,8 +67,6 @@ const IconoValidacion = ({ valido }: { valido: boolean }) =>
     <XCircle size={16} className="text-red-500" />
 
 export default function UsuarioNuevoForm({
-  loading,
-  onLoadingChange,
   onSuccess,
   onError,
   onCancel
@@ -83,7 +83,7 @@ export default function UsuarioNuevoForm({
     confirmarPassword: false
   })
   const [modalAbierto, setModalAbierto] = useState<'direccion' | 'area' | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -104,7 +104,8 @@ export default function UsuarioNuevoForm({
     longitud: false,
     minuscula: false,
     numero: false,
-    especial: false
+    especial: false,
+    maximo: false
   })
 
   // Función para hacer scroll al inicio del formulario
@@ -213,7 +214,8 @@ export default function UsuarioNuevoForm({
       longitud: password.length >= 8,
       minuscula: /(?=.*[a-z])/.test(password),
       numero: /(?=.*\d)/.test(password),
-      especial: /(?=.*[@$!%*?&])/.test(password)
+      especial: /(?=.*[@$!%*?&])/.test(password),
+      maximo: password.length <= 20
     })
   }, [formData.password])
 
@@ -266,9 +268,6 @@ export default function UsuarioNuevoForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Si ya fue exitoso, no hacer nada
-    if (submitSuccess) return
-
     // Validaciones básicas
     if (!formData.cedula || !formData.nombre || !formData.email || !formData.password || !formData.rolId || !formData.pisoId || !formData.direccionId) {
       onError('Todos los campos obligatorios deben ser completados')
@@ -289,9 +288,8 @@ export default function UsuarioNuevoForm({
       return
     }
 
-    onLoadingChange(true)
+    setLoading(true)
     onError('')
-    setSubmitSuccess(false)
 
     try {
       const response = await axios.post('/api/admin/crear-usuario', {
@@ -300,21 +298,26 @@ export default function UsuarioNuevoForm({
       })
 
       if (response.status === 201) {
-        setSubmitSuccess(true)
         onSuccess('Usuario creado correctamente')
         scrollToTop()
-        
-        // Cerrar el modal después de 2 segundos (dar tiempo a ver el mensaje)
+        // Cerrar automáticamente después de 2 segundos
         setTimeout(() => {
           onCancel()
         }, 2000)
       }
     } catch (error: unknown) {
       const axiosError = error as AxiosError<ApiErrorResponse>
-      onError(axiosError.response?.data?.error || 'Error al crear el usuario')
+      const errorMessage = axiosError.response?.data?.error || 'Error al crear el usuario'
+      
+      // Verificar si es error de email único
+      if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('único')) {
+        onError('El email ya está registrado en el sistema. Por favor, use un email diferente.')
+      } else {
+        onError(errorMessage)
+      }
       scrollToTop()
     } finally {
-      onLoadingChange(false)
+      setLoading(false)
     }
   }
 
@@ -327,9 +330,8 @@ export default function UsuarioNuevoForm({
     formData.pisoId &&
     formData.direccionId &&
     formData.password === formData.confirmarPassword &&
-    Object.values(validacionContraseña).every(Boolean) &&
-    !submitSuccess // No permitir enviar si ya fue exitoso
-
+    Object.values(validacionContraseña).every(Boolean)
+  
   if (cargandoDatos) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -440,10 +442,13 @@ export default function UsuarioNuevoForm({
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
-                  placeholder="Ingresa el email"
+                  placeholder="Ingresa el email (debe ser único)"
                   required
                   disabled={loading}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  El email debe ser único en el sistema
+                </p>
               </div>
             </div>
           </div>
@@ -487,7 +492,7 @@ export default function UsuarioNuevoForm({
                 <button
                   type="button"
                   onClick={() => setModalAbierto('direccion')}
-                  disabled={loading || !formData.pisoId}
+                  disabled={!formData.pisoId || loading}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed bg-white"
                 >
                   <span className="truncate">{getDireccionSeleccionada()}</span>
@@ -503,7 +508,7 @@ export default function UsuarioNuevoForm({
                 <button
                   type="button"
                   onClick={() => setModalAbierto('area')}
-                  disabled={loading || !formData.direccionId}
+                  disabled={!formData.direccionId || loading}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed bg-white"
                 >
                   <span className="truncate">{getAreaSeleccionada()}</span>
@@ -537,6 +542,7 @@ export default function UsuarioNuevoForm({
                     placeholder="Ingresa la contraseña"
                     required
                     disabled={loading}
+                    maxLength={20}
                   />
                   <button
                     type="button"
@@ -547,6 +553,9 @@ export default function UsuarioNuevoForm({
                     {showPassword.password ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.password.length}/20 caracteres
+                </p>
               </div>
 
               {/* Campo Confirmar Contraseña */}
@@ -565,6 +574,7 @@ export default function UsuarioNuevoForm({
                     placeholder="Confirma la contraseña"
                     required
                     disabled={loading}
+                    maxLength={20}
                   />
                   <button
                     type="button"
@@ -587,6 +597,12 @@ export default function UsuarioNuevoForm({
                     <IconoValidacion valido={validacionContraseña.longitud} />
                     <span className={validacionContraseña.longitud ? "text-green-600" : "text-gray-600"}>
                       Mínimo 8 caracteres
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <IconoValidacion valido={validacionContraseña.maximo} />
+                    <span className={validacionContraseña.maximo ? "text-green-600" : "text-gray-600"}>
+                      Máximo 20 caracteres
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -642,16 +658,14 @@ export default function UsuarioNuevoForm({
             {/* Botón Crear Usuario */}
             <button
               type="submit"
-              disabled={!isFormValid || loading || submitSuccess}
+              disabled={!isFormValid || loading}
               className="bg-[#001F3F] cursor-pointer transition-all duration-200 hover:bg-[#003366] hover:shadow-lg text-white px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creando Usuario...
+                  Creando...
                 </div>
-              ) : submitSuccess ? (
-                "¡Usuario Creado!"
               ) : (
                 "Crear Usuario"
               )}

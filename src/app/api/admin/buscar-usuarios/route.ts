@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q') || ''
+    const buscarPorCedula = searchParams.get('buscarPorCedula') === 'true'
 
     if (!query.trim() || query.length < 3) {
       return NextResponse.json({ usuarios: [] })
@@ -25,6 +26,211 @@ export async function GET(request: NextRequest) {
       palabra.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     )
 
+    // Si se busca por cédula, agregar condición de cédula
+    if (buscarPorCedula) {
+      // Para búsqueda por cédula, buscar directamente por cédula sin dividir palabras
+      const condicionesCedula: Prisma.UsuarioWhereInput[] = [
+        {
+          cedula: {
+            contains: query,
+            mode: 'insensitive'
+          }
+        }
+      ]
+
+      // También mantener la búsqueda original por nombre/apellido
+      let condicionesNombreApellido: Prisma.UsuarioWhereInput[] = []
+
+      // Si solo hay una palabra, buscar en nombre o apellido
+      if (palabras.length === 1) {
+        const palabra = palabras[0]
+        const palabraNormalizada = palabrasNormalizadas[0]
+
+        condicionesNombreApellido = [
+          {
+            OR: [
+              {
+                nombre: {
+                  startsWith: palabra,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                apellido: {
+                  startsWith: palabra,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                nombre: {
+                  startsWith: palabraNormalizada,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                apellido: {
+                  startsWith: palabraNormalizada,
+                  mode: 'insensitive'
+                }
+              }
+            ]
+          }
+        ]
+      } else {
+        // Para múltiples palabras, usar la lógica original
+        condicionesNombreApellido = []
+
+        // Combinación 1: primera palabra en nombre, segunda en apellido
+        condicionesNombreApellido.push({
+          AND: [
+            {
+              OR: [
+                { nombre: { startsWith: palabras[0], mode: 'insensitive' } },
+                { nombre: { startsWith: palabrasNormalizadas[0], mode: 'insensitive' } }
+              ]
+            },
+            {
+              OR: [
+                { apellido: { startsWith: palabras[1], mode: 'insensitive' } },
+                { apellido: { startsWith: palabrasNormalizadas[1], mode: 'insensitive' } }
+              ]
+            }
+          ]
+        })
+
+        // Combinación 2: primera palabra en apellido, segunda en nombre
+        condicionesNombreApellido.push({
+          AND: [
+            {
+              OR: [
+                { apellido: { startsWith: palabras[0], mode: 'insensitive' } },
+                { apellido: { startsWith: palabrasNormalizadas[0], mode: 'insensitive' } }
+              ]
+            },
+            {
+              OR: [
+                { nombre: { startsWith: palabras[1], mode: 'insensitive' } },
+                { nombre: { startsWith: palabrasNormalizadas[1], mode: 'insensitive' } }
+              ]
+            }
+          ]
+        })
+
+        // Para 3 o más palabras, buscar cada palabra individualmente
+        if (palabras.length >= 3) {
+          const condicionesMultiplesPalabras: Prisma.UsuarioWhereInput[] = []
+
+          // Agregar condiciones para cada palabra
+          palabras.forEach((palabra, index) => {
+            const palabraNormalizada = palabrasNormalizadas[index]
+            condicionesMultiplesPalabras.push({
+              OR: [
+                { nombre: { startsWith: palabra, mode: 'insensitive' } },
+                { apellido: { startsWith: palabra, mode: 'insensitive' } },
+                { nombre: { startsWith: palabraNormalizada, mode: 'insensitive' } },
+                { apellido: { startsWith: palabraNormalizada, mode: 'insensitive' } }
+              ]
+            })
+          })
+
+          condicionesNombreApellido.push({
+            AND: condicionesMultiplesPalabras
+          })
+        }
+      }
+
+      const usuarios = await prismadb.usuario.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                ...condicionesCedula,
+                ...condicionesNombreApellido
+              ]
+            },
+            { rolId: { not: 1 } }
+          ]
+        },
+        select: {
+          id: true,
+          nombre: true,
+          apellido: true,
+          cedula: true,
+          email: true,
+          estado: true,
+          rol: {
+            select: {
+              id: true,
+              rol: true
+            }
+          },
+          direccion: {
+            select: {
+              direccion: true,
+              piso: {
+                select: {
+                  piso: true
+                }
+              }
+            }
+          },
+          area: {
+            select: {
+              nombre: true
+            }
+          },
+          equipos: {
+            select: {
+              id: true,
+              bienNacional: true,
+              serial: true,
+              tipoEquipo: {
+                select: {
+                  nombre: true
+                }
+              },
+              modelo: {
+                select: {
+                  nombre: true,
+                  marca: {
+                    select: {
+                      nombre: true
+                    }
+                  }
+                }
+              },
+              status: {
+                select: {
+                  estado: true
+                }
+              },
+              estado: {
+                select: {
+                  nombre: true
+                }
+              },
+              especificaciones: {
+                select: {
+                  memoriaRam: true,
+                  capacidadDisco: true,
+                  tipoDisco: true,
+                  procesador: true
+                }
+              }
+            }
+          }
+        },
+        take: 25,
+        orderBy: [
+          { nombre: 'asc' },
+          { apellido: 'asc' }
+        ]
+      })
+
+      return NextResponse.json({ usuarios })
+    }
+
+    // Comportamiento original cuando NO se busca por cédula
     // Si solo hay una palabra, buscar en nombre o apellido
     if (palabras.length === 1) {
       const palabra = palabras[0]
@@ -215,7 +421,7 @@ export async function GET(request: NextRequest) {
         apellido: true,
         cedula: true,
         email: true,
-        estado: true, // Este ya estaba incluido
+        estado: true,
         rol: {
           select: {
             id: true,

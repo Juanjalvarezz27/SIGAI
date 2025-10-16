@@ -4,21 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { User, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
 import axios, { AxiosError } from "axios"
 import BarraBusqueda from "../BarraBusqueda"
-
-interface Usuario {
-  id: number
-  nombre: string
-  apellido: string
-  cedula: string | null
-  email: string | null
-  rol: {
-    id: number
-    rol: string
-  }
-  direccion: {
-    direccion: string
-  }
-}
+import { Usuario } from '../../../types/index'
 
 interface Rol {
   id: number
@@ -42,6 +28,7 @@ interface ValidacionContraseña {
   minuscula: boolean
   numero: boolean
   especial: boolean
+  maximo: boolean
 }
 
 interface UsuarioActivoFormProps {
@@ -83,7 +70,8 @@ export default function UsuarioActivoForm({
     longitud: false,
     minuscula: false,
     numero: false,
-    especial: false
+    especial: false,
+    maximo: false
   })
 
   const formRef = useRef<HTMLDivElement>(null)
@@ -114,7 +102,8 @@ export default function UsuarioActivoForm({
       longitud: password.length >= 8,
       minuscula: /(?=.*[a-z])/.test(password),
       numero: /(?=.*\d)/.test(password),
-      especial: /(?=.*[@$!%*?&])/.test(password)
+      especial: /(?=.*[@$!%*?&])/.test(password),
+      maximo: password.length <= 20
     })
   }, [formData.password])
 
@@ -151,6 +140,17 @@ export default function UsuarioActivoForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    
+    // Si el usuario ya tiene cédula, no permitir cambiar el campo cédula
+    if (name === 'cedula' && usuarioSeleccionado?.cedula) {
+      return
+    }
+    
+    // Si el usuario ya tiene email, no permitir cambiar el campo email
+    if (name === 'email' && usuarioSeleccionado?.email) {
+      return
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: name === 'rolId' ? parseInt(value) : value
@@ -190,10 +190,16 @@ export default function UsuarioActivoForm({
     onError('')
 
     try {
-      const response = await axios.put('/api/admin/actualizar-personal', {
+      // CORRECCIÓN: Mantener cédula y email actuales si ya existen
+      const datosActualizacion = {
         usuarioId: usuarioSeleccionado.id,
-        ...formData
-      })
+        cedula: usuarioSeleccionado.cedula ? usuarioSeleccionado.cedula : (formData.cedula || null),
+        email: usuarioSeleccionado.email ? usuarioSeleccionado.email : (formData.email || null),
+        password: formData.password,
+        rolId: formData.rolId
+      }
+
+      const response = await axios.put('/api/admin/actualizar-personal', datosActualizacion)
 
       if (response.status === 200) {
         const rolSeleccionado = roles.find(r => r.id === formData.rolId)
@@ -213,8 +219,6 @@ export default function UsuarioActivoForm({
   }
 
   const isFormValid = usuarioSeleccionado &&
-    formData.cedula &&
-    formData.email &&
     formData.password &&
     formData.confirmarPassword &&
     formData.rolId &&
@@ -267,29 +271,81 @@ export default function UsuarioActivoForm({
         {/* Formulario de datos */}
         {usuarioSeleccionado && (
           <div className="space-y-4 w-11/12 mx-auto">
+            {/* Sección de datos actuales */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Datos Actuales del Usuario
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Campo Cédula Actual */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cédula Actual
+                  </label>
+                  <div className="p-2 bg-gray-100 rounded-md border border-gray-300">
+                    <p className="text-gray-700">
+                      {usuarioSeleccionado.cedula || 'No tiene cédula registrada'}
+                    </p>
+                    {usuarioSeleccionado.cedula && (
+                      <p className="text-xs text-orange-600 mt-1">
+                        La cédula no se puede modificar
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Campo Email Actual */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Actual
+                  </label>
+                  <div className="p-2 bg-gray-100 rounded-md border border-gray-300">
+                    <p className="text-gray-700">
+                      {usuarioSeleccionado.email || 'No tiene email registrado'}
+                    </p>
+                    {usuarioSeleccionado.email && (
+                      <p className="text-xs text-orange-600 mt-1">
+                        El email no se puede modificar
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               {/* Campo Cédula */}
               <div>
                 <label htmlFor="cedula" className="block text-sm font-medium text-gray-700 mb-2">
-                  Cédula *
+                  {usuarioSeleccionado.cedula ? 'Cédula (No editable)' : 'Cédula *'}
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   id="cedula"
                   name="cedula"
                   value={formData.cedula}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
-                  placeholder="Ingresa la cédula"
-                  required
-                  disabled={loading}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent ${
+                    usuarioSeleccionado.cedula 
+                      ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300'
+                  }`}
+                  placeholder={
+                    usuarioSeleccionado.cedula 
+                      ? "La cédula no se puede modificar" 
+                      : "Ingresa la cédula"
+                  }
+                  required={!usuarioSeleccionado.cedula}
+                  disabled={loading || !!usuarioSeleccionado.cedula}
+                  readOnly={!!usuarioSeleccionado.cedula}
                 />
               </div>
 
               {/* Campo Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
+                  {usuarioSeleccionado.email ? 'Email (No editable)' : 'Email *'}
                 </label>
                 <input
                   type="email"
@@ -297,10 +353,19 @@ export default function UsuarioActivoForm({
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
-                  placeholder="Ingresa el email"
-                  required
-                  disabled={loading}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent ${
+                    usuarioSeleccionado.email 
+                      ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' 
+                      : 'border-gray-300'
+                  }`}
+                  placeholder={
+                    usuarioSeleccionado.email 
+                      ? "El email no se puede modificar" 
+                      : "Ingresa el email"
+                  }
+                  required={!usuarioSeleccionado.email}
+                  disabled={loading || !!usuarioSeleccionado.email}
+                  readOnly={!!usuarioSeleccionado.email}
                 />
               </div>
             </div>
@@ -345,6 +410,7 @@ export default function UsuarioActivoForm({
                     placeholder="Ingresa la contraseña"
                     required
                     disabled={loading}
+                    maxLength={20}
                   />
                   <button
                     type="button"
@@ -355,6 +421,9 @@ export default function UsuarioActivoForm({
                     {showPassword.password ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.password.length}/20 caracteres
+                </p>
               </div>
 
               {/* Campo Confirmar Contraseña */}
@@ -373,6 +442,7 @@ export default function UsuarioActivoForm({
                     placeholder="Confirma la contraseña"
                     required
                     disabled={loading}
+                    maxLength={20}
                   />
                   <button
                     type="button"
@@ -395,6 +465,12 @@ export default function UsuarioActivoForm({
                     <IconoValidacion valido={validacionContraseña.longitud} />
                     <span className={validacionContraseña.longitud ? "text-green-600" : "text-gray-600"}>
                       Mínimo 8 caracteres
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <IconoValidacion valido={validacionContraseña.maximo} />
+                    <span className={validacionContraseña.maximo ? "text-green-600" : "text-gray-600"}>
+                      Máximo 20 caracteres
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

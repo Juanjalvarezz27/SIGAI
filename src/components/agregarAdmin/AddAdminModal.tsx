@@ -4,25 +4,11 @@ import { useState, useEffect, useRef } from "react"
 import { X, UserPlus, User, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
 import axios, { AxiosError } from "axios"
 import BarraBusqueda from "../BarraBusqueda"
+import { Usuario } from '../../../types/index'
 
 interface AddAdminModalProps {
   isOpen: boolean
   onClose: () => void
-}
-
-interface Usuario {
-  id: number
-  nombre: string
-  apellido: string
-  cedula: string | null
-  email: string | null
-  rol: {
-    id: number
-    rol: string
-  }
-  direccion: {
-    direccion: string
-  }
 }
 
 interface FormData {
@@ -41,6 +27,7 @@ interface ValidacionContraseña {
   minuscula: boolean
   numero: boolean
   especial: boolean
+  maximo: boolean
 }
 
 // Función para capitalizar la primera letra
@@ -69,7 +56,8 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
     longitud: false,
     minuscula: false,
     numero: false,
-    especial: false
+    especial: false,
+    maximo: false
   })
 
   const modalContentRef = useRef<HTMLDivElement>(null)
@@ -82,7 +70,8 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
       longitud: password.length >= 8,
       minuscula: /(?=.*[a-z])/.test(password),
       numero: /(?=.*\d)/.test(password),
-      especial: /(?=.*[@$!%*?&])/.test(password)
+      especial: /(?=.*[@$!%*?&])/.test(password),
+      maximo: password.length <= 20
     })
   }, [formData.password])
 
@@ -283,6 +272,7 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                   type="button"
                   onClick={() => setUsuarioSeleccionado(null)}
                   className="text-sm text-blue-600 hover:text-blue-800"
+                  disabled={loading}
                 >
                   Cambiar usuario
                 </button>
@@ -299,7 +289,7 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                       Cédula *
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       id="cedula"
                       name="cedula"
                       value={formData.cedula}
@@ -347,6 +337,7 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                         placeholder="Ingresa la contraseña"
                         required
                         disabled={loading}
+                        maxLength={20}
                       />
                       <button
                         type="button"
@@ -357,6 +348,9 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                         {showPassword.password ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.password.length}/20 caracteres
+                    </p>
                   </div>
 
                   {/* Campo Confirmar Contraseña */}
@@ -375,6 +369,7 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                         placeholder="Confirma la contraseña"
                         required
                         disabled={loading}
+                        maxLength={20}
                       />
                       <button
                         type="button"
@@ -397,6 +392,12 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                         <IconoValidacion valido={validacionContraseña.longitud} />
                         <span className={validacionContraseña.longitud ? "text-green-600" : "text-gray-600"}>
                           Mínimo 8 caracteres
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <IconoValidacion valido={validacionContraseña.maximo} />
+                        <span className={validacionContraseña.maximo ? "text-green-600" : "text-gray-600"}>
+                          Máximo 20 caracteres
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -446,7 +447,14 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
                 disabled={!isFormValid || loading}
                 className="bg-[#001F3F] cursor-pointer transform transition-all duration-200 hover:scale-105 hover:bg-[#003366] text-white px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Actualizando...' : 'Actualizar a Admin'}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Actualizando...
+                  </div>
+                ) : (
+                  'Actualizar a Admin'
+                )}
               </button>
             </div>
           </form>

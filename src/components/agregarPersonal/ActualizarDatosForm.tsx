@@ -4,21 +4,7 @@ import { useState, useRef } from "react"
 import { User } from "lucide-react"
 import axios, { AxiosError } from "axios"
 import BarraBusqueda from "../BarraBusqueda"
-
-interface Usuario {
-  id: number
-  nombre: string
-  apellido: string
-  cedula: string | null
-  email: string | null
-  rol: {
-    id: number
-    rol: string
-  }
-  direccion: {
-    direccion: string
-  }
-}
+import { Usuario } from '../../../types/index'
 
 interface FormData {
   cedula: string
@@ -77,12 +63,12 @@ export default function ActualizarDatosForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    
+
     // Si el usuario ya tiene cédula, no permitir cambiar el campo cédula
     if (name === 'cedula' && usuarioSeleccionado?.cedula) {
       return
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -133,11 +119,15 @@ export default function ActualizarDatosForm({
     onError('')
 
     try {
-      const response = await axios.put('/api/admin/actualizar-datos', {
+      // CORRECCIÓN: Si el usuario ya tiene cédula, mantener la cédula actual
+      // Si no tiene cédula, usar la nueva cédula del formulario
+      const datosActualizacion = {
         usuarioId: usuarioSeleccionado.id,
-        cedula: usuarioSeleccionado.cedula ? null : (formData.cedula || null), // Solo enviar cédula si no tenía
+        cedula: usuarioSeleccionado.cedula ? usuarioSeleccionado.cedula : (formData.cedula || null),
         email: formData.email || null
-      })
+      }
+
+      const response = await axios.put('/api/admin/actualizar-datos', datosActualizacion)
 
       if (response.status === 200) {
         onSuccess('Datos del usuario actualizados correctamente')
@@ -156,8 +146,8 @@ export default function ActualizarDatosForm({
   }
 
   // Determinar si el formulario es válido
-  const isFormValid = usuarioSeleccionado && 
-    (usuarioSeleccionado.cedula 
+  const isFormValid = usuarioSeleccionado &&
+    (usuarioSeleccionado.cedula
       ? formData.email && /\S+@\S+\.\S+/.test(formData.email) // Si tiene cédula, solo validar email
       : (formData.cedula || formData.email) && (formData.email ? /\S+@\S+\.\S+/.test(formData.email) : true) // Si no tiene cédula, validar como antes
     )
@@ -257,7 +247,7 @@ export default function ActualizarDatosForm({
                     Nueva Cédula
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     id="cedula"
                     name="cedula"
                     value={formData.cedula}

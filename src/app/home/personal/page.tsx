@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import Navbar from "@/components/Navbar"
 import Title from "@/components/Title"
-import BarraBusqueda from "@/components/BarraBusqueda"
 import FiltroRoles from "@/components/FiltroRoles"
-import { ChevronLeft, ChevronRight, User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive } from "lucide-react"
+import { ChevronLeft, ChevronRight, User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Search } from "lucide-react"
 import axios from "axios"
+import debounce from 'lodash/debounce'
 
 interface Equipo {
   id: number
@@ -65,6 +65,171 @@ interface PaginationInfo {
   hasNextPage: boolean
   hasPrevPage: boolean
   limit: number
+}
+
+interface BarraBusquedaProps {
+  onUsuarioSeleccionado: (usuario: Usuario) => void
+  loading?: boolean
+  placeholder?: string
+  label?: string
+}
+
+  // Función helper para los equipos duplicados
+const eliminarEquiposDuplicados = (equipos: Equipo[]): Equipo[] => {
+  const crearClaveUnica = (equipo: Equipo) => {
+    return `${equipo.modelo.nombre}-${equipo.modelo.marca.nombre}-${equipo.bienNacional || 'sin-bien'}-${equipo.serial || 'sin-serial'}`;
+  };
+
+  const equiposUnicos = new Map();
+  
+  equipos.forEach(equipo => {
+    const clave = crearClaveUnica(equipo);
+    if (!equiposUnicos.has(clave)) {
+      equiposUnicos.set(clave, equipo);
+    }
+  });
+
+  return Array.from(equiposUnicos.values());
+};
+
+
+// Función para capitalizar la primera letra
+function capitalizeFirstLetter(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+// Componente BarraBusquedaPersonalizado - Solo para esta página
+function BarraBusquedaPersonalizado({
+  onUsuarioSeleccionado,
+  loading = false,
+  placeholder = "Escribe al menos 3 caracteres para buscar por nombre o cédula...",
+  label = "Buscar Usuario"
+}: BarraBusquedaProps) {
+  const [busqueda, setBusqueda] = useState<string>('')
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [buscando, setBuscando] = useState<boolean>(false)
+
+  // Función debounced para buscar usuarios
+  const buscarUsuarios = useMemo(
+    () => debounce(async (query: string) => {
+      if (!query.trim() || query.length < 3) {
+        setUsuarios([])
+        setBuscando(false)
+        return
+      }
+
+      try {
+        setBuscando(true)
+        const response = await axios.get(`/api/admin/buscar-usuarios?q=${encodeURIComponent(query)}&buscarPorCedula=true`)
+        setUsuarios(response.data.usuarios || [])
+      } catch (error: unknown) {
+        console.error('Error buscando usuarios:', error)
+        setUsuarios([])
+      } finally {
+        setBuscando(false)
+      }
+    }, 500),
+    []
+  )
+
+  // Efecto para buscar cuando cambia la búsqueda
+  useEffect(() => {
+    if (busqueda && busqueda.length >= 3) {
+      buscarUsuarios(busqueda)
+    } else {
+      setUsuarios([])
+    }
+  }, [busqueda, buscarUsuarios])
+
+  const handleSeleccionarUsuario = (usuario: Usuario) => {
+    onUsuarioSeleccionado(usuario)
+    setBusqueda('')
+    setUsuarios([])
+  }
+
+  return (
+    <div>
+      <label htmlFor="busqueda" className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          id="busqueda"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
+          placeholder={placeholder}
+          disabled={loading}
+        />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+      </div>
+
+      {/* Mensaje de mínimo caracteres */}
+      {busqueda && busqueda.length < 3 && (
+        <p className="mt-2 text-sm text-gray-500">
+          Escribe al menos 3 caracteres para buscar
+        </p>
+      )}
+
+      {/* Loader de búsqueda - SOLO se muestra cuando está buscando */}
+      {buscando && (
+        <div className="mt-4 flex justify-center">
+          <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de resultados - SOLO se muestra cuando NO está buscando y hay resultados */}
+      {!buscando && usuarios.length > 0 && (
+        <div className="mt-2 border border-gray-200 rounded-md max-h-40 overflow-y-auto">
+          {usuarios.map(usuario => (
+            <div
+              key={usuario.id}
+              onClick={() => handleSeleccionarUsuario(usuario)}
+              className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-[#A0C4FF] rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-[#001F3F]" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {usuario.nombre} {usuario.apellido}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {capitalizeFirstLetter(usuario.rol.rol)} • {usuario.direccion.direccion}
+                      </p>
+                      {usuario.cedula && (
+                        <p className="text-xs text-gray-400">
+                          Cédula: {usuario.cedula}
+                        </p>
+                      )}
+                    </div>
+                    {usuario.estado === 'Deshabilitado' && (
+                      <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                        Deshabilitado
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Mensaje de no resultados - SOLO se muestra cuando NO está buscando y no hay resultados */}
+      {busqueda && busqueda.length >= 3 && !buscando && usuarios.length === 0 && (
+        <div className="mt-2 text-center text-gray-500">
+          No se encontraron usuarios
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function Personal() {
@@ -160,7 +325,7 @@ export default function Personal() {
       if (response.status === 200) {
         // Recargar los datos
         await cargarUsuarios(currentPage, rolFiltro)
-        
+
         // Si estamos en vista detalle, actualizar el usuario seleccionado
         if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioId) {
           setUsuarioSeleccionado({
@@ -168,7 +333,7 @@ export default function Personal() {
             estado: nuevoEstado
           })
         }
-        
+
         setError('')
       }
     } catch (error: unknown) {
@@ -177,11 +342,6 @@ export default function Personal() {
     } finally {
       setLoading(false)
     }
-  }
-
-  // Función para formatear texto (capitalizar primera letra)
-  const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
   }
 
   // Función para generar números de página a mostrar
@@ -226,12 +386,12 @@ export default function Personal() {
           loading={loading}
         />
 
-        {/* Barra de búsqueda */}
+        {/* Barra de búsqueda personalizada */}
         <div className="mb-6">
-          <BarraBusqueda
+          <BarraBusquedaPersonalizado
             onUsuarioSeleccionado={handleSeleccionarUsuario}
             loading={loading}
-            placeholder={`Buscar ${getNombreFiltro(rolFiltro).toLowerCase()} por nombre...`}
+            placeholder={`Buscar ${getNombreFiltro(rolFiltro).toLowerCase()} por nombre o cédula...`}
             label={`Buscar ${getNombreFiltro(rolFiltro)}`}
           />
         </div>
@@ -254,6 +414,7 @@ export default function Personal() {
         {/* Vista de detalle del usuario */}
         {modo === 'detalle' && usuarioSeleccionado && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            {/* ... (el resto del código de vista detalle se mantiene igual) */}
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
@@ -272,14 +433,14 @@ export default function Personal() {
                 {/* Botón de deshabilitar/habilitar - MOSTRAR SIEMPRE */}
                 <button
                   onClick={() => toggleUsuarioEstado(
-                    usuarioSeleccionado.id, 
+                    usuarioSeleccionado.id,
                     usuarioSeleccionado.estado === 'Activo' ? 'Deshabilitado' : 'Activo'
                   )}
                   disabled={loading}
                   className={`px-4 py-2 rounded-md font-medium transform transition-all duration-200 hover:scale-105 cursor-pointer ${
                     usuarioSeleccionado.estado === 'Activo'
-                      ? 'bg-red-600 hover:bg-red-700 text-white'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {usuarioSeleccionado.estado === 'Activo' ? 'Deshabilitar' : 'Habilitar'}
@@ -360,7 +521,7 @@ export default function Personal() {
               <h3 className="text-lg font-semibold mb-4">Equipos Asignados</h3>
               {usuarioSeleccionado.equipos.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {usuarioSeleccionado.equipos.map((equipo) => (
+                  {eliminarEquiposDuplicados(usuarioSeleccionado.equipos).map((equipo) => (
                     <div key={equipo.id} className="bg-white border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Monitor size={24} className="text-[#F29F6D]" />
@@ -455,8 +616,8 @@ export default function Personal() {
                             disabled={loading}
                             className={`px-3 py-1 text-sm rounded-md transform transition-all duration-200 hover:scale-105 ${
                               currentPage === pageNum
-                                ? 'bg-blue-500 text-white cursor-pointer'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 cursor-pointer'
+                              ? 'bg-blue-500 text-white cursor-pointer'
+                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 cursor-pointer'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {pageNum}
@@ -573,7 +734,7 @@ export default function Personal() {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No hay usuarios</h3>
                 <p className="text-gray-500">
-                  {rolFiltro === 'deshabilitados' 
+                  {rolFiltro === 'deshabilitados'
                     ? 'No se encontraron usuarios deshabilitados en el sistema.'
                     : `No se encontraron usuarios ${rolFiltro !== 'todos' ? `con rol ${getNombreFiltro(rolFiltro).toLowerCase()}` : ''} en el sistema.`
                   }
