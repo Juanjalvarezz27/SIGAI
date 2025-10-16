@@ -189,7 +189,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
           <button
             onClick={handleAbrirModalPisos}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center transition-all duration-200 hover:scale-105 cursor-pointer gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Building size={16} />
             <span>Filtrar por Piso(s)</span>
@@ -198,7 +198,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
           <button
             onClick={handleAbrirModalDirecciones}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex cursor-pointer transition-all duration-200 hover:scale-105 items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MapPin size={16} />
             <span>Filtrar por Dirección</span>
