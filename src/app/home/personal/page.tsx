@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar"
 import Title from "@/components/Title"
 import FiltroRoles from "@/components/FiltroRoles"
 import FiltroUbicacion from "@/components/FiltroUbicacion"
+import ModalDeshabilitacion from "@/components/agregarPersonal/ModalDeshabilitacion"
 import { ChevronLeft, ChevronRight, User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Search } from "lucide-react"
 import axios from "axios"
 import debounce from 'lodash/debounce'
@@ -73,6 +74,15 @@ interface BarraBusquedaProps {
   loading?: boolean
   placeholder?: string
   label?: string
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      error?: string
+    }
+  }
+  message?: string
 }
 
 // Tipos para los filtros de ubicación
@@ -249,6 +259,11 @@ export default function Personal() {
   const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
   const [rolFiltro, setRolFiltro] = useState<string>('todos')
   const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null)
+  
+  // Estados para el modal
+  const [modalAbierto, setModalAbierto] = useState<boolean>(false)
+  const [usuarioADeshabilitar, setUsuarioADeshabilitar] = useState<Usuario | null>(null)
+  const [deshabilitando, setDeshabilitando] = useState<boolean>(false)
 
   // Función para obtener el nombre del filtro actual
   const getNombreFiltro = (filtro: string) => {
@@ -354,13 +369,42 @@ export default function Personal() {
     }
   }
 
-  // Función para deshabilitar/habilitar usuario
-  const toggleUsuarioEstado = async (usuarioId: number, nuevoEstado: 'Activo' | 'Deshabilitado') => {
+  // Función para abrir el modal de deshabilitación
+  const abrirModalDeshabilitacion = (usuario: Usuario) => {
+    setUsuarioADeshabilitar(usuario)
+    setModalAbierto(true)
+  }
+
+  // Función para cerrar el modal
+  const cerrarModal = () => {
+    if (!deshabilitando) {
+      setModalAbierto(false)
+      setUsuarioADeshabilitar(null)
+    }
+  }
+
+  // Función para manejar errores de API
+  const manejarErrorAPI = (error: unknown): string => {
+    const apiError = error as ApiError
+    if (apiError.response?.data?.error) {
+      return apiError.response.data.error
+    }
+    if (apiError.message) {
+      return apiError.message
+    }
+    return 'Error desconocido al procesar la solicitud'
+  }
+
+  // Función para confirmar la deshabilitación
+  const confirmarDeshabilitacion = async (motivo: string) => {
+    if (!usuarioADeshabilitar) return
+
     try {
-      setLoading(true)
+      setDeshabilitando(true)
       const response = await axios.patch('/api/usuario/estado', {
-        usuarioId,
-        estado: nuevoEstado
+        usuarioId: usuarioADeshabilitar.id,
+        estado: 'Deshabilitado',
+        motivo: motivo
       })
 
       if (response.status === 200) {
@@ -368,18 +412,48 @@ export default function Personal() {
         await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
 
         // Si estamos en vista detalle, actualizar el usuario seleccionado
+        if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioADeshabilitar.id) {
+          setUsuarioSeleccionado({
+            ...usuarioSeleccionado,
+            estado: 'Deshabilitado'
+          })
+        }
+
+        setError('')
+        cerrarModal()
+      }
+    } catch (error: unknown) {
+      console.error('Error deshabilitando usuario:', error)
+      setError(manejarErrorAPI(error))
+    } finally {
+      setDeshabilitando(false)
+    }
+  }
+
+  // Función para habilitar usuario (sin modal)
+  const habilitarUsuario = async (usuarioId: number) => {
+    try {
+      setLoading(true)
+      const response = await axios.patch('/api/usuario/estado', {
+        usuarioId,
+        estado: 'Activo'
+      })
+
+      if (response.status === 200) {
+        await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
+
         if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioId) {
           setUsuarioSeleccionado({
             ...usuarioSeleccionado,
-            estado: nuevoEstado
+            estado: 'Activo'
           })
         }
 
         setError('')
       }
     } catch (error: unknown) {
-      console.error('Error cambiando estado del usuario:', error)
-      setError('Error al cambiar el estado del usuario')
+      console.error('Error habilitando usuario:', error)
+      setError(manejarErrorAPI(error))
     } finally {
       setLoading(false)
     }
@@ -474,11 +548,14 @@ export default function Personal() {
               <div className="flex gap-2">
                 {/* Botón de deshabilitar/habilitar - MOSTRAR SIEMPRE */}
                 <button
-                  onClick={() => toggleUsuarioEstado(
-                    usuarioSeleccionado.id,
-                    usuarioSeleccionado.estado === 'Activo' ? 'Deshabilitado' : 'Activo'
-                  )}
-                  disabled={loading}
+                  onClick={() => {
+                    if (usuarioSeleccionado.estado === 'Activo') {
+                      abrirModalDeshabilitacion(usuarioSeleccionado)
+                    } else {
+                      habilitarUsuario(usuarioSeleccionado.id)
+                    }
+                  }}
+                  disabled={loading || deshabilitando}
                   className={`px-4 py-2 rounded-md font-medium transform transition-all duration-200 hover:scale-105 cursor-pointer ${
                     usuarioSeleccionado.estado === 'Activo'
                       ? 'bg-red-600 hover:bg-red-700 text-white'
@@ -825,6 +902,15 @@ export default function Personal() {
           </>
         )}
       </div>
+
+      {/* Modal de deshabilitación */}
+      <ModalDeshabilitacion
+        isOpen={modalAbierto}
+        onClose={cerrarModal}
+        onConfirm={confirmarDeshabilitacion}
+        usuarioNombre={usuarioADeshabilitar ? `${usuarioADeshabilitar.nombre} ${usuarioADeshabilitar.apellido}` : ''}
+        loading={deshabilitando}
+      />
     </>
   )
 }

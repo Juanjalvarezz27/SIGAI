@@ -49,8 +49,23 @@ model Usuario {
   area        Area?      @relation(fields: [areaId], references: [id])
   direccion   Direcciones @relation(fields: [direccionId], references: [id])
   rol         Rol         @relation(fields: [rolId], references: [id])
+  
+  deshabilitacionesRealizadas DeshabilitacionHistorial[] @relation("DeshabilitacionesRealizadas")
+  deshabilitacionesRecibidas DeshabilitacionHistorial[] @relation("DeshabilitacionesRecibidas")
 
   @@map("usuarios")
+}
+
+model DeshabilitacionHistorial {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  motivo String
+  fechaDeshabilitacion DateTime @default(now())
+  deshabilitadoPorId Int
+  usuario Usuario @relation("DeshabilitacionesRecibidas", fields: [usuarioId], references: [id])
+  deshabilitadoPor Usuario @relation("DeshabilitacionesRealizadas", fields: [deshabilitadoPorId], references: [id])
+  
+  @@map("deshabilitacion_historial")
 }
 model Rol {
   id       Int       @id @default(autoincrement())
