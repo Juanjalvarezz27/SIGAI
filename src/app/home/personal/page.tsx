@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import Navbar from "@/components/Navbar"
 import Title from "@/components/Title"
 import FiltroRoles from "@/components/FiltroRoles"
+import FiltroUbicacion from "@/components/FiltroUbicacion"
 import { ChevronLeft, ChevronRight, User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Search } from "lucide-react"
 import axios from "axios"
 import debounce from 'lodash/debounce'
@@ -74,28 +75,34 @@ interface BarraBusquedaProps {
   label?: string
 }
 
-  // Función helper para los equipos duplicados
+// Tipos para los filtros de ubicación
+type FiltroUbicacionTipo =
+  | { tipo: 'piso'; valor: number }
+  | { tipo: 'direccion'; valor: number }
+  | { tipo: 'multi-piso'; valores: number[] }
+  | null
+
+// Función helper para los equipos duplicados
 const eliminarEquiposDuplicados = (equipos: Equipo[]): Equipo[] => {
   const crearClaveUnica = (equipo: Equipo) => {
-    return `${equipo.modelo.nombre}-${equipo.modelo.marca.nombre}-${equipo.bienNacional || 'sin-bien'}-${equipo.serial || 'sin-serial'}`;
-  };
+    return `${equipo.modelo.nombre}-${equipo.modelo.marca.nombre}-${equipo.bienNacional || 'sin-bien'}-${equipo.serial || 'sin-serial'}`
+  }
 
-  const equiposUnicos = new Map();
-  
+  const equiposUnicos = new Map()
+
   equipos.forEach(equipo => {
-    const clave = crearClaveUnica(equipo);
+    const clave = crearClaveUnica(equipo)
     if (!equiposUnicos.has(clave)) {
-      equiposUnicos.set(clave, equipo);
+      equiposUnicos.set(clave, equipo)
     }
-  });
+  })
 
-  return Array.from(equiposUnicos.values());
-};
-
+  return Array.from(equiposUnicos.values())
+}
 
 // Función para capitalizar la primera letra
 function capitalizeFirstLetter(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 }
 
 // Componente BarraBusquedaPersonalizado - Solo para esta página
@@ -241,6 +248,7 @@ export default function Personal() {
   const [error, setError] = useState<string>('')
   const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
   const [rolFiltro, setRolFiltro] = useState<string>('todos')
+  const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null)
 
   // Función para obtener el nombre del filtro actual
   const getNombreFiltro = (filtro: string) => {
@@ -255,13 +263,34 @@ export default function Personal() {
     }
   }
 
-  // Función para cargar usuarios
-  const cargarUsuarios = useCallback(async (page: number, rol: string) => {
+  // Función para cargar usuarios (actualizada para manejar múltiples pisos)
+  const cargarUsuarios = useCallback(async (page: number, rol: string, ubicacionFiltro: FiltroUbicacionTipo) => {
     try {
       setLoading(true)
       setError('')
 
-      const response = await axios.get(`/api/usuario/obtenerUsuarios?page=${page}&limit=50&rolId=${rol}`)
+      // Construir query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50',
+        rolId: rol
+      })
+
+      // Agregar filtros de ubicación si existen
+      if (ubicacionFiltro) {
+        if (ubicacionFiltro.tipo === 'piso') {
+          params.append('pisoId', ubicacionFiltro.valor.toString())
+        } else if (ubicacionFiltro.tipo === 'multi-piso' && ubicacionFiltro.valores.length > 0) {
+          // Para múltiples pisos, enviar como parámetros separados
+          ubicacionFiltro.valores.forEach((pisoId: number) => {
+            params.append('pisoIds', pisoId.toString())
+          })
+        } else if (ubicacionFiltro.tipo === 'direccion') {
+          params.append('direccionId', ubicacionFiltro.valor.toString())
+        }
+      }
+
+      const response = await axios.get(`/api/usuario/obtenerUsuarios?${params.toString()}`)
 
       if (response.status === 200) {
         setUsuarios(response.data.usuarios)
@@ -276,15 +305,27 @@ export default function Personal() {
     }
   }, [])
 
-  // Cargar usuarios cuando cambia la página o el filtro
+  // Cargar usuarios cuando cambia la página, el filtro de rol o el filtro de ubicación
   useEffect(() => {
-    cargarUsuarios(currentPage, rolFiltro)
-  }, [currentPage, rolFiltro, cargarUsuarios])
+    cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
+  }, [currentPage, rolFiltro, filtroUbicacion, cargarUsuarios])
 
   // Función para manejar cambio de rol
   const handleRolChange = (nuevoRol: string) => {
     setRolFiltro(nuevoRol)
     setCurrentPage(1)
+    setError('')
+    // Cerrar vista de detalle cuando se cambia el filtro
+    if (modo === 'detalle') {
+      setModo('lista')
+      setUsuarioSeleccionado(null)
+    }
+  }
+
+  // Función para manejar cambio de filtro de ubicación
+  const handleFiltroUbicacionChange = (nuevoFiltro: FiltroUbicacionTipo) => {
+    setFiltroUbicacion(nuevoFiltro)
+    setCurrentPage(1) // Resetear a la primera página cuando cambia el filtro
     setError('')
     // Cerrar vista de detalle cuando se cambia el filtro
     if (modo === 'detalle') {
@@ -324,7 +365,7 @@ export default function Personal() {
 
       if (response.status === 200) {
         // Recargar los datos
-        await cargarUsuarios(currentPage, rolFiltro)
+        await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
 
         // Si estamos en vista detalle, actualizar el usuario seleccionado
         if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioId) {
@@ -378,13 +419,15 @@ export default function Personal() {
       <Title text={"Personal"} />
 
       <div className="container mx-auto px-4 py-8">
-
-        {/* Filtro por roles */}
-        <FiltroRoles
-          rolSeleccionado={rolFiltro}
-          onRolChange={handleRolChange}
-          loading={loading}
-        />
+        {/* Filtros en la parte superior */}
+        <div className="mb-6 space-y-4">
+          {/* Filtro por roles */}
+          <FiltroRoles
+            rolSeleccionado={rolFiltro}
+            onRolChange={handleRolChange}
+            loading={loading}
+          />
+        </div>
 
         {/* Barra de búsqueda personalizada */}
         <div className="mb-6">
@@ -411,10 +454,9 @@ export default function Personal() {
           </div>
         )}
 
-        {/* Vista de detalle del usuario */}
+        {/* Vista de detalle del usuario*/}
         {modo === 'detalle' && usuarioSeleccionado && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            {/* ... (el resto del código de vista detalle se mantiene igual) */}
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
@@ -439,8 +481,8 @@ export default function Personal() {
                   disabled={loading}
                   className={`px-4 py-2 rounded-md font-medium transform transition-all duration-200 hover:scale-105 cursor-pointer ${
                     usuarioSeleccionado.estado === 'Activo'
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {usuarioSeleccionado.estado === 'Activo' ? 'Deshabilitar' : 'Habilitar'}
@@ -588,14 +630,14 @@ export default function Personal() {
           <>
             {/* Información de paginación */}
             {pagination && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 ">
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-600">
                       Mostrando <span className="font-semibold">{(currentPage - 1) * 50 + 1}-{Math.min(currentPage * 50, pagination.totalCount)}</span> de <span className="font-semibold">{pagination.totalCount}</span> {getNombreFiltro(rolFiltro).toLowerCase()}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 ">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => cambiarPagina(currentPage - 1)}
                       disabled={!pagination.hasPrevPage || loading}
@@ -605,7 +647,7 @@ export default function Personal() {
                       Anterior
                     </button>
 
-                    <div className="flex items-center gap-1 ">
+                    <div className="flex items-center gap-1">
                       {generarNumerosPagina().map((pageNum, index) => (
                         pageNum === '...' ? (
                           <span key={`ellipsis-${index}`} className="px-2 text-gray-500">...</span>
@@ -616,8 +658,8 @@ export default function Personal() {
                             disabled={loading}
                             className={`px-3 py-1 text-sm rounded-md transform transition-all duration-200 hover:scale-105 ${
                               currentPage === pageNum
-                              ? 'bg-blue-500 text-white cursor-pointer'
-                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 cursor-pointer'
+                                ? 'bg-blue-500 text-white cursor-pointer'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 cursor-pointer'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {pageNum}
@@ -639,6 +681,14 @@ export default function Personal() {
               </div>
             )}
 
+            {/* Filtro por ubicación */}
+            <div>
+              <FiltroUbicacion
+                onFiltroChange={handleFiltroUbicacionChange}
+                loading={loading}
+              />
+            </div>
+
             {/* Loader */}
             {loading && (
               <div className="flex justify-center items-center py-12">
@@ -650,7 +700,7 @@ export default function Personal() {
 
             {/* Lista de usuarios */}
             {!loading && !error && usuarios.length > 0 && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 ">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {usuarios.map((usuario) => (
                   <div
                     key={usuario.id}

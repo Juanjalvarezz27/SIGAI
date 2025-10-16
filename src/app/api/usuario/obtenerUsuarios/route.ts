@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const rolId = searchParams.get('rolId')
+    const pisoId = searchParams.get('pisoId')
+    const direccionId = searchParams.get('direccionId')
 
     // Validar parámetros
     if (page < 1 || limit < 1) {
@@ -24,9 +26,10 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
-    // Construir where clause CORREGIDO
+    // Construir where clause
     const whereClause: Prisma.UsuarioWhereInput = {}
 
+    // Filtro por rol y estado
     if (rolId === 'deshabilitados') {
       // Mostrar todos los usuarios deshabilitados sin importar rol
       whereClause.estado = 'Deshabilitado'
@@ -40,6 +43,34 @@ export async function GET(request: NextRequest) {
     } else {
       // Por defecto mostrar solo activos
       whereClause.estado = 'Activo'
+    }
+
+    // Manejar múltiples pisos
+    if (searchParams.has('pisoIds')) {
+      const pisoIds = searchParams.getAll('pisoIds').map(id => parseInt(id)).filter(id => !isNaN(id))
+      if (pisoIds.length > 0) {
+        whereClause.direccion = {
+          pisoId: {
+            in: pisoIds
+          }
+        }
+      }
+    } else if (pisoId) {
+      // Filtro individual de piso (mantener compatibilidad)
+      const pisoIdNum = parseInt(pisoId)
+      if (!isNaN(pisoIdNum)) {
+        whereClause.direccion = {
+          pisoId: pisoIdNum
+        }
+      }
+    }
+
+    // Filtro por dirección individual
+    if (direccionId) {
+      const direccionIdNum = parseInt(direccionId)
+      if (!isNaN(direccionIdNum)) {
+        whereClause.direccionId = direccionIdNum
+      }
     }
 
     // Obtener usuarios con paginación
