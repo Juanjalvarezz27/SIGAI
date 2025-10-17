@@ -215,7 +215,7 @@ export default function AddAdminModal({ isOpen, onClose }: AddAdminModalProps) {
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-red-600 transition-colors"
+            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
             disabled={loading}
           >
             <X size={24} />

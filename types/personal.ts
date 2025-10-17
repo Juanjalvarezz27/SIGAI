@@ -46,6 +46,15 @@ export interface Usuario {
     nombre: string
   } | null
   equipos: Equipo[]
+  // Agregar información de deshabilitación
+  deshabilitacionHistorial?: {
+    motivo: string
+    fechaDeshabilitacion: string
+    deshabilitadoPor: {
+      nombre: string
+      apellido: string | null
+    }
+  }[]
 }
 
 export interface PaginationInfo {

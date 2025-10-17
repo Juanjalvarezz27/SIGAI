@@ -37,6 +37,8 @@ interface UsuarioActivoFormProps {
   onSuccess: (message: string) => void
   onError: (message: string) => void
   onClose: () => void
+  usuarioPrecargado?: Usuario // Nueva prop opcional
+  esSupervisor?: boolean // Nueva prop para identificar si es supervisor
 }
 
 const IconoValidacion = ({ valido }: { valido: boolean }) =>
@@ -49,9 +51,11 @@ export default function UsuarioActivoForm({
   onLoadingChange,
   onSuccess,
   onError,
-  onClose
+  onClose,
+  usuarioPrecargado, // Nueva prop
+  esSupervisor = false // Nueva prop con valor por defecto
 }: UsuarioActivoFormProps) {
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null)
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(usuarioPrecargado || null)
   const [roles, setRoles] = useState<Rol[]>([])
   const [showPassword, setShowPassword] = useState({
     password: false,
@@ -59,11 +63,11 @@ export default function UsuarioActivoForm({
   })
 
   const [formData, setFormData] = useState<FormData>({
-    cedula: '',
-    email: '',
+    cedula: usuarioPrecargado?.cedula || '',
+    email: usuarioPrecargado?.email || '',
     password: '',
     confirmarPassword: '',
-    rolId: 0
+    rolId: usuarioPrecargado?.rol.id || 0
   })
 
   const [validacionContraseña, setValidacionContraseña] = useState<ValidacionContraseña>({
@@ -80,19 +84,51 @@ export default function UsuarioActivoForm({
   useEffect(() => {
     const cargarRoles = async () => {
       try {
-        const rolesDisponibles: Rol[] = [
+        // Roles para admin (todos los roles)
+        const rolesAdmin = [
           { id: 2, rol: 'Supervisor' },
           { id: 3, rol: 'Solicitante' },
           { id: 4, rol: 'Analista' }
         ]
+
+        // Roles para supervisor (solo analistas y solicitantes)
+        const rolesSupervisor = [
+          { id: 3, rol: 'Solicitante' },
+          { id: 4, rol: 'Analista' }
+        ]
+
+        // Elegir los roles según el tipo de usuario
+        const rolesDisponibles = esSupervisor ? rolesSupervisor : rolesAdmin
+        
         setRoles(rolesDisponibles)
+
+        // Si es supervisor y el rol actual es supervisor (2), resetear a 0
+        if (esSupervisor && formData.rolId === 2) {
+          setFormData(prev => ({
+            ...prev,
+            rolId: 0
+          }))
+        }
       } catch (error) {
         console.error('Error cargando roles:', error)
       }
     }
 
     cargarRoles()
-  }, [])
+  }, [esSupervisor, formData.rolId])
+
+  // Si hay usuario precargado, establecerlo automáticamente
+  useEffect(() => {
+    if (usuarioPrecargado) {
+      setUsuarioSeleccionado(usuarioPrecargado)
+      setFormData(prev => ({
+        ...prev,
+        cedula: usuarioPrecargado.cedula || '',
+        email: usuarioPrecargado.email || '',
+        rolId: usuarioPrecargado.rol.id || 0
+      }))
+    }
+  }, [usuarioPrecargado])
 
   // Validar contraseña en tiempo real
   useEffect(() => {
@@ -115,13 +151,13 @@ export default function UsuarioActivoForm({
   }
 
   const resetForm = () => {
-    setUsuarioSeleccionado(null)
+    setUsuarioSeleccionado(usuarioPrecargado || null)
     setFormData({
-      cedula: '',
-      email: '',
+      cedula: usuarioPrecargado?.cedula || '',
+      email: usuarioPrecargado?.email || '',
       password: '',
       confirmarPassword: '',
-      rolId: 0
+      rolId: usuarioPrecargado?.rol.id || 0
     })
     setShowPassword({
       password: false,
@@ -134,20 +170,16 @@ export default function UsuarioActivoForm({
     setFormData(prev => ({
       ...prev,
       cedula: usuario.cedula || '',
-      email: usuario.email || ''
+      email: usuario.email || '',
+      rolId: usuario.rol.id || 0
     }))
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    
-    // Si el usuario ya tiene cédula, no permitir cambiar el campo cédula
+
+    // Solo bloquear la cédula si ya existe, el email siempre es editable
     if (name === 'cedula' && usuarioSeleccionado?.cedula) {
-      return
-    }
-    
-    // Si el usuario ya tiene email, no permitir cambiar el campo email
-    if (name === 'email' && usuarioSeleccionado?.email) {
       return
     }
 
@@ -179,8 +211,15 @@ export default function UsuarioActivoForm({
       return
     }
 
+    // Validación adicional para supervisores - no pueden asignar rol de supervisor
+    if (esSupervisor && formData.rolId === 2) {
+      onError('Los supervisores no pueden crear o asignar el rol de supervisor')
+      scrollToTop()
+      return
+    }
+
     // Validar que todas las reglas de contraseña se cumplan
-    if (!Object.values(validacionContraseña).every(Boolean)) {
+    if (formData.password && !Object.values(validacionContraseña).every(Boolean)) {
       onError('La contraseña no cumple con todos los requisitos de seguridad')
       scrollToTop()
       return
@@ -190,12 +229,12 @@ export default function UsuarioActivoForm({
     onError('')
 
     try {
-      // CORRECCIÓN: Mantener cédula y email actuales si ya existen
+      // CORRECCIÓN: Mantener cédula actual si ya existe, pero permitir cambiar email
       const datosActualizacion = {
         usuarioId: usuarioSeleccionado.id,
         cedula: usuarioSeleccionado.cedula ? usuarioSeleccionado.cedula : (formData.cedula || null),
-        email: usuarioSeleccionado.email ? usuarioSeleccionado.email : (formData.email || null),
-        password: formData.password,
+        email: formData.email || null, // Siempre permitir cambiar el email
+        password: formData.password || null, // Permitir contraseña vacía para no cambiarla
         rolId: formData.rolId
       }
 
@@ -219,17 +258,15 @@ export default function UsuarioActivoForm({
   }
 
   const isFormValid = usuarioSeleccionado &&
-    formData.password &&
-    formData.confirmarPassword &&
     formData.rolId &&
-    formData.password === formData.confirmarPassword &&
-    Object.values(validacionContraseña).every(Boolean)
+    formData.rolId !== 2 && // Para supervisores, no permitir rol 2 (Supervisor)
+    (!formData.password || (formData.password === formData.confirmarPassword && Object.values(validacionContraseña).every(Boolean)))
 
   return (
     <div ref={formRef} className="overflow-y-auto flex-1">
-      <form onSubmit={handleSubmit} className="space-y-6 w-11/12 mx-auto">
-        {/* Buscador de usuarios */}
-        {!usuarioSeleccionado && (
+      <form onSubmit={handleSubmit} className="space-y-6 w-11/12 mx-auto py-4">
+        {/* Buscador de usuarios - Solo mostrar si no hay usuario precargado */}
+        {!usuarioPrecargado && !usuarioSeleccionado && (
           <BarraBusqueda
             onUsuarioSeleccionado={handleSeleccionarUsuario}
             loading={loading}
@@ -254,17 +291,20 @@ export default function UsuarioActivoForm({
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setUsuarioSeleccionado(null)
-                resetForm()
-              }}
-              className="text-sm text-blue-600 hover:text-blue-800"
-              disabled={loading}
-            >
-              Cambiar usuario
-            </button>
+            {/* Solo mostrar botón cambiar usuario si no hay usuario precargado */}
+            {!usuarioPrecargado && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUsuarioSeleccionado(null)
+                  resetForm()
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800"
+                disabled={loading}
+              >
+                Cambiar usuario
+              </button>
+            )}
           </div>
         )}
 
@@ -276,7 +316,7 @@ export default function UsuarioActivoForm({
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Datos Actuales del Usuario
               </h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Campo Cédula Actual */}
                 <div>
@@ -304,9 +344,10 @@ export default function UsuarioActivoForm({
                     <p className="text-gray-700">
                       {usuarioSeleccionado.email || 'No tiene email registrado'}
                     </p>
+                    {/* Mostrar mensaje solo si hay email registrado */}
                     {usuarioSeleccionado.email && (
-                      <p className="text-xs text-orange-600 mt-1">
-                        El email no se puede modificar
+                      <p className="text-xs text-green-600 mt-1">
+                        El email se puede modificar
                       </p>
                     )}
                   </div>
@@ -327,13 +368,13 @@ export default function UsuarioActivoForm({
                   value={formData.cedula}
                   onChange={handleChange}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent ${
-                    usuarioSeleccionado.cedula 
-                      ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' 
+                    usuarioSeleccionado.cedula
+                      ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed'
                       : 'border-gray-300'
                   }`}
                   placeholder={
-                    usuarioSeleccionado.cedula 
-                      ? "La cédula no se puede modificar" 
+                    usuarioSeleccionado.cedula
+                      ? "La cédula no se puede modificar"
                       : "Ingresa la cédula"
                   }
                   required={!usuarioSeleccionado.cedula}
@@ -342,10 +383,10 @@ export default function UsuarioActivoForm({
                 />
               </div>
 
-              {/* Campo Email */}
+              {/* Campo Email - SIEMPRE EDITABLE */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  {usuarioSeleccionado.email ? 'Email (No editable)' : 'Email *'}
+                  Email *
                 </label>
                 <input
                   type="email"
@@ -353,19 +394,10 @@ export default function UsuarioActivoForm({
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent ${
-                    usuarioSeleccionado.email 
-                      ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' 
-                      : 'border-gray-300'
-                  }`}
-                  placeholder={
-                    usuarioSeleccionado.email 
-                      ? "El email no se puede modificar" 
-                      : "Ingresa el email"
-                  }
-                  required={!usuarioSeleccionado.email}
-                  disabled={loading || !!usuarioSeleccionado.email}
-                  readOnly={!!usuarioSeleccionado.email}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
+                  placeholder="Ingresa el email"
+                  required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -391,13 +423,18 @@ export default function UsuarioActivoForm({
                   </option>
                 ))}
               </select>
+              {esSupervisor && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Los supervisores solo pueden crear/editar Analistas y Solicitantes
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Campo Contraseña */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Contraseña *
+                  Contraseña (Opcional)
                 </label>
                 <div className="relative">
                   <input
@@ -407,8 +444,7 @@ export default function UsuarioActivoForm({
                     value={formData.password}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent pr-10"
-                    placeholder="Ingresa la contraseña"
-                    required
+                    placeholder="Dejar vacío para no cambiar"
                     disabled={loading}
                     maxLength={20}
                   />
@@ -429,7 +465,7 @@ export default function UsuarioActivoForm({
               {/* Campo Confirmar Contraseña */}
               <div>
                 <label htmlFor="confirmarPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmar Contraseña *
+                  Confirmar Contraseña
                 </label>
                 <div className="relative">
                   <input
@@ -439,8 +475,7 @@ export default function UsuarioActivoForm({
                     value={formData.confirmarPassword}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent pr-10"
-                    placeholder="Confirma la contraseña"
-                    required
+                    placeholder="Confirmar contraseña"
                     disabled={loading}
                     maxLength={20}
                   />
@@ -510,7 +545,7 @@ export default function UsuarioActivoForm({
           <button
             type="button"
             onClick={onClose}
-            className="bg-gray-300 cursor-pointer transition-all duration-200  hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gray-300 cursor-pointer transition-all duration-200 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={loading}
           >
             Cancelar
@@ -520,7 +555,7 @@ export default function UsuarioActivoForm({
             disabled={!isFormValid || loading}
             className="bg-[#001F3F] cursor-pointer transition-all duration-200 hover:bg-[#003366] text-white px-6 py-2 rounded-md font-medium duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Actualizando...' : 'Actualizar Rol'}
+            {loading ? 'Actualizando...' : 'Actualizar Usuario'}
           </button>
         </div>
       </form>

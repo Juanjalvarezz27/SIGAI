@@ -4,14 +4,17 @@ interface FiltroRolesProps {
   rolSeleccionado: string
   onRolChange: (rol: string) => void
   loading?: boolean
+  esSupervisor?: boolean 
 }
 
 export default function FiltroRoles({
   rolSeleccionado,
   onRolChange,
-  loading = false
+  loading = false,
+  esSupervisor = false // Valor por defecto
 }: FiltroRolesProps) {
-  const roles = [
+  // Roles para admin (completo)
+  const rolesAdmin = [
     { id: 'todos', nombre: 'Todos', valor: 'todos' },
     { id: 'personal', nombre: 'Personal', valor: '5' },
     { id: 'supervisor', nombre: 'Supervisor', valor: '2' },
@@ -19,6 +22,17 @@ export default function FiltroRoles({
     { id: 'analista', nombre: 'Analista', valor: '4' },
     { id: 'deshabilitados', nombre: 'Deshabilitados', valor: 'deshabilitados' }
   ]
+
+  // Roles para supervisor (limitado)
+  const rolesSupervisor = [
+    { id: 'todos', nombre: 'Todos', valor: 'todos' },
+    { id: 'solicitante', nombre: 'Solicitante', valor: '3' },
+    { id: 'analista', nombre: 'Analista', valor: '4' },
+    { id: 'deshabilitados', nombre: 'Deshabilitados', valor: 'deshabilitados' }
+  ]
+
+  // Elegir los roles según el tipo de usuario
+  const roles = esSupervisor ? rolesSupervisor : rolesAdmin
 
   return (
     <div className="flex flex-col items-center mb-3 -mt-6">

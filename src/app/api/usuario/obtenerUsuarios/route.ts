@@ -6,9 +6,9 @@ import { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticación y rol de admin
+    // Verificar autenticación y rol de admin o supervisor
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email || session.user.rol !== 'admin') {
+    if (!session?.user?.email || (session.user.rol !== 'admin' && session.user.rol !== 'supervisor')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

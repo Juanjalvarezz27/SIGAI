@@ -247,7 +247,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                   {pisos.map((piso) => (
                     <div
                       key={piso.id}
-                      className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors ${
+                      className={`flex items-center justify-between p-3 rounded-md transition-colors ${
                         estaPisoSeleccionado(piso.id)
                           ? 'bg-blue-50 border border-blue-200'
                           : 'hover:bg-gray-100'
@@ -258,7 +258,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                           type="checkbox"
                           checked={estaPisoSeleccionado(piso.id)}
                           onChange={() => handleTogglePisoSeleccionado(piso.id)}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                         />
                         <span className={estaPisoSeleccionado(piso.id) ? 'text-blue-700 font-medium' : 'text-gray-700'}>
                           {piso.piso}
@@ -266,7 +266,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                       </div>
                       <button
                         onClick={() => handleSeleccionarPisoIndividual(piso.id)}
-                        className="text-sm text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                        className="text-sm text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-100 transition-colors cursor-pointer"
                       >
                         Solo este
                       </button>
@@ -280,21 +280,21 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
             <div className="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={limpiarFiltro}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-4 py-2 cursor-pointer text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Limpiar
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={() => setModalAbierto(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAplicarMultiplesPisos}
                   disabled={pisosSeleccionados.length === 0}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 cursor-pointer bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Aplicar {pisosSeleccionados.length > 0 && `(${pisosSeleccionados.length})`}
                 </button>
@@ -313,12 +313,12 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                 {pisoSeleccionadoParaDirecciones && (
                   <button
                     onClick={volverASeleccionPiso}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                   >
                     <ChevronLeft size={20} />
                   </button>
                 )}
-                <h3 className="text-lg font-semibold text-gray-800">
+                <h3 className="text-lg font-semibold text-gray-800 ">
                   {pisoSeleccionadoParaDirecciones 
                     ? `Direcciones - ${getNombrePiso(pisoSeleccionadoParaDirecciones)}`
                     : 'Seleccionar Piso para Direcciones'
@@ -330,7 +330,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                   setModalAbierto(null)
                   setPisoSeleccionadoParaDirecciones(null)
                 }}
-                className="text-gray-400 hover:text-red-600 transition-colors"
+                className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -341,7 +341,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
               {!pisoSeleccionadoParaDirecciones && (
                 <>
                   {cargandoPisos ? (
-                    <div className="flex justify-center items-center py-8">
+                    <div className="flex justify-center items-center py-8 cursor-pointer">
                       <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   ) : (
@@ -350,7 +350,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                         <button
                           key={piso.id}
                           onClick={() => handleSeleccionarPisoParaDirecciones(piso.id)}
-                          className="w-full text-left p-3 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-between"
+                          className="w-full text-left p-3 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-between cursor-pointer"
                         >
                           <span>{piso.piso}</span>
                           <ChevronRight size={16} className="text-gray-400" />
@@ -375,7 +375,7 @@ export default function FiltroUbicacion({ onFiltroChange, loading = false }: Fil
                           <button
                             key={direccion.id}
                             onClick={() => handleSeleccionarDireccion(direccion.id)}
-                            className="w-full text-left p-3 rounded-md hover:bg-gray-100 transition-colors"
+                            className="w-full text-left p-3 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
                           >
                             {direccion.direccion}
                           </button>

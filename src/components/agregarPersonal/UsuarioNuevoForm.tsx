@@ -59,6 +59,7 @@ interface UsuarioNuevoFormProps {
   onSuccess: (message: string) => void
   onError: (message: string) => void
   onCancel: () => void
+  esSupervisor?: boolean // Nueva prop para identificar si es supervisor
 }
 
 const IconoValidacion = ({ valido }: { valido: boolean }) =>
@@ -69,7 +70,8 @@ const IconoValidacion = ({ valido }: { valido: boolean }) =>
 export default function UsuarioNuevoForm({
   onSuccess,
   onError,
-  onCancel
+  onCancel,
+  esSupervisor = false // Nueva prop con valor por defecto
 }: UsuarioNuevoFormProps) {
   const [pisos, setPisos] = useState<Piso[]>([])
   const [direcciones, setDirecciones] = useState<Direccion[]>([])
@@ -125,13 +127,25 @@ export default function UsuarioNuevoForm({
         const pisosResponse = await axios.get('/api/pisos')
         setPisos(pisosResponse.data.pisos || [])
 
-        // Cargar roles disponibles
-        const rolesDisponibles: Rol[] = [
+        // Cargar roles disponibles según el tipo de usuario
+        // Roles para admin (todos los roles)
+        const rolesAdmin = [
           { id: 2, rol: 'Supervisor' },
           { id: 3, rol: 'Solicitante' },
           { id: 4, rol: 'Analista' },
           { id: 5, rol: 'Personal' }
         ]
+
+        // Roles para supervisor (solo analistas, solicitantes y personal - SIN SUPERVISOR)
+        const rolesSupervisor = [
+          { id: 3, rol: 'Solicitante' },
+          { id: 4, rol: 'Analista' },
+          { id: 5, rol: 'Personal' }
+        ]
+
+        // Elegir los roles según el tipo de usuario
+        const rolesDisponibles = esSupervisor ? rolesSupervisor : rolesAdmin
+        
         setRoles(rolesDisponibles)
 
       } catch (error) {
@@ -143,7 +157,7 @@ export default function UsuarioNuevoForm({
     }
 
     cargarDatosIniciales()
-  }, [onError])
+  }, [onError, esSupervisor]) // Agregar esSupervisor como dependencia
 
   // Cargar direcciones cuando se selecciona un piso
   useEffect(() => {
@@ -298,7 +312,8 @@ export default function UsuarioNuevoForm({
       })
 
       if (response.status === 201) {
-        onSuccess('Usuario creado correctamente')
+        const rolSeleccionado = roles.find(r => r.id === formData.rolId)
+        onSuccess(`Usuario ${rolSeleccionado?.rol} creado correctamente`)
         scrollToTop()
         // Cerrar automáticamente después de 2 segundos
         setTimeout(() => {
@@ -393,6 +408,11 @@ export default function UsuarioNuevoForm({
                     </option>
                   ))}
                 </select>
+                {esSupervisor && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Los supervisores solo pueden crear Analistas y Solicitantes
+                  </p>
+                )}
               </div>
 
               {/* Campo Nombre */}

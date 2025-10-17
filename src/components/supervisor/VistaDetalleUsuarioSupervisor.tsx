@@ -1,4 +1,3 @@
-// components/personal/VistaDetalleUsuario.tsx
 "use client"
 
 import { User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Edit, X, Calendar, UserX, FileText } from "lucide-react"
@@ -7,11 +6,9 @@ import { useState, useEffect } from "react"
 import UsuarioActivoForm from "@/components/agregarPersonal/UsuarioActivoForm"
 import axios from "axios"
 
-interface VistaDetalleUsuarioProps {
+interface VistaDetalleUsuarioSupervisorProps {
   usuario: Usuario
   onVolver: () => void
-  onDeshabilitar: (usuario: Usuario) => void
-  onHabilitar: (usuarioId: number) => void
   loading?: boolean
 }
 
@@ -47,13 +44,11 @@ const eliminarEquiposDuplicados = (equipos: Equipo[]): Equipo[] => {
   return Array.from(equiposUnicos.values())
 }
 
-export default function VistaDetalleUsuario({
+export default function VistaDetalleUsuarioSupervisor({
   usuario,
   onVolver,
-  onDeshabilitar,
-  onHabilitar,
   loading = false
-}: VistaDetalleUsuarioProps) {
+}: VistaDetalleUsuarioSupervisorProps) {
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
   const [mensajeExito, setMensajeExito] = useState("")
   const [mensajeError, setMensajeError] = useState("")
@@ -150,25 +145,6 @@ export default function VistaDetalleUsuario({
               Editar
             </button>
 
-            {/* Botón de deshabilitar/habilitar - MOSTRAR SIEMPRE */}
-            <button
-              onClick={() => {
-                if (usuario.estado === 'Activo') {
-                  onDeshabilitar(usuario)
-                } else {
-                  onHabilitar(usuario.id)
-                }
-              }}
-              disabled={loading}
-              className={`px-4 py-2 rounded-md font-medium transform transition-all duration-200 hover:scale-105 cursor-pointer ${
-                usuario.estado === 'Activo'
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {usuario.estado === 'Activo' ? 'Deshabilitar' : 'Habilitar'}
-            </button>
-
             <button
               onClick={onVolver}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
@@ -178,6 +154,9 @@ export default function VistaDetalleUsuario({
           </div>
         </div>
 
+        {/* Resto del componente igual que VistaDetalleUsuario */}
+        {/* ... (mantener todo el contenido igual excepto los botones) */}
+        
         {/* Información Personal y Ubicación */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Información Personal */}
@@ -285,7 +264,7 @@ export default function VistaDetalleUsuario({
                     <div>
                       <p className="text-sm font-medium text-gray-700">Deshabilitado por</p>
                       <p className="text-gray-900">
-                        {historialDeshabilitacion.deshabilitadoPor.nombre} 
+                        {historialDeshabilitacion.deshabilitadoPor.nombre}
                         {historialDeshabilitacion.deshabilitadoPor.apellido ? ` ${historialDeshabilitacion.deshabilitadoPor.apellido}` : ''}
                       </p>
                     </div>
@@ -415,6 +394,7 @@ export default function VistaDetalleUsuario({
                 onError={manejarError}
                 onClose={cerrarModalEditar}
                 usuarioPrecargado={usuario}
+                esSupervisor={true}
               />
             </div>
           </div>

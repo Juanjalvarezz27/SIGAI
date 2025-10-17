@@ -7,13 +7,13 @@ import bcrypt from 'bcrypt'
 
 interface ActualizarPersonalRequest {
   usuarioId: number
-  cedula: string
-  email: string
-  password: string
+  cedula: string | null
+  email: string | null
+  password: string | null 
   rolId: number
 }
 
-// Función para validar fortaleza de contraseña
+// Función para validar fortaleza de contraseña (solo si se proporciona)
 function validarFortalezaContraseña(contraseña: string): { valida: boolean; errores: string[] } {
   const errores: string[] = []
 
@@ -39,20 +39,28 @@ function validarFortalezaContraseña(contraseña: string): { valida: boolean; er
   }
 }
 
+// Interface para los datos de actualización
+interface DatosActualizacion {
+  rolId: number
+  cedula?: string | null
+  email?: string | null
+  password?: string
+}
+
 export async function PUT(request: NextRequest) {
   try {
     // Verificar autenticación y rol de admin
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email || session.user.rol !== 'admin') {
+    if (!session?.user?.email || (session.user.rol !== 'admin' && session.user.rol !== 'supervisor')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     const body: ActualizarPersonalRequest = await request.json()
     const { usuarioId, cedula, email, password, rolId } = body
 
-    // Validaciones
-    if (!usuarioId || !cedula || !email || !password || !rolId) {
-      return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
+    // Validaciones básicas
+    if (!usuarioId || !rolId) {
+      return NextResponse.json({ error: 'Usuario ID y Rol son requeridos' }, { status: 400 })
     }
 
     // Validar que el rol sea válido (2, 3, o 4)
@@ -60,19 +68,15 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Rol no válido' }, { status: 400 })
     }
 
-    // Validar fortaleza de la contraseña
-    const validacionContraseña = validarFortalezaContraseña(password)
-    if (!validacionContraseña.valida) {
-      return NextResponse.json({
-        error: 'La contraseña no cumple con los requisitos de seguridad',
-        detalles: validacionContraseña.errores
-      }, { status: 400 })
-    }
-
     // Verificar que el usuario existe
     const usuarioExistente = await prismadb.usuario.findUnique({
       where: { id: usuarioId },
-      select: { id: true, email: true, rolId: true }
+      select: { 
+        id: true, 
+        email: true, 
+        rolId: true,
+        cedula: true 
+      }
     })
 
     if (!usuarioExistente) {
@@ -84,8 +88,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No se puede modificar un administrador' }, { status: 400 })
     }
 
-    // Verificar que el email no esté en uso por otro usuario
-    if (email !== usuarioExistente.email) {
+    // Verificar que el email no esté en uso por otro usuario (solo si se está cambiando)
+    if (email && email !== usuarioExistente.email) {
       const emailExistente = await prismadb.usuario.findUnique({
         where: { email }
       })
@@ -95,21 +99,56 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Hashear contraseña
-    const hashedPassword = await bcrypt.hash(password, 12)
+    // Validar fortaleza de la contraseña solo si se proporciona una nueva
+    let hashedPassword: string | undefined
+    if (password && password.trim() !== '') {
+      const validacionContraseña = validarFortalezaContraseña(password)
+      if (!validacionContraseña.valida) {
+        return NextResponse.json({
+          error: 'La contraseña no cumple con los requisitos de seguridad',
+          detalles: validacionContraseña.errores
+        }, { status: 400 })
+      }
+      
+      // Hashear la nueva contraseña
+      hashedPassword = await bcrypt.hash(password, 12)
+    }
 
-    // Actualizar usuario con nuevo rol
+    // Preparar datos para actualizar
+    const datosActualizacion: DatosActualizacion = {
+      rolId: rolId
+    }
+
+    // Solo actualizar cédula si se proporciona
+    if (cedula !== undefined && cedula !== null) {
+      datosActualizacion.cedula = cedula
+    }
+
+    // Solo actualizar email si se proporciona
+    if (email !== undefined && email !== null) {
+      datosActualizacion.email = email
+    }
+
+    // Solo actualizar contraseña si se proporciona una nueva
+    if (hashedPassword) {
+      datosActualizacion.password = hashedPassword
+    }
+
+    // Actualizar usuario
     await prismadb.usuario.update({
       where: { id: usuarioId },
-      data: {
-        cedula,
-        email,
-        password: hashedPassword,
-        rolId: rolId
-      }
+      data: datosActualizacion
     })
 
-    return NextResponse.json({ message: 'Usuario actualizado correctamente' })
+    return NextResponse.json({ 
+      message: 'Usuario actualizado correctamente',
+      cambios: {
+        rol: true,
+        cedula: cedula !== undefined && cedula !== null,
+        email: email !== undefined && email !== null,
+        password: !!hashedPassword
+      }
+    })
 
   } catch (error: unknown) {
     console.error('Error actualizando usuario:', error)

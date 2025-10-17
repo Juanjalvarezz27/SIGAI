@@ -55,7 +55,7 @@ export default function SelectModal({
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-red-600 transition-colors"
+            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
             disabled={loading}
           >
             <X size={20} />
