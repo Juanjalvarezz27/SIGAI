@@ -9,6 +9,7 @@ export async function GET() {
 
     return NextResponse.json({ tipos })
   } catch (error) {
+    console.error('Error obteniendo tipos de equipo:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar si ya existe
     const tipoExistente = await prismadb.tipoEquipo.findFirst({
-      where: { 
+      where: {
         nombre: {
           equals: nombre,
           mode: 'insensitive'
