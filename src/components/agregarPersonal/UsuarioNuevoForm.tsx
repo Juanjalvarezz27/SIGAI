@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { Eye, EyeOff, CheckCircle, XCircle, Building, MapPin, Layers, ChevronDown } from "lucide-react"
 import axios, { AxiosError } from "axios"
 import SelectModal from "./SelectModal"
+import { useSession } from "next-auth/react"
+import AsignacionEquipos from "./AsignacionEquipos"
 
 // Interfaces
 interface Piso {
@@ -53,13 +55,32 @@ interface ValidacionContraseña {
   maximo: boolean
 }
 
+interface EquipoConEspecificaciones {
+  bienNacional: string
+  serial: string
+  observaciones: string
+  tipoEquipoId: number
+  tipoEquipoNombre?: string
+  modelo: string 
+  marca: string   
+  statusId: number
+  estadoId: number
+  especificaciones?: {
+    memoriaRam: string
+    modulosRam: string
+    capacidadDisco: string
+    tipoDisco: string
+    procesador: string
+  }
+  id?: number 
+}
+
 interface UsuarioNuevoFormProps {
   loading: boolean
   onLoadingChange: (loading: boolean) => void
   onSuccess: (message: string) => void
   onError: (message: string) => void
   onCancel: () => void
-  esSupervisor?: boolean // Nueva prop para identificar si es supervisor
 }
 
 const IconoValidacion = ({ valido }: { valido: boolean }) =>
@@ -67,16 +88,21 @@ const IconoValidacion = ({ valido }: { valido: boolean }) =>
     <CheckCircle size={16} className="text-green-500" /> :
     <XCircle size={16} className="text-red-500" />
 
+// Función para capitalizar la primera letra
+const capitalizarPrimeraLetra = (texto: string): string => {
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase()
+}
+
 export default function UsuarioNuevoForm({
   onSuccess,
   onError,
   onCancel,
-  esSupervisor = false // Nueva prop con valor por defecto
 }: UsuarioNuevoFormProps) {
   const [pisos, setPisos] = useState<Piso[]>([])
   const [direcciones, setDirecciones] = useState<Direccion[]>([])
   const [areas, setAreas] = useState<Area[]>([])
   const [roles, setRoles] = useState<Rol[]>([])
+  const [equipos, setEquipos] = useState<EquipoConEspecificaciones[]>([])
   const [cargandoDatos, setCargandoDatos] = useState(true)
   const [cargandoDirecciones, setCargandoDirecciones] = useState(false)
   const [cargandoAreas, setCargandoAreas] = useState(false)
@@ -87,6 +113,7 @@ export default function UsuarioNuevoForm({
   const [modalAbierto, setModalAbierto] = useState<'direccion' | 'area' | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const { data: session } = useSession()
   const formRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState<FormData>({
@@ -110,6 +137,9 @@ export default function UsuarioNuevoForm({
     maximo: false
   })
 
+  // Determinar si el usuario es supervisor basado en la sesión
+  const esSupervisor = session?.user?.rol === 'supervisor'
+
   // Función para hacer scroll al inicio del formulario
   const scrollToTop = () => {
     if (formRef.current) {
@@ -127,26 +157,22 @@ export default function UsuarioNuevoForm({
         const pisosResponse = await axios.get('/api/pisos')
         setPisos(pisosResponse.data.pisos || [])
 
-        // Cargar roles disponibles según el tipo de usuario
-        // Roles para admin (todos los roles)
-        const rolesAdmin = [
-          { id: 2, rol: 'Supervisor' },
-          { id: 3, rol: 'Solicitante' },
-          { id: 4, rol: 'Analista' },
-          { id: 5, rol: 'Personal' }
-        ]
+        // Cargar roles desde la API
+        const rolesResponse = await axios.get('/api/usuario/roles')
+        let rolesDisponibles = rolesResponse.data.roles || []
 
-        // Roles para supervisor (solo analistas, solicitantes y personal - SIN SUPERVISOR)
-        const rolesSupervisor = [
-          { id: 3, rol: 'Solicitante' },
-          { id: 4, rol: 'Analista' },
-          { id: 5, rol: 'Personal' }
-        ]
+        // Si el usuario es supervisor, filtrar para quitar el rol de supervisor
+        if (esSupervisor) {
+          rolesDisponibles = rolesDisponibles.filter((rol: Rol) => rol.rol.toLowerCase() !== 'supervisor')
+        }
 
-        // Elegir los roles según el tipo de usuario
-        const rolesDisponibles = esSupervisor ? rolesSupervisor : rolesAdmin
-        
-        setRoles(rolesDisponibles)
+        // Capitalizar la primera letra de cada rol
+        const rolesCapitalizados = rolesDisponibles.map((rol: Rol) => ({
+          ...rol,
+          rol: capitalizarPrimeraLetra(rol.rol)
+        }))
+
+        setRoles(rolesCapitalizados)
 
       } catch (error) {
         console.error('Error cargando datos iniciales:', error)
@@ -157,7 +183,7 @@ export default function UsuarioNuevoForm({
     }
 
     cargarDatosIniciales()
-  }, [onError, esSupervisor]) // Agregar esSupervisor como dependencia
+  }, [onError, esSupervisor])
 
   // Cargar direcciones cuando se selecciona un piso
   useEffect(() => {
@@ -268,7 +294,7 @@ export default function UsuarioNuevoForm({
       return "Cargando direcciones..."
     }
     return direcciones.find(d => d.id === formData.direccionId)?.direccion ||
-           (formData.pisoId ? 'Selecciona una dirección' : 'Primero selecciona un piso')
+      (formData.pisoId ? 'Selecciona una dirección' : 'Primero selecciona un piso')
   }
 
   const getAreaSeleccionada = () => {
@@ -276,7 +302,7 @@ export default function UsuarioNuevoForm({
       return "Cargando áreas..."
     }
     return areas.find(a => a.id === formData.areaId)?.nombre ||
-           (formData.direccionId ? 'Selecciona un área' : 'Primero selecciona una dirección')
+      (formData.direccionId ? 'Selecciona un área' : 'Primero selecciona una dirección')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -308,22 +334,24 @@ export default function UsuarioNuevoForm({
     try {
       const response = await axios.post('/api/admin/crear-usuario', {
         ...formData,
-        areaId: formData.areaId || null
+        areaId: formData.areaId || null,
+        equipos: equipos
       })
 
       if (response.status === 201) {
         const rolSeleccionado = roles.find(r => r.id === formData.rolId)
-        onSuccess(`Usuario ${rolSeleccionado?.rol} creado correctamente`)
+        const mensajeEquipos = equipos.length > 0 ? ` con ${equipos.length} equipo(s) asignado(s)` : ''
+        onSuccess(`Usuario ${rolSeleccionado?.rol} creado correctamente${mensajeEquipos}`)
         scrollToTop()
         // Cerrar automáticamente después de 2 segundos
         setTimeout(() => {
           onCancel()
-        }, 2000)
+        }, 5000)
       }
     } catch (error: unknown) {
       const axiosError = error as AxiosError<ApiErrorResponse>
       const errorMessage = axiosError.response?.data?.error || 'Error al crear el usuario'
-      
+
       // Verificar si es error de email único
       if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('único')) {
         onError('El email ya está registrado en el sistema. Por favor, use un email diferente.')
@@ -346,7 +374,7 @@ export default function UsuarioNuevoForm({
     formData.direccionId &&
     formData.password === formData.confirmarPassword &&
     Object.values(validacionContraseña).every(Boolean)
-  
+
   if (cargandoDatos) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -367,7 +395,7 @@ export default function UsuarioNuevoForm({
               <Building className="w-5 h-5 text-[#001F3F]" />
               Información Personal
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Campo Cédula */}
               <div>
@@ -397,7 +425,7 @@ export default function UsuarioNuevoForm({
                   name="rolId"
                   value={formData.rolId}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
+                  className="w-full px-3 py-2 cursor-pointer border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
                   required
                   disabled={loading}
                 >
@@ -410,7 +438,7 @@ export default function UsuarioNuevoForm({
                 </select>
                 {esSupervisor && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Los supervisores solo pueden crear Analistas y Solicitantes
+                    Los supervisores solo pueden crear Analistas, Solicitantes y Personal
                   </p>
                 )}
               </div>
@@ -479,7 +507,7 @@ export default function UsuarioNuevoForm({
               <MapPin className="w-5 h-5 text-[#001F3F]" />
               Ubicación
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Campo Piso */}
               <div>
@@ -544,7 +572,7 @@ export default function UsuarioNuevoForm({
               <Layers className="w-5 h-5 text-[#001F3F]" />
               Seguridad
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Campo Contraseña */}
               <div>
@@ -656,12 +684,11 @@ export default function UsuarioNuevoForm({
               )}
           </div>
 
-          {/* Nota sobre equipos */}
-          <div className="text-center">
-            <p className="text-black text-sm">
-              Nota: Falta asignación de equipos
-            </p>
-          </div>
+          {/* Asignación de Equipos */}
+          <AsignacionEquipos 
+            onEquiposChange={setEquipos}
+            disabled={loading}
+          />
 
           {/* Botones de acción */}
           <div className="flex justify-center gap-3 pt-4">

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Users } from "lucide-react"
+import { X, Users, CheckCircle } from "lucide-react"
 import UsuarioActivoForm from "./UsuarioActivoForm"
 import UsuarioNuevoForm from "./UsuarioNuevoForm"
 import ActualizarDatosForm from "./ActualizarDatosForm"
@@ -48,6 +48,17 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
       scrollToTop()
     }
   }, [error])
+
+  // Efecto para cerrar automáticamente después de 5 segundos cuando hay éxito
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        onClose()
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [success, onClose])
 
   const handleClose = () => {
     onClose()
@@ -138,16 +149,28 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
             </div>
           </div>
 
-          {/* Mensajes de error y éxito */}
+          {/* Mensajes de error */}
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
               {error}
             </div>
           )}
 
+          {/* Mensaje de éxito mejorado */}
           {success && (
-            <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-              {success}
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 animate-pulse">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-green-800 text-lg">
+                    ¡Operación Exitosa!
+                  </h4>
+                  <p className="text-green-700 mt-1">{success}</p>
+                  <p className="text-green-600 text-sm mt-2">
+                    El modal se cerrará automáticamente en 5 segundos...
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

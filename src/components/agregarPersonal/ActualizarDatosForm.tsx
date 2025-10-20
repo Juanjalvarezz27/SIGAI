@@ -5,10 +5,31 @@ import { User } from "lucide-react"
 import axios, { AxiosError } from "axios"
 import BarraBusqueda from "../BarraBusqueda"
 import { Usuario } from '../../../types/index'
+import AsignacionEquipos from "./AsignacionEquipos"
 
 interface FormData {
   cedula: string
   email: string
+}
+
+interface EquipoConEspecificaciones {
+  bienNacional: string
+  serial: string
+  observaciones: string
+  tipoEquipoId: number
+  tipoEquipoNombre?: string
+  modelo: string
+  marca: string
+  statusId: number
+  estadoId: number
+  especificaciones?: {
+    memoriaRam: string
+    modulosRam: string
+    capacidadDisco: string
+    tipoDisco: string
+    procesador: string
+  }
+  id?: number
 }
 
 interface ApiErrorResponse {
@@ -35,6 +56,8 @@ export default function ActualizarDatosForm({
     cedula: '',
     email: ''
   })
+  const [equipos, setEquipos] = useState<EquipoConEspecificaciones[]>([])
+  const [mostrarAsignacionEquipos, setMostrarAsignacionEquipos] = useState(false)
 
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -51,6 +74,8 @@ export default function ActualizarDatosForm({
       cedula: '',
       email: ''
     })
+    setEquipos([])
+    setMostrarAsignacionEquipos(false)
   }
 
   const handleSeleccionarUsuario = (usuario: Usuario) => {
@@ -86,15 +111,8 @@ export default function ActualizarDatosForm({
 
     // Si el usuario ya tiene cédula, solo validar el email
     if (usuarioSeleccionado.cedula) {
-      // Validar que se ingrese un email
-      if (!formData.email) {
-        onError('Debes ingresar un email para actualizar')
-        scrollToTop()
-        return
-      }
-
-      // Validar que el email tenga formato válido
-      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      // Validar que si se ingresa email, tenga formato válido
+      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
         onError('El formato del email no es válido')
         scrollToTop()
         return
@@ -119,22 +137,26 @@ export default function ActualizarDatosForm({
     onError('')
 
     try {
-      // CORRECCIÓN: Si el usuario ya tiene cédula, mantener la cédula actual
-      // Si no tiene cédula, usar la nueva cédula del formulario
+      // Preparar datos de actualización
       const datosActualizacion = {
         usuarioId: usuarioSeleccionado.id,
         cedula: usuarioSeleccionado.cedula ? usuarioSeleccionado.cedula : (formData.cedula || null),
-        email: formData.email || null
+        email: formData.email || null,
+        equipos: equipos.length > 0 ? equipos : undefined
       }
 
       const response = await axios.put('/api/admin/actualizar-datos', datosActualizacion)
 
       if (response.status === 200) {
-        onSuccess('Datos del usuario actualizados correctamente')
+        const mensaje = response.data.equiposAgregados > 0
+          ? `${response.data.message} con ${response.data.equiposAgregados} equipo(s) agregado(s)`
+          : response.data.message
+        
+        onSuccess(mensaje)
         scrollToTop()
         setTimeout(() => {
           onClose()
-        }, 2000)
+        }, 5000) // 5 segundos para mostrar el mensaje de éxito
       }
     } catch (error: unknown) {
       const axiosError = error as AxiosError<ApiErrorResponse>
@@ -148,7 +170,7 @@ export default function ActualizarDatosForm({
   // Determinar si el formulario es válido
   const isFormValid = usuarioSeleccionado &&
     (usuarioSeleccionado.cedula
-      ? formData.email && /\S+@\S+\.\S+/.test(formData.email) // Si tiene cédula, solo validar email
+      ? !formData.email || /\S+@\S+\.\S+/.test(formData.email) // Si tiene cédula, email debe ser válido si se ingresa
       : (formData.cedula || formData.email) && (formData.email ? /\S+@\S+\.\S+/.test(formData.email) : true) // Si no tiene cédula, validar como antes
     )
 
@@ -202,7 +224,7 @@ export default function ActualizarDatosForm({
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Actualizar Datos del Usuario
               </h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Campo Cédula Actual */}
                 <div>
@@ -239,7 +261,7 @@ export default function ActualizarDatosForm({
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Nuevos Datos
               </h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Campo Nueva Cédula */}
                 <div>
@@ -253,13 +275,13 @@ export default function ActualizarDatosForm({
                     value={formData.cedula}
                     onChange={handleChange}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent ${
-                      usuarioSeleccionado.cedula 
-                        ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' 
+                      usuarioSeleccionado.cedula
+                        ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed'
                         : 'border-gray-600'
                     }`}
                     placeholder={
-                      usuarioSeleccionado.cedula 
-                        ? "La cédula no se puede modificar" 
+                      usuarioSeleccionado.cedula
+                        ? "La cédula no se puede modificar"
                         : "Ingresa la nueva cédula"
                     }
                     disabled={loading || !!usuarioSeleccionado.cedula}
@@ -293,11 +315,49 @@ export default function ActualizarDatosForm({
               {/* Nota informativa */}
               <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
                 <p className="text-sm text-blue-700">
-                  <strong>Nota:</strong> {usuarioSeleccionado.cedula 
-                    ? 'Solo puedes actualizar el email. La cédula no se puede modificar una vez registrada.' 
+                  <strong>Nota:</strong> {usuarioSeleccionado.cedula
+                    ? 'Solo puedes actualizar el email. La cédula no se puede modificar una vez registrada.'
                     : 'Puedes actualizar solo la cédula, solo el email, o ambos campos. Los campos que dejes vacíos mantendrán su valor actual.'}
                 </p>
               </div>
+            </div>
+
+            {/* Sección de Asignación de Equipos (Opcional) */}
+            <div className="bg-[#F0F8FF] border border-[#B0D4FF] rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[#001F3F]">
+                  Asignación de Equipos (Opcional)
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setMostrarAsignacionEquipos(!mostrarAsignacionEquipos)}
+                  className="px-3 py-2 bg-[#001F3F] hover:bg-[#003366] text-white rounded-md transition-colors text-sm"
+                  disabled={loading}
+                >
+                  {mostrarAsignacionEquipos ? 'Ocultar' : 'Agregar Equipos'}
+                </button>
+              </div>
+
+              {mostrarAsignacionEquipos && (
+                <div className="mt-4">
+                  <AsignacionEquipos 
+                    onEquiposChange={setEquipos}
+                    disabled={loading}
+                  />
+                  <p className="text-sm text-gray-600 mt-2">
+                    <strong>Nota:</strong> Los equipos agregados aquí se asignarán al usuario seleccionado.
+                    Esta operación es opcional y se puede realizar junto con la actualización de datos.
+                  </p>
+                </div>
+              )}
+
+              {!mostrarAsignacionEquipos && equipos.length > 0 && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-green-700 text-sm">
+                    <strong>Equipos listos para asignar:</strong> {equipos.length} equipo(s) preparado(s)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, CheckCircle } from "lucide-react"
 import UsuarioNuevoForm from "@/components/agregarPersonal/UsuarioNuevoForm"
+import { useSession } from "next-auth/react"
 
 interface BotonNuevoUsuarioProps {
   loading?: boolean
@@ -12,12 +13,12 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
   const [modalAbierto, setModalAbierto] = useState(false)
   const [mensajeExito, setMensajeExito] = useState("")
   const [mensajeError, setMensajeError] = useState("")
+  const { data: session } = useSession()
 
   const abrirModal = () => {
     setModalAbierto(true)
     setMensajeExito("")
     setMensajeError("")
-    // Prevenir scroll del body cuando el modal está abierto
     document.body.style.overflow = "hidden"
   }
 
@@ -25,13 +26,17 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
     setModalAbierto(false)
     setMensajeExito("")
     setMensajeError("")
-    // Restaurar scroll del body cuando el modal se cierra
     document.body.style.overflow = "auto"
   }
 
   const manejarExito = (mensaje: string) => {
     setMensajeExito(mensaje)
     setMensajeError("")
+    
+    // Cerrar automáticamente después de 5 segundos
+    setTimeout(() => {
+      cerrarModal()
+    }, 5000)
   }
 
   const manejarError = (mensaje: string) => {
@@ -55,11 +60,11 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/[0.5] transition-opacity"
             onClick={cerrarModal}
           />
-          
+
           {/* Modal */}
           <div className="relative bg-white rounded-lg shadow-xl w-8/12 mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
@@ -69,7 +74,7 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
               </h3>
               <button
                 onClick={cerrarModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-red-600 cursor-pointer transition-colors"
               >
                 <Plus size={20} className="rotate-45" />
               </button>
@@ -79,8 +84,19 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
             {(mensajeExito || mensajeError) && (
               <div className="px-6 pt-4 flex-shrink-0">
                 {mensajeExito && (
-                  <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md mb-4">
-                    {mensajeExito}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-green-800 text-lg">
+                          ¡Usuario Creado Exitosamente!
+                        </h4>
+                        <p className="text-green-700 mt-1">{mensajeExito}</p>
+                        <p className="text-green-600 text-sm mt-2">
+                          El modal se cerrará automáticamente en 5 segundos...
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {mensajeError && (

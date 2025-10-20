@@ -4,6 +4,27 @@ import { authOptions } from '@/lib/auth'
 import prismadb from '@/lib/prismadb'
 import bcrypt from 'bcrypt'
 
+interface EspecificacionesOrdenador {
+  memoriaRam: string
+  modulosRam: string
+  capacidadDisco: string
+  tipoDisco: string
+  procesador: string
+}
+
+interface EquipoData {
+  bienNacional: string
+  serial: string
+  observaciones: string
+  tipoEquipoId: number
+  tipoEquipoNombre?: string
+  modelo: string    
+  marca: string     
+  statusId: number
+  estadoId: number
+  especificaciones?: EspecificacionesOrdenador
+}
+
 interface CrearUsuarioRequest {
   cedula: string
   nombre: string
@@ -14,6 +35,7 @@ interface CrearUsuarioRequest {
   pisoId: number
   direccionId: number
   areaId?: number
+  equipos?: EquipoData[]
 }
 
 // Función para validar fortaleza de contraseña
@@ -44,18 +66,37 @@ function validarFortalezaContraseña(contraseña: string): { valida: boolean; er
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticación y rol de admin
+    // Verificar autenticación y rol
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email || session.user.rol !== 'admin') {
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const userRole = session.user.rol
+    
+    // Solo admin y supervisor pueden crear usuarios
+    if (userRole !== 'admin' && userRole !== 'supervisor') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     const body: CrearUsuarioRequest = await request.json()
-    const { cedula, nombre, apellido, email, password, rolId, direccionId, areaId } = body
+    const { cedula, nombre, apellido, email, password, rolId, direccionId, areaId, equipos } = body
 
     // Validaciones
     if (!cedula || !nombre || !email || !password || !rolId || !direccionId) {
       return NextResponse.json({ error: 'Todos los campos obligatorios son requeridos' }, { status: 400 })
+    }
+
+    // Si el usuario es supervisor, no puede crear supervisores
+    if (userRole === 'supervisor') {
+      // Obtener el nombre del rol que está intentando crear
+      const rolSeleccionado = await prismadb.rol.findUnique({
+        where: { id: rolId }
+      })
+
+      if (rolSeleccionado?.rol === 'supervisor') {
+        return NextResponse.json({ error: 'No autorizado: un supervisor no puede crear supervisores' }, { status: 401 })
+      }
     }
 
     // Validar fortaleza de la contraseña
@@ -99,24 +140,172 @@ export async function POST(request: NextRequest) {
     // Hashear contraseña
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Crear usuario
-    await prismadb.usuario.create({
-      data: {
-        cedula,
-        nombre,
-        apellido,
-        email,
-        password: hashedPassword,
-        rolId,
-        direccionId,
-        areaId: areaId || null
+    // Crear usuario dentro de una transacción
+    const resultado = await prismadb.$transaction(async (tx) => {
+      // Crear usuario
+      const usuarioCreado = await tx.usuario.create({
+        data: {
+          cedula,
+          nombre,
+          apellido,
+          email,
+          password: hashedPassword,
+          rolId,
+          direccionId,
+          areaId: areaId || null
+        }
+      })
+
+      // Crear equipos si se proporcionaron
+      if (equipos && equipos.length > 0) {
+        for (const equipoData of equipos) {
+          let especificacionesId = null
+          
+          // Validar campos obligatorios del equipo
+          if (!equipoData.marca || !equipoData.modelo || !equipoData.statusId || !equipoData.estadoId) {
+            throw new Error('Todos los campos obligatorios del equipo deben ser completados')
+          }
+
+          // Buscar o crear el tipo de equipo
+          let tipoEquipoId = equipoData.tipoEquipoId
+          if (!tipoEquipoId && equipoData.tipoEquipoNombre) {
+            // Buscar si el tipo ya existe
+            const tipoExistente = await tx.tipoEquipo.findFirst({
+              where: { 
+                nombre: {
+                  equals: equipoData.tipoEquipoNombre,
+                  mode: 'insensitive'
+                }
+              }
+            })
+
+            if (tipoExistente) {
+              tipoEquipoId = tipoExistente.id
+            } else {
+              // Crear nuevo tipo
+              const nuevoTipo = await tx.tipoEquipo.create({
+                data: { nombre: equipoData.tipoEquipoNombre }
+              })
+              tipoEquipoId = nuevoTipo.id
+            }
+          }
+
+          if (!tipoEquipoId) {
+            throw new Error('Tipo de equipo es requerido')
+          }
+
+          // Verificar que el tipo de equipo existe
+          const tipoEquipoExistente = await tx.tipoEquipo.findUnique({
+            where: { id: tipoEquipoId }
+          })
+          if (!tipoEquipoExistente) {
+            throw new Error(`El tipo de equipo seleccionado no existe`)
+          }
+
+          // Verificar que el status existe
+          const statusExistente = await tx.status.findUnique({
+            where: { id: equipoData.statusId }
+          })
+          if (!statusExistente) {
+            throw new Error(`El status seleccionado no existe`)
+          }
+
+          // Verificar que el estado existe
+          const estadoExistente = await tx.estados.findUnique({
+            where: { id: equipoData.estadoId }
+          })
+          if (!estadoExistente) {
+            throw new Error(`El estado seleccionado no existe`)
+          }
+
+          // Buscar o crear modelo
+          let modeloId: number
+          const modeloExistente = await tx.modelo.findFirst({
+            where: { 
+              nombre: equipoData.modelo,
+              marca: {
+                nombre: equipoData.marca
+              }
+            },
+            include: { marca: true }
+          })
+
+          if (modeloExistente) {
+            modeloId = modeloExistente.id
+          } else {
+            // Buscar o crear marca
+            let marcaId: number
+            const marcaExistente = await tx.marca.findFirst({
+              where: { 
+                nombre: {
+                  equals: equipoData.marca,
+                  mode: 'insensitive'
+                }
+              }
+            })
+
+            if (marcaExistente) {
+              marcaId = marcaExistente.id
+            } else {
+              const nuevaMarca = await tx.marca.create({
+                data: { nombre: equipoData.marca }
+              })
+              marcaId = nuevaMarca.id
+            }
+
+            // Crear modelo
+            const nuevoModelo = await tx.modelo.create({
+              data: { 
+                nombre: equipoData.modelo,
+                marcaId: marcaId
+              }
+            })
+            modeloId = nuevoModelo.id
+          }
+
+          // Crear especificaciones si es necesario
+          if (equipoData.especificaciones) {
+            const especificaciones = await tx.especificacionesAdicionales.create({
+              data: equipoData.especificaciones
+            })
+            especificacionesId = especificaciones.id
+          }
+
+          // Crear equipo
+          await tx.equipos.create({
+            data: {
+              bienNacional: equipoData.bienNacional || null,
+              serial: equipoData.serial || null,
+              observaciones: equipoData.observaciones || null,
+              tipoEquipoId: tipoEquipoId,
+              modeloId: modeloId,
+              statusId: equipoData.statusId,
+              estadoId: equipoData.estadoId,
+              usuarioId: usuarioCreado.id,
+              especificacionesId: especificacionesId
+            }
+          })
+        }
       }
+
+      return usuarioCreado
     })
 
-    return NextResponse.json({ message: 'Usuario creado correctamente' }, { status: 201 })
+    return NextResponse.json({ 
+      message: 'Usuario creado correctamente',
+      equiposAsignados: equipos?.length || 0
+    }, { status: 201 })
 
   } catch (error: unknown) {
     console.error('Error creando usuario:', error)
+    
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
