@@ -1,4 +1,3 @@
-
 export interface Equipo {
   id: number
   bienNacional: string | null
@@ -63,15 +62,13 @@ export interface Estados {
   id: number
   nombre: string
 }
-
 export interface EspecificacionesAdicionales {
   id: number
-  ram: string | null
-  almacenamiento: string | null
+  memoriaRam: string | null
+  modulosRam: string | null
+  capacidadDisco: string | null
+  tipoDisco: string | null
   procesador: string | null
-  sistemaOperativo: string | null
-  anydesk: string | null
-  teamviewer: string | null
 }
 
 export interface PaginationInfo {
@@ -80,8 +77,8 @@ export interface PaginationInfo {
   totalItems: number
   hasNext: boolean
   hasPrev: boolean
-  totalCount?: number 
+  totalCount?: number
   hasNextPage?: boolean
-  hasPrevPage?: boolean 
-  limit?: number 
+  hasPrevPage?: boolean
+  limit?: number
 }

@@ -43,7 +43,7 @@ interface UsuarioActivoFormProps {
 
 const IconoValidacion = ({ valido }: { valido: boolean }) =>
   valido ?
-    <CheckCircle size={16} className="text-green-500" /> :
+    <CheckCircle className="w-10 h-10 text-green-500" /> :
     <XCircle size={16} className="text-red-500" />
 
 export default function UsuarioActivoForm({

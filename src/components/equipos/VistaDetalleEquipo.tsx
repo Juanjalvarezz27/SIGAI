@@ -19,6 +19,8 @@ import {
 import { Equipo } from "../../../types/equipos";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import BotonEditarEquipo from "./BotonEditarEquipo";
+import ModalEditarEquipo from "./ModalEditarEquipo";
 
 interface VistaDetalleEquipoProps {
   equipo: Equipo;
@@ -53,6 +55,7 @@ export default function VistaDetalleEquipo({
 }: VistaDetalleEquipoProps) {
   const [equiposUsuario, setEquiposUsuario] = useState<Equipo[]>([]);
   const [cargandoEquipos, setCargandoEquipos] = useState(false);
+  const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
 
   // Cargar equipos del usuario cuando el equipo tenga usuario asignado
   useEffect(() => {
@@ -83,6 +86,11 @@ export default function VistaDetalleEquipo({
 
     cargarEquiposUsuario();
   }, [equipo.usuario?.id, equipo.id]);
+
+  const handleEquipoEditado = () => {
+    // Recargar la página para mostrar los cambios
+    window.location.reload();
+  };
 
   return (
     <>
@@ -125,12 +133,18 @@ export default function VistaDetalleEquipo({
             </div>
           </div>
 
-          <button
-            onClick={onVolver}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
-          >
-            Volver a la lista
-          </button>
+          <div className="flex gap-3">
+            <BotonEditarEquipo 
+              onClick={() => setModalEditarAbierto(true)}
+              loading={loading}
+            />
+            <button
+              onClick={onVolver}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
+            >
+              Volver a la lista
+            </button>
+          </div>
         </div>
 
         {/* Información del Equipo y Usuario */}
@@ -234,47 +248,37 @@ export default function VistaDetalleEquipo({
                       </span>
                     </div>
                   )}
-                  {equipo.especificaciones.ram && (
+                  {equipo.especificaciones.memoriaRam && (
                     <div className="flex items-center gap-2">
                       <Monitor size={16} className="text-blue-500" />
                       <span>
-                        <strong>RAM:</strong> {equipo.especificaciones.ram}
+                        <strong>Memoria RAM:</strong> {equipo.especificaciones.memoriaRam}
                       </span>
                     </div>
                   )}
-                  {equipo.especificaciones.almacenamiento && (
+                  {equipo.especificaciones.modulosRam && (
+                    <div className="flex items-center gap-2">
+                      <Monitor size={16} className="text-blue-500" />
+                      <span>
+                        <strong>Módulos RAM:</strong> {equipo.especificaciones.modulosRam}
+                      </span>
+                    </div>
+                  )}
+                  {equipo.especificaciones.capacidadDisco && (
                     <div className="flex items-center gap-2">
                       <HardDrive size={16} className="text-blue-500" />
                       <span>
-                        <strong>Almacenamiento:</strong>{" "}
-                        {equipo.especificaciones.almacenamiento}
+                        <strong>Capacidad Disco:</strong>{" "}
+                        {equipo.especificaciones.capacidadDisco}
                       </span>
                     </div>
                   )}
-                  {equipo.especificaciones.sistemaOperativo && (
+                  {equipo.especificaciones.tipoDisco && (
                     <div className="flex items-center gap-2">
-                      <Cpu size={16} className="text-blue-500" />
+                      <HardDrive size={16} className="text-blue-500" />
                       <span>
-                        <strong>Sistema Operativo:</strong>{" "}
-                        {equipo.especificaciones.sistemaOperativo}
-                      </span>
-                    </div>
-                  )}
-                  {equipo.especificaciones.anydesk && (
-                    <div className="flex items-center gap-2">
-                      <Monitor size={16} className="text-blue-500" />
-                      <span>
-                        <strong>Anydesk:</strong>{" "}
-                        {equipo.especificaciones.anydesk}
-                      </span>
-                    </div>
-                  )}
-                  {equipo.especificaciones.teamviewer && (
-                    <div className="flex items-center gap-2">
-                      <Monitor size={16} className="text-blue-500" />
-                      <span>
-                        <strong>TeamViewer:</strong>{" "}
-                        {equipo.especificaciones.teamviewer}
+                        <strong>Tipo Disco:</strong>{" "}
+                        {equipo.especificaciones.tipoDisco}
                       </span>
                     </div>
                   )}
@@ -457,6 +461,14 @@ export default function VistaDetalleEquipo({
           </div>
         )}
       </div>
+
+      {/* Modal de Edición */}
+      <ModalEditarEquipo
+        isOpen={modalEditarAbierto}
+        onClose={() => setModalEditarAbierto(false)}
+        onEquipoEditado={handleEquipoEditado}
+        equipo={equipo}
+      />
     </>
   );
 }

@@ -418,7 +418,7 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
       }
 
       // Crear el equipo
-      const response = await axios.post('/api/equipos', equipoData)
+      const response = await axios.post('/api/equipos/crearEquipo', equipoData)
 
       if (response.status === 201) {
         // Mostrar mensaje de éxito
@@ -465,7 +465,7 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
             disabled={loading}
           >
             <X size={20} />
@@ -478,7 +478,7 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
           {mensajeExito && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <CheckCircle className="w-10 h-10 text-green-500 flex-shrink-0" />
                 <div>
                   <p className="text-green-800 font-medium">{mensajeExito}</p>
                   <p className="text-green-600 text-sm mt-1">
