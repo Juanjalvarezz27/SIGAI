@@ -1,3 +1,4 @@
+// app/inventario-equipos/page.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -7,8 +8,11 @@ import FiltroTipoEquipo from "@/components/equipos/FiltroTipoEquipo"
 import FiltroStatusToggle from "@/components/equipos/FiltroStatusToggle"
 import BarraBusquedaEquipos from "@/components/equipos/BarraBusquedaEquipos"
 import ListaEquipos from "@/components/equipos/ListaEquipos"
+import VistaDetalleEquipo from "@/components/equipos/VistaDetalleEquipo"
 import PaginacionSuperior from "@/components/equipos/PaginacionSuperior"
 import PaginacionInferior from "@/components/equipos/PaginacionInferior"
+import BotonNuevoEquipo from "@/components/equipos/BotonNuevoEquipo"
+import ModalNuevoEquipo from "@/components/equipos/ModalNuevoEquipo"
 import axios from "axios"
 import { Equipo, PaginationInfo } from "../../../../types/equipos"
 
@@ -21,6 +25,8 @@ export default function InventarioEquipos() {
   const [error, setError] = useState<string>('')
   const [tiposFiltro, setTiposFiltro] = useState<string[]>([])
   const [statusFiltro, setStatusFiltro] = useState<string>('todos')
+  const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
+  const [modalNuevoEquipoAbierto, setModalNuevoEquipoAbierto] = useState(false)
 
   const cargarEquipos = useCallback(async (page: number, tipos: string[], status: string) => {
     try {
@@ -38,7 +44,7 @@ export default function InventarioEquipos() {
           params.append('tipoEquipoIds', tipoId)
         })
       }
-      
+
       // Mapear los status del toggle a los IDs reales usando statusId
       if (status !== 'todos') {
         params.append('statusId', status)
@@ -75,7 +81,12 @@ export default function InventarioEquipos() {
 
   const handleSeleccionarEquipo = (equipo: Equipo) => {
     setEquipoSeleccionado(equipo)
-    // Aquí puedes implementar vista detalle similar a personal
+    setModo('detalle')
+  }
+
+  const handleVolverALista = () => {
+    setModo('lista')
+    setEquipoSeleccionado(null)
   }
 
   const cambiarPagina = (nuevaPagina: number) => {
@@ -84,69 +95,103 @@ export default function InventarioEquipos() {
     }
   }
 
+  const handleEquipoCreado = () => {
+    // Recargar la lista de equipos
+    cargarEquipos(currentPage, tiposFiltro, statusFiltro)
+  }
+
   return (
     <>
       <Navbar />
       <Title text={"Inventario de Equipos"} />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Toggle de Status */}
-        <FiltroStatusToggle
-          statusSeleccionado={statusFiltro}
-          onStatusChange={handleStatusChange}
-          loading={loading}
-        />
-
-        {/* Barra de búsqueda */}
-        <div className="mb-6">
-          <BarraBusquedaEquipos
-            onEquipoSeleccionado={handleSeleccionarEquipo}
+        {/* Vista de detalle del equipo */}
+        {modo === 'detalle' && equipoSeleccionado && (
+          <VistaDetalleEquipo
+            equipo={equipoSeleccionado}
+            onVolver={handleVolverALista}
             loading={loading}
           />
-        </div>
-
-        {/* Mensaje de error */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-            <div className="flex justify-between items-center">
-              <span>{error}</span>
-              <button
-                onClick={() => setError('')}
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
-              >
-                Volver al inicio
-              </button>
-            </div>
-          </div>
         )}
 
         {/* Vista de lista de equipos */}
-        <PaginacionSuperior
-          pagination={pagination}
-          currentPage={currentPage}
-          onPageChange={cambiarPagina}
-          loading={loading}
-        />
+        {modo === 'lista' && (
+          <>
+            {/* Toggle de Status */}
+            <FiltroStatusToggle
+              statusSeleccionado={statusFiltro}
+              onStatusChange={handleStatusChange}
+              loading={loading}
+            />
 
-        {/* Filtro de Tipos de Equipo */}
-        <FiltroTipoEquipo
-          tiposSeleccionados={tiposFiltro}
-          onTiposChange={handleTiposChange}
-          loading={loading}
-        />
+            {/* Barra de búsqueda */}
+            <div className="mb-6">
+              <BarraBusquedaEquipos
+                onEquipoSeleccionado={handleSeleccionarEquipo}
+                loading={loading}
+              />
+            </div>
 
-        <ListaEquipos
-          equipos={equipos}
-          onEquipoSeleccionado={handleSeleccionarEquipo}
-          loading={loading}
-          error={error}
-        />
+            {/* Mensaje de error */}
+            {error && !loading && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
+                <div className="flex justify-between items-center">
+                  <span>{error}</span>
+                  <button
+                    onClick={() => setError('')}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                  >
+                    Volver al inicio
+                  </button>
+                </div>
+              </div>
+            )}
 
-        <PaginacionInferior
-          pagination={pagination}
-          currentPage={currentPage}
-          onPageChange={cambiarPagina}
-          loading={loading}
+            {/* Vista de lista de equipos */}
+            <PaginacionSuperior
+              pagination={pagination}
+              currentPage={currentPage}
+              onPageChange={cambiarPagina}
+              loading={loading}
+            />
+
+            {/* Filtro de Tipos de Equipo y Botón Nuevo */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex-1">
+                <FiltroTipoEquipo
+                  tiposSeleccionados={tiposFiltro}
+                  onTiposChange={handleTiposChange}
+                  loading={loading}
+                />
+              </div>
+              <BotonNuevoEquipo 
+                onClick={() => setModalNuevoEquipoAbierto(true)}
+                loading={loading}
+              />
+            </div>
+
+            <ListaEquipos
+              equipos={equipos}
+              onEquipoSeleccionado={handleSeleccionarEquipo}
+              loading={loading}
+              error={error}
+            />
+
+            <PaginacionInferior
+              pagination={pagination}
+              currentPage={currentPage}
+              onPageChange={cambiarPagina}
+              loading={loading}
+            />
+          </>
+        )}
+
+        {/* Modal de Nuevo Equipo */}
+        <ModalNuevoEquipo
+          isOpen={modalNuevoEquipoAbierto}
+          onClose={() => setModalNuevoEquipoAbierto(false)}
+          onEquipoCreado={handleEquipoCreado}
         />
       </div>
     </>

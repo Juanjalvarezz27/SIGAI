@@ -56,7 +56,7 @@ export interface Marca {
 
 export interface Status {
   id: number
-  nombre: string
+  estado: string
 }
 
 export interface Estados {

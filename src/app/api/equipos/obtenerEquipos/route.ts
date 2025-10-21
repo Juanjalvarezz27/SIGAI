@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
             marca: true
           }
         },
-        status: true,
+        status: true, 
         estado: true,
         usuario: {
           include: {
