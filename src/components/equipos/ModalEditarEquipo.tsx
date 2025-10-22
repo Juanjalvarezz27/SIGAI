@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { X, Search, Trash2, Cpu, CheckCircle } from "lucide-react"
 import axios from "axios"
 import { Equipo, TipoEquipo, Status, Estados } from "../../../types/equipos"
+import ReasignacionEquipo from "./ReasignacionEquipo"
 
 // Interfaces locales para el formulario
 interface EspecificacionesFormData {
@@ -479,7 +480,7 @@ export default function ModalEditarEquipo({
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 cursor-pointer hover:text-red-600 transition-colors"
             disabled={loading}
           >
             <X size={20} />
@@ -527,6 +528,23 @@ export default function ModalEditarEquipo({
           {/* Formulario - Solo mostrar cuando no está cargando */}
           {!cargandoDatos && (
             <div className="space-y-4">
+              {/* Reasignación de Equipo */}
+                {equipo.usuario && (
+                  <ReasignacionEquipo
+                    equipoId={equipo.id}
+                    usuarioActual={{
+                      id: equipo.usuario.id,
+                      nombre: equipo.usuario.nombre,
+                      apellido: equipo.usuario.apellido || "",
+                      email: equipo.usuario.email || ""
+                    }}
+                    onReasignacionExitosa={() => {
+                      // Recargar la página para mostrar los cambios
+                      window.location.reload()
+                    }}
+                    disabled={loading || cargandoDatos || !!mensajeExito}
+                  />
+                )}
               {/* Selección de Tipo de Equipo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

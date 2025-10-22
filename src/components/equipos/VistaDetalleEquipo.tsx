@@ -15,17 +15,56 @@ import {
   Mail,
   CreditCard,
   Circle,
+  CheckCircle,
+  Calendar,
+  User as UserIcon,
+  RefreshCw,
 } from "lucide-react";
 import { Equipo } from "../../../types/equipos";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import BotonEditarEquipo from "./BotonEditarEquipo";
 import ModalEditarEquipo from "./ModalEditarEquipo";
+import BotonDesincorporarEquipo from "./BotonDesincorporarEquipo";
+import ModalDesincorporarEquipo from "./ModalDesincorporarEquipo";
 
 interface VistaDetalleEquipoProps {
   equipo: Equipo;
   onVolver: () => void;
   loading?: boolean;
+}
+
+interface HistorialDesincorporacion {
+  id: number;
+  motivo: string;
+  fechaDeshabilitacion: string;
+  deshabilitadoPor: {
+    id: number;
+    nombre: string;
+    apellido: string;
+  };
+  statusAnterior: {
+    id: number;
+    estado: string;
+  };
+  statusNuevo: {
+    id: number;
+    estado: string;
+  };
+  equipo: {
+    id: number;
+    bienNacional?: string;
+    serial?: string;
+    tipoEquipo: {
+      nombre: string;
+    };
+    modelo: {
+      nombre: string;
+      marca: {
+        nombre: string;
+      };
+    };
+  };
 }
 
 // Función helper para eliminar equipos duplicados
@@ -56,6 +95,14 @@ export default function VistaDetalleEquipo({
   const [equiposUsuario, setEquiposUsuario] = useState<Equipo[]>([]);
   const [cargandoEquipos, setCargandoEquipos] = useState(false);
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
+  const [modalDesincorporarAbierto, setModalDesincorporarAbierto] = useState(false);
+  const [loadingDesincorporar, setLoadingDesincorporar] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [historialDesincorporacion, setHistorialDesincorporacion] = useState<HistorialDesincorporacion[]>([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
+
+  // Verificar si el equipo está desincorporado (Status Desincorporados)
+  const estaDesincorporado = equipo.status?.id === 3;
 
   // Cargar equipos del usuario cuando el equipo tenga usuario asignado
   useEffect(() => {
@@ -87,13 +134,121 @@ export default function VistaDetalleEquipo({
     cargarEquiposUsuario();
   }, [equipo.usuario?.id, equipo.id]);
 
+  // Cargar historial de desincorporación si el equipo está desincorporado
+  useEffect(() => {
+    const cargarHistorialDesincorporacion = async () => {
+      if (estaDesincorporado) {
+        try {
+          setCargandoHistorial(true);
+          const response = await axios.get(
+            `/api/equipos/${equipo.id}/desincorporacion-historial`
+          );
+          if (response.status === 200) {
+            setHistorialDesincorporacion(response.data.historial || []);
+          }
+        } catch (error) {
+          console.error("Error cargando historial de desincorporación:", error);
+          setHistorialDesincorporacion([]);
+        } finally {
+          setCargandoHistorial(false);
+        }
+      }
+    };
+
+    cargarHistorialDesincorporacion();
+  }, [equipo.id, estaDesincorporado]);
+
+  // Efecto para limpiar el mensaje de éxito después de 5 segundos
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        window.location.reload();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   const handleEquipoEditado = () => {
     // Recargar la página para mostrar los cambios
     window.location.reload();
   };
 
+  const handleDesincorporarEquipo = async (motivo: string) => {
+    try {
+      setLoadingDesincorporar(true);
+      
+      const response = await axios.post(`/api/equipos/${equipo.id}/desincorporar`, {
+        motivo
+      });
+
+      if (response.status === 200) {
+        // Mostrar mensaje de éxito y cerrar modal
+        setSuccessMessage("Desincorporación realizada con éxito");
+        setModalDesincorporarAbierto(false);
+        setLoadingDesincorporar(false);
+      }
+    } catch (error: unknown) {
+      console.error('Error desincorporando equipo:', error);
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.error || 'Error al desincorporar el equipo');
+      } else {
+        alert('Error al desincorporar el equipo');
+      }
+      setLoadingDesincorporar(false);
+    }
+  };
+
+  const handleHabilitarEquipo = async () => {
+    try {
+      setLoadingDesincorporar(true);
+      
+      const response = await axios.post(`/api/equipos/${equipo.id}/incorporar`);
+
+      if (response.status === 200) {
+        // Mostrar mensaje de éxito para incorporación
+        setSuccessMessage("Incorporación realizada con éxito");
+        setLoadingDesincorporar(false);
+      }
+    } catch (error: unknown) {
+      console.error('Error habilitando equipo:', error);
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.error || 'Error al habilitar el equipo');
+      } else {
+        alert('Error al habilitar el equipo');
+      }
+      setLoadingDesincorporar(false);
+    }
+  };
+
+  // Formatear fecha para mostrar
+  const formatearFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <>
+      {/* Mensaje de éxito global */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 p-4 bg-green-50 border border-green-200 rounded-lg shadow-lg max-w-sm">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-10 h-10 text-green-600 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-green-800">{successMessage}</p>
+              <p className="text-sm text-green-700 mt-1">
+                La página se actualizará automáticamente.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
@@ -130,6 +285,11 @@ export default function VistaDetalleEquipo({
                   </span>
                 </div>
               )}
+              {estaDesincorporado && (
+                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                  Desincorporado
+                </span>
+              )}
             </div>
           </div>
 
@@ -138,6 +298,30 @@ export default function VistaDetalleEquipo({
               onClick={() => setModalEditarAbierto(true)}
               loading={loading}
             />
+            
+            {/* Botón de desincorporar/habilitar */} 
+            {!estaDesincorporado ? (
+              <BotonDesincorporarEquipo 
+                onClick={() => setModalDesincorporarAbierto(true)}
+                loading={loading || loadingDesincorporar}
+              />
+            ) : (
+              <button
+                onClick={handleHabilitarEquipo}
+                disabled={loading || loadingDesincorporar}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 cursor-pointer hover:bg-green-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+              >
+                {loadingDesincorporar ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Incorporando...
+                  </>
+                ) : (
+                  'Incorporar Equipo'
+                )}
+              </button>
+            )}
+
             <button
               onClick={onVolver}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transform transition-all duration-200 hover:scale-105 cursor-pointer"
@@ -252,15 +436,7 @@ export default function VistaDetalleEquipo({
                     <div className="flex items-center gap-2">
                       <Monitor size={16} className="text-blue-500" />
                       <span>
-                        <strong>Memoria RAM:</strong> {equipo.especificaciones.memoriaRam}
-                      </span>
-                    </div>
-                  )}
-                  {equipo.especificaciones.modulosRam && (
-                    <div className="flex items-center gap-2">
-                      <Monitor size={16} className="text-blue-500" />
-                      <span>
-                        <strong>Módulos RAM:</strong> {equipo.especificaciones.modulosRam}
+                        <strong>RAM:</strong> {equipo.especificaciones.memoriaRam}
                       </span>
                     </div>
                   )}
@@ -268,17 +444,26 @@ export default function VistaDetalleEquipo({
                     <div className="flex items-center gap-2">
                       <HardDrive size={16} className="text-blue-500" />
                       <span>
-                        <strong>Capacidad Disco:</strong>{" "}
+                        <strong>Almacenamiento:</strong>{" "}
                         {equipo.especificaciones.capacidadDisco}
                       </span>
                     </div>
                   )}
                   {equipo.especificaciones.tipoDisco && (
                     <div className="flex items-center gap-2">
-                      <HardDrive size={16} className="text-blue-500" />
+                      <Cpu size={16} className="text-blue-500" />
                       <span>
                         <strong>Tipo Disco:</strong>{" "}
                         {equipo.especificaciones.tipoDisco}
+                      </span>
+                    </div>
+                  )}
+                  {equipo.especificaciones.modulosRam && (
+                    <div className="flex items-center gap-2">
+                      <Monitor size={16} className="text-blue-500" />
+                      <span>
+                        <strong>Módulos RAM:</strong>{" "}
+                        {equipo.especificaciones.modulosRam}
                       </span>
                     </div>
                   )}
@@ -367,6 +552,80 @@ export default function VistaDetalleEquipo({
             </div>
           )}
         </div>
+
+        {/* Historial de Desincorporación (solo para equipos desincorporados) */}
+        {estaDesincorporado && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
+              <RefreshCw size={20} className="text-red-600" />
+              Historial de Desincorporación
+            </h3>
+
+            {cargandoHistorial ? (
+              <div className="flex justify-center py-4">
+                <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : historialDesincorporacion.length > 0 ? (
+              <div className="space-y-4">
+                {historialDesincorporacion.map((registro) => (
+                  <div
+                    key={registro.id}
+                    className="bg-white border border-red-100 rounded-lg p-4"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        <Calendar size={16} className="text-red-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Fecha de Desincorporación</p>
+                          <p className="font-medium">{formatearFecha(registro.fechaDeshabilitacion)}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <UserIcon size={16} className="text-red-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Desincorporado por</p>
+                          <p className="font-medium">
+                            {registro.deshabilitadoPor.nombre} {registro.deshabilitadoPor.apellido}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        <Circle size={16} className="text-yellow-500 fill-yellow-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Status Anterior</p>
+                          <p className="font-medium">{registro.statusAnterior.estado}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Circle size={16} className="text-red-500 fill-red-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Status Nuevo</p>
+                          <p className="font-medium">{registro.statusNuevo.estado}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-red-100">
+                      <p className="text-sm text-gray-600 mb-2">Motivo de Desincorporación</p>
+                      <p className="text-gray-800 bg-red-50 p-3 rounded-md border border-red-100">
+                        {registro.motivo}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-center py-4">
+                No se encontró historial de desincorporación para este equipo.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Otros Equipos del Usuario */}
         {equipo.usuario && (
@@ -468,6 +727,15 @@ export default function VistaDetalleEquipo({
         onClose={() => setModalEditarAbierto(false)}
         onEquipoEditado={handleEquipoEditado}
         equipo={equipo}
+      />
+
+      {/* Modal de Desincorporación */}
+      <ModalDesincorporarEquipo
+        isOpen={modalDesincorporarAbierto}
+        onClose={() => setModalDesincorporarAbierto(false)}
+        onConfirm={handleDesincorporarEquipo}
+        equipoNombre={`${equipo.tipoEquipo.nombre} - ${equipo.modelo.marca.nombre} ${equipo.modelo.nombre}`}
+        loading={loadingDesincorporar}
       />
     </>
   );

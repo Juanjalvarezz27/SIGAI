@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { usuarioId: string } }
 ) {
   try {
-    const usuarioId = parseInt(params.usuarioId)
+    const usuarioId = parseInt(await params.usuarioId)
 
     if (isNaN(usuarioId)) {
       return NextResponse.json({ error: 'ID de usuario inválido' }, { status: 400 })

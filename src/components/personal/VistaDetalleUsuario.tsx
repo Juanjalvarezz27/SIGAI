@@ -1,4 +1,3 @@
-// components/personal/VistaDetalleUsuario.tsx
 "use client"
 
 import { User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Edit, X, Calendar, UserX, FileText } from "lucide-react"
