@@ -5,6 +5,7 @@ import { X, Search, Trash2, Cpu, CheckCircle } from "lucide-react"
 import axios from "axios"
 import { Equipo, TipoEquipo, Status, Estados } from "../../../types/equipos"
 import ReasignacionEquipo from "./ReasignacionEquipo"
+import MiniModalBusqueda from "./MiniModalBusqueda"
 
 // Interfaces locales para el formulario
 interface EspecificacionesFormData {
@@ -57,11 +58,11 @@ interface ModalEditarEquipoProps {
 const EQUIPOS_CON_ESPECIFICACIONES = ["Ordenador", "Laptop", "AllInOne"]
 const EQUIPOS_CON_CAMPOS_OPCIONALES = ["Mouse"]
 
-export default function ModalEditarEquipo({ 
-  isOpen, 
-  onClose, 
-  onEquipoEditado, 
-  equipo 
+export default function ModalEditarEquipo({
+  isOpen,
+  onClose,
+  onEquipoEditado,
+  equipo
 }: ModalEditarEquipoProps) {
   const [tiposEquipo, setTiposEquipo] = useState<TipoEquipo[]>([])
   const [status, setStatus] = useState<Status[]>([])
@@ -99,12 +100,18 @@ export default function ModalEditarEquipo({
   const [mostrarEspecificaciones, setMostrarEspecificaciones] = useState(false)
   const [camposOpcionales, setCamposOpcionales] = useState(false)
 
+  // Estados para los mini modales de marca y modelo
+  const [mostrarModalMarca, setMostrarModalMarca] = useState(false)
+  const [mostrarModalModelo, setMostrarModalModelo] = useState(false)
+  const [marcaSeleccionada, setMarcaSeleccionada] = useState<{id: number, nombre: string} | null>(null)
+  const [esMarcaNueva, setEsMarcaNueva] = useState(false)
+
   // Efecto para controlar el scroll del body cuando el modal está abierto
   useEffect(() => {
     if (isOpen) {
       // Guardar la posición actual del scroll
       const scrollY = window.scrollY
-      
+
       // Agregar estilos para deshabilitar el scroll
       document.body.style.position = 'fixed'
       document.body.style.top = `-${scrollY}px`
@@ -128,7 +135,7 @@ export default function ModalEditarEquipo({
     if (mensajeExito) {
       const timer = setTimeout(() => {
         setMensajeExito("")
-      }, 5000) // 5 segundos completos
+      }, 5000)
 
       return () => clearTimeout(timer)
     }
@@ -153,7 +160,7 @@ export default function ModalEditarEquipo({
         // Llenar formulario con datos del equipo si existe
         if (equipo) {
           const tipoEquipo = tiposResponse.data.tipos?.find((t: TipoEquipo) => t.id === equipo.tipoEquipo.id)
-          
+
           setFormData({
             bienNacional: equipo.bienNacional || "",
             serial: equipo.serial || "",
@@ -180,6 +187,13 @@ export default function ModalEditarEquipo({
           })
 
           setTipoSeleccionado(tipoEquipo || null)
+
+          // Establecer marca seleccionada
+          setMarcaSeleccionada({
+            id: equipo.modelo.marca.id,
+            nombre: equipo.modelo.marca.nombre
+          })
+          setEsMarcaNueva(false)
         }
 
       } catch (error) {
@@ -197,10 +211,10 @@ export default function ModalEditarEquipo({
   // Determinar si mostrar especificaciones y campos opcionales
   useEffect(() => {
     const tipoNombre = tipoSeleccionado?.nombre || formData.tipoEquipoNombre
-    
+
     // Verificar si requiere especificaciones
     const requiereEspec = Boolean(tipoNombre && EQUIPOS_CON_ESPECIFICACIONES.includes(tipoNombre))
-    
+
     // Verificar si tiene campos opcionales
     const tieneCamposOpcionales = Boolean(tipoNombre && EQUIPOS_CON_CAMPOS_OPCIONALES.includes(tipoNombre))
 
@@ -240,6 +254,10 @@ export default function ModalEditarEquipo({
     setMostrarListaTipos(false)
     setErrores([])
     setMensajeExito("")
+    setMarcaSeleccionada(null)
+    setMostrarModalMarca(false)
+    setMostrarModalModelo(false)
+    setEsMarcaNueva(false)
   }
 
   const handleChange = (field: keyof Omit<EquipoFormData, 'especificaciones'>, value: string | number) => {
@@ -292,6 +310,73 @@ export default function ModalEditarEquipo({
     }))
     setNuevoTipo("")
     setMostrarListaTipos(true)
+  }
+
+  // Handlers para marcas y modelos CORREGIDOS
+  const handleSeleccionarMarca = async (marca: {id: number, nombre: string} | "otro", nombreNuevo?: string) => {
+    if (marca === "otro") {
+      // Si selecciona "otro", crear nueva marca
+      if (nombreNuevo) {
+        try {
+          const response = await axios.post('/api/equipos/marcas/crearMarca', {
+            nombre: nombreNuevo
+          })
+          
+          if (response.data.marca) {
+            const nuevaMarca = response.data.marca
+            setFormData(prev => ({ ...prev, marca: nuevaMarca.nombre }))
+            setMarcaSeleccionada(nuevaMarca)
+            setEsMarcaNueva(true)
+          }
+        } catch (error) {
+          console.error('Error creando nueva marca:', error)
+          setFormData(prev => ({ ...prev, marca: nombreNuevo }))
+          setMarcaSeleccionada(null)
+          setEsMarcaNueva(true)
+        }
+      } else {
+        setFormData(prev => ({ ...prev, marca: "" }))
+        setMarcaSeleccionada(null)
+        setEsMarcaNueva(true)
+      }
+    } else {
+      // Si selecciona una marca existente
+      setFormData(prev => ({ ...prev, marca: marca.nombre }))
+      setMarcaSeleccionada(marca)
+      setEsMarcaNueva(false)
+    }
+    
+    setFormData(prev => ({ ...prev, modelo: "" }))
+    setMostrarModalMarca(false)
+  }
+
+  // Handler para modelos - FUNCIÓN FALTANTE
+  const handleSeleccionarModelo = async (modelo: {id: number, nombre: string} | "otro", nombreNuevo?: string) => {
+    if (modelo === "otro") {
+      // Si selecciona "otro", crear nuevo modelo para la marca actual
+      if (nombreNuevo && marcaSeleccionada) {
+        try {
+          const response = await axios.post('/api/equipos/modelos/crearModelo', {
+            nombre: nombreNuevo,
+            marcaId: marcaSeleccionada.id
+          })
+          
+          if (response.data.modelo) {
+            const nuevoModelo = response.data.modelo
+            setFormData(prev => ({ ...prev, modelo: nuevoModelo.nombre }))
+          }
+        } catch (error) {
+          console.error('Error creando nuevo modelo:', error)
+          setFormData(prev => ({ ...prev, modelo: nombreNuevo }))
+        }
+      } else {
+        setFormData(prev => ({ ...prev, modelo: nombreNuevo || "" }))
+      }
+    } else {
+      // Si selecciona un modelo existente
+      setFormData(prev => ({ ...prev, modelo: modelo.nombre }))
+    }
+    setMostrarModalModelo(false)
   }
 
   const crearNuevoTipoEquipo = async (): Promise<TipoEquipo | null> => {
@@ -381,7 +466,7 @@ export default function ModalEditarEquipo({
 
   const handleSubmit = async () => {
     const nuevosErrores = validarFormulario()
-    
+
     if (nuevosErrores.length > 0) {
       setErrores(nuevosErrores)
       return
@@ -441,12 +526,9 @@ export default function ModalEditarEquipo({
       if (response.status === 200) {
         // Mostrar mensaje de éxito
         setMensajeExito("¡Equipo actualizado con éxito!")
-        
+
         // Notificar al componente padre
         onEquipoEditado()
-        
-        // NO cerrar automáticamente el modal - dejar que el usuario vea el mensaje por 5 segundos
-        // El modal se cerrará cuando el usuario haga click en Cancelar o cuando se cierre el mensaje
       }
 
     } catch (error: unknown) {
@@ -529,22 +611,22 @@ export default function ModalEditarEquipo({
           {!cargandoDatos && (
             <div className="space-y-4">
               {/* Reasignación de Equipo */}
-                {equipo.usuario && (
-                  <ReasignacionEquipo
-                    equipoId={equipo.id}
-                    usuarioActual={{
-                      id: equipo.usuario.id,
-                      nombre: equipo.usuario.nombre,
-                      apellido: equipo.usuario.apellido || "",
-                      email: equipo.usuario.email || ""
-                    }}
-                    onReasignacionExitosa={() => {
-                      // Recargar la página para mostrar los cambios
-                      window.location.reload()
-                    }}
-                    disabled={loading || cargandoDatos || !!mensajeExito}
-                  />
-                )}
+              {equipo.usuario && (
+                <ReasignacionEquipo
+                  equipoId={equipo.id}
+                  usuarioActual={{
+                    id: equipo.usuario.id,
+                    nombre: equipo.usuario.nombre,
+                    apellido: equipo.usuario.apellido || "",
+                    email: equipo.usuario.email || ""
+                  }}
+                  onReasignacionExitosa={() => {
+                    window.location.reload()
+                  }}
+                  disabled={loading || cargandoDatos || !!mensajeExito}
+                />
+              )}
+
               {/* Selección de Tipo de Equipo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -643,30 +725,37 @@ export default function ModalEditarEquipo({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Marca *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.marca}
-                    onChange={(e) => handleChange('marca', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                    placeholder="Ej: Dell, HP, Lenovo"
+                  <button
+                    type="button"
+                    onClick={() => setMostrarModalMarca(true)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#001F3F] flex items-center justify-between"
                     disabled={loading}
-                    required
-                  />
+                  >
+                    <span className={formData.marca ? "text-gray-900" : "text-gray-500"}>
+                      {formData.marca || "Seleccionar marca..."}
+                    </span>
+                    <Search size={16} className="text-gray-400" />
+                  </button>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Modelo *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.modelo}
-                    onChange={(e) => handleChange('modelo', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                    placeholder="Ej: Optiplex 7070, ThinkPad X1"
-                    disabled={loading}
-                    required
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarModalModelo(true)}
+                    disabled={loading || !formData.marca}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#001F3F] flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className={formData.modelo ? "text-gray-900" : "text-gray-500"}>
+                      {formData.modelo || "Seleccionar modelo..."}
+                    </span>
+                    <Search size={16} className="text-gray-400" />
+                  </button>
+                  {!formData.marca && (
+                    <p className="text-xs text-gray-500 mt-1">Primero selecciona una marca</p>
+                  )}
                 </div>
               </div>
 
@@ -880,6 +969,26 @@ export default function ModalEditarEquipo({
           </button>
         </div>
       </div>
+
+      {/* Mini Modal para Marcas */}
+      <MiniModalBusqueda
+        isOpen={mostrarModalMarca}
+        onClose={() => setMostrarModalMarca(false)}
+        onSeleccionar={handleSeleccionarMarca}
+        tipo="marca"
+        valorActual={formData.marca}
+      />
+
+      {/* Mini Modal para Modelos */}
+      <MiniModalBusqueda
+        isOpen={mostrarModalModelo}
+        onClose={() => setMostrarModalModelo(false)}
+        onSeleccionar={handleSeleccionarModelo}
+        tipo="modelo"
+        marcaId={marcaSeleccionada?.id}
+        valorActual={formData.modelo}
+        esMarcaNueva={esMarcaNueva}
+      />
     </div>
   )
 }

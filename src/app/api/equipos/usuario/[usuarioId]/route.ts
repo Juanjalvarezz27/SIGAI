@@ -6,15 +6,17 @@ export async function GET(
   { params }: { params: { usuarioId: string } }
 ) {
   try {
-    const usuarioId = parseInt(await params.usuarioId)
+    // Await al objeto params completo primero
+    const { usuarioId } = await params
+    const id = parseInt(usuarioId)
 
-    if (isNaN(usuarioId)) {
+    if (isNaN(id)) {
       return NextResponse.json({ error: 'ID de usuario inválido' }, { status: 400 })
     }
 
     const equipos = await prismadb.equipos.findMany({
       where: {
-        usuarioId: usuarioId
+        usuarioId: id
       },
       include: {
         tipoEquipo: true,
