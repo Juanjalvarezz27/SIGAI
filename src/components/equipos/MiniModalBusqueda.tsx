@@ -38,12 +38,6 @@ export default function MiniModalBusqueda({
 
   // Función para buscar items
   const buscarItems = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setItems([])
-      setCargando(false)
-      return
-    }
-
     try {
       setCargando(true)
 
@@ -51,14 +45,22 @@ export default function MiniModalBusqueda({
         const response = await axios.get(`/api/equipos/marcas/buscar?q=${encodeURIComponent(query)}`)
         setItems(response.data.marcas || [])
       } else if (tipo === "modelo" && marcaId) {
-        const response = await axios.get(`/api/equipos/modelos/buscar?q=${encodeURIComponent(query)}&marcaId=${marcaId}`)
+        // Para modelos, siempre buscar incluso con query vacía
+        const url = query.trim() 
+          ? `/api/equipos/modelos/buscar?q=${encodeURIComponent(query)}&marcaId=${marcaId}`
+          : `/api/equipos/modelos/buscar?marcaId=${marcaId}`
+        
+        const response = await axios.get(url)
         setItems(response.data.modelos || [])
+      } else {
+        setItems([])
       }
     } catch (error) {
       console.error(`Error buscando ${tipo}s:`, error)
       setItems([])
     } finally {
       setCargando(false)
+      setEsPrimeraCarga(false)
     }
   }, [tipo, marcaId])
 
@@ -77,8 +79,8 @@ export default function MiniModalBusqueda({
       setMostrarInputModelo(false)
       setNombreModelo("")
 
-      // Para modelos: solo cargar automáticamente si NO es una marca nueva
-      if (tipo === "modelo" && marcaId && !esMarcaNueva) {
+      // Para modelos: SIEMPRE cargar automáticamente si hay marcaId
+      if (tipo === "modelo" && marcaId) {
         cargarModelosPorMarca()
       }
 
@@ -90,7 +92,7 @@ export default function MiniModalBusqueda({
         }
       }
     }
-  }, [isOpen, valorActual, buscarItemsDebounced, tipo, marcaId, esMarcaNueva])
+  }, [isOpen, valorActual, buscarItemsDebounced, tipo, marcaId])
 
   // Función para cargar todos los modelos de una marca específica
   const cargarModelosPorMarca = async () => {
@@ -110,15 +112,20 @@ export default function MiniModalBusqueda({
     }
   }
 
-  // Efecto para buscar cuando cambia la búsqueda (solo para marcas)
+  // Efecto para buscar cuando cambia la búsqueda
   useEffect(() => {
     if (tipo === "marca" && busqueda && busqueda.length >= 2) {
       buscarItemsDebounced(busqueda)
+    } else if (tipo === "modelo" && marcaId) {
+      // Para modelos, buscar inmediatamente cuando cambia la búsqueda
+      if (busqueda.trim() || busqueda === "") {
+        buscarItemsDebounced(busqueda)
+      }
     } else if (tipo === "marca") {
       // Si la búsqueda está vacía o tiene menos de 2 caracteres, limpiar items
       setItems([])
     }
-  }, [busqueda, buscarItemsDebounced, tipo])
+  }, [busqueda, buscarItemsDebounced, tipo, marcaId])
 
   // Cleanup del debounce
   useEffect(() => {
@@ -181,7 +188,7 @@ export default function MiniModalBusqueda({
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-red-600 transition-colors"
+            className="text-gray-400 hover:text-red-600 cursor-pointer transition-colors"
           >
             <X size={20} />
           </button>
@@ -199,6 +206,21 @@ export default function MiniModalBusqueda({
                 onChange={(e) => setBusqueda(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
                 placeholder="Buscar marcas..."
+                autoFocus
+              />
+            </div>
+          )}
+
+          {/* Barra de búsqueda para modelos (NUEVO) */}
+          {tipo === "modelo" && (
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
+                placeholder="Buscar modelos..."
                 autoFocus
               />
             </div>
@@ -233,13 +255,13 @@ export default function MiniModalBusqueda({
                   <button
                     onClick={handleGuardarModelo}
                     disabled={!nombreModelo.trim()}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 cursor-pointer bg-green-600 cursor-pointer text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Guardar Modelo
                   </button>
                   <button
                     onClick={() => setMostrarInputModelo(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md"
+                    className="px-4 py-2 cursor-pointer text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md"
                   >
                     Cancelar
                   </button>
@@ -254,7 +276,7 @@ export default function MiniModalBusqueda({
               onClick={handleCrearNuevo}
               className="w-full p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors mb-4"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 cursor-pointer">
                 <Plus className="w-6 h-6 text-green-600" />
                 <div className="text-left">
                   <span className="font-medium text-green-800 block">
@@ -267,7 +289,7 @@ export default function MiniModalBusqueda({
                   </span>
                   <p className="text-sm text-green-600 mt-1">
                     {busqueda.trim()
-                      ? `El ${tipo} se guardará como "${busqueda}"`
+                      ? ` ${tipo} se guardará como "${busqueda}"`
                       : tipo === "marca" 
                         ? "Escribe el nombre de la nueva marca arriba"
                         : tipo === "modelo" && esMarcaNueva
@@ -305,7 +327,7 @@ export default function MiniModalBusqueda({
                   <button
                     key={item.id}
                     onClick={() => handleSeleccionarItem(item)}
-                    className="w-full text-left p-3 hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
+                    className="w-full text-left p-3 cursor-pointer hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-900">{item.nombre}</span>
@@ -359,7 +381,7 @@ export default function MiniModalBusqueda({
           <div className="p-4 border-t border-gray-200">
             <button
               onClick={onClose}
-              className="w-full px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+              className="w-full px-4 py-2 cursor-pointer text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
             >
               Cancelar
             </button>

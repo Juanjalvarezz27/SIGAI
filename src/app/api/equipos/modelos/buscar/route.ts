@@ -11,23 +11,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'marcaId es requerido' }, { status: 400 })
     }
 
-    // Si no hay query, retornar array vacío
-    if (!query.trim()) {
-      return NextResponse.json({ modelos: [] })
+    // Construir el where clause de forma type-safe
+    const whereClause: {
+      marcaId: number
+      nombre?: {
+        contains: string
+        mode: 'insensitive'
+      }
+    } = {
+      marcaId: parseInt(marcaId)
     }
 
+    // Solo agregar filtro por nombre si hay query
+    if (query.trim()) {
+      whereClause.nombre = {
+        contains: query,
+        mode: 'insensitive'
+      }
+    }
+
+    // SIEMPRE cargar modelos, incluso si no hay query
     const modelos = await prismadb.modelo.findMany({
-      where: {
-        AND: [
-          { marcaId: parseInt(marcaId) },
-          {
-            nombre: {
-              contains: query,
-              mode: 'insensitive'
-            }
-          }
-        ]
-      },
+      where: whereClause,
       orderBy: { nombre: 'asc' },
     })
 
