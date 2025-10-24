@@ -4,14 +4,14 @@ interface FiltroRolesProps {
   rolSeleccionado: string
   onRolChange: (rol: string) => void
   loading?: boolean
-  esSupervisor?: boolean 
+  esSupervisor?: boolean
 }
 
 export default function FiltroRoles({
   rolSeleccionado,
   onRolChange,
   loading = false,
-  esSupervisor = false // Valor por defecto
+  esSupervisor = false
 }: FiltroRolesProps) {
   // Roles para admin (completo)
   const rolesAdmin = [
@@ -43,11 +43,11 @@ export default function FiltroRoles({
             type="button"
             onClick={() => onRolChange(rol.valor)}
             disabled={loading}
-            className={`px-4 py-2 rounded-md font-medium transition-all duration-200 cursor-pointer transition-all duration-300 hover:scale-105 ${
+            className={`px-4 py-2 rounded-md font-medium transition-all duration-200 cursor-pointer hover:scale-105 ${
               rolSeleccionado === rol.valor
                 ? 'bg-white text-[#001F3F] shadow-sm'
-                : 'text-gray-600 hover:text-gray-800 disabled:hover:text-gray-600'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                : 'text-gray-600 hover:text-gray-800'
+            } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-600`}
           >
             {rol.nombre}
           </button>

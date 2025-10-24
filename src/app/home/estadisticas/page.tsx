@@ -4,6 +4,7 @@ import { useState } from "react"
 import Navbar from "@/components/Navbar"
 import Title from "@/components/Title"
 import ToggleEstadisticas from "@/components/estadisticas/ToggleEstadisticas"
+import ExportButtons from "@/components/estadisticas/ExportButtons"
 import EstadisticasPersonal from "@/components/estadisticas/EstadisticasPersonal"
 import EstadisticasEquipos from "@/components/estadisticas/EstadisticasEquipos"
 
@@ -16,21 +17,18 @@ export default function EstadisticasPage() {
     switch (tipoEstadistica) {
       case "personal":
         return <EstadisticasPersonal />
-
       case "equipos":
         return <EstadisticasEquipos />
-
       case "tickets":
         return (
-          <div className="text-center">
-            <p>Estadísticas de Tickets</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Estadísticas de Tickets</p>
           </div>
         )
-        
       case "eventos":
         return (
-          <div className="text-center">
-            <p>Estadísticas de Eventos</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Estadísticas de Eventos</p>
           </div>
         )
       default:
@@ -44,9 +42,12 @@ export default function EstadisticasPage() {
       <div className="container mx-auto px-4 py-8">
         <Title text="Estadísticas" />
 
-        {/* Toggle de Estadísticas */}
-        <div className="mb-8">
-          <ToggleEstadisticas onTipoChange={setTipoEstadistica} />
+        {/* Toggle de Estadísticas con Botones de Exportación */}
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-6">
+            <ToggleEstadisticas onTipoChange={setTipoEstadistica} />
+            <ExportButtons tipoEstadistica={tipoEstadistica} />
+          </div>
         </div>
 
         {/* Contenido de Estadísticas */}
