@@ -1,4 +1,3 @@
-// app/inventario-equipos/page.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -27,6 +26,25 @@ export default function InventarioEquipos() {
   const [statusFiltro, setStatusFiltro] = useState<string>('todos')
   const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
   const [modalNuevoEquipoAbierto, setModalNuevoEquipoAbierto] = useState(false)
+  const [miRol, setMiRol] = useState({ rolId: 0, rol: '', loading: true })
+
+  // Obtener mi rol al cargar el componente
+  useEffect(() => {
+    const obtenerMiRol = async () => {
+      try {
+        const response = await axios.get('/api/auth/usuarioRol')
+        setMiRol({ 
+          ...response.data, 
+          loading: false 
+        })
+      } catch (error) {
+        console.error('Error obteniendo rol:', error)
+        setMiRol(prev => ({ ...prev, loading: false }))
+      }
+    }
+
+    obtenerMiRol()
+  }, [])
 
   const cargarEquipos = useCallback(async (page: number, tipos: string[], status: string) => {
     try {
@@ -100,6 +118,9 @@ export default function InventarioEquipos() {
     cargarEquipos(currentPage, tiposFiltro, statusFiltro)
   }
 
+  // Determinar si el usuario puede crear equipos (admin = 1, supervisor = 2)
+  const puedeCrearEquipos = miRol.rolId === 1 || miRol.rolId === 2
+
   return (
     <>
       <Navbar />
@@ -165,10 +186,14 @@ export default function InventarioEquipos() {
                   loading={loading}
                 />
               </div>
-              <BotonNuevoEquipo 
-                onClick={() => setModalNuevoEquipoAbierto(true)}
-                loading={loading}
-              />
+              
+              {/* Solo mostrar botón si tiene permisos */}
+              {puedeCrearEquipos && (
+                <BotonNuevoEquipo
+                  onClick={() => setModalNuevoEquipoAbierto(true)}
+                  loading={loading}
+                />
+              )}
             </div>
 
             <ListaEquipos
@@ -187,12 +212,14 @@ export default function InventarioEquipos() {
           </>
         )}
 
-        {/* Modal de Nuevo Equipo */}
-        <ModalNuevoEquipo
-          isOpen={modalNuevoEquipoAbierto}
-          onClose={() => setModalNuevoEquipoAbierto(false)}
-          onEquipoCreado={handleEquipoCreado}
-        />
+        {/* Modal de Nuevo Equipo - Solo renderizar si tiene permisos */}
+        {puedeCrearEquipos && (
+          <ModalNuevoEquipo
+            isOpen={modalNuevoEquipoAbierto}
+            onClose={() => setModalNuevoEquipoAbierto(false)}
+            onEquipoCreado={handleEquipoCreado}
+          />
+        )}
       </div>
     </>
   )

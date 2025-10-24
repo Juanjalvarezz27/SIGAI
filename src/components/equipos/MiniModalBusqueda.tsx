@@ -17,7 +17,7 @@ interface MiniModalBusquedaProps {
   tipo: "marca" | "modelo"
   marcaId?: number // Solo necesario para modelos
   valorActual?: string
-  esMarcaNueva?: boolean // Nueva prop para indicar si es una marca recién creada
+  esMarcaNueva?: boolean //  prop para indicar si es una marca recién creada
 }
 
 export default function MiniModalBusqueda({

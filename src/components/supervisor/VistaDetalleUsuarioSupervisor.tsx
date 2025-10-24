@@ -153,9 +153,6 @@ export default function VistaDetalleUsuarioSupervisor({
             </button>
           </div>
         </div>
-
-        {/* Resto del componente igual que VistaDetalleUsuario */}
-        {/* ... (mantener todo el contenido igual excepto los botones) */}
         
         {/* Información Personal y Ubicación */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

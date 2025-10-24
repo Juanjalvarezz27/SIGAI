@@ -318,16 +318,16 @@ export default function VistaDetalleUsuario({
 
                   <div className="space-y-2 text-sm">
                     {equipo.bienNacional && (
-                      <p><span className="font-medium">Bien Nacional:</span> {equipo.bienNacional}</p>
+                      <p><span className="font-semibold">Bien Nacional:</span> {equipo.bienNacional}</p>
                     )}
                     {equipo.serial && (
-                      <p><span className="font-medium">Serial:</span> {equipo.serial}</p>
+                      <p><span className="font-semibold">Serial:</span> {equipo.serial}</p>
                     )}
                     {equipo.status && (
-                      <p><span className="font-medium">Status:</span> {equipo.status.estado}</p>
+                      <p><span className="font-semibold">Status:</span> {equipo.status.estado}</p>
                     )}
                     {equipo.estado && (
-                      <p><span className="font-medium">Estado:</span> {equipo.estado.nombre}</p>
+                      <p><span className="font-semibold">Estado:</span> {equipo.estado.nombre}</p>
                     )}
 
                     {equipo.especificaciones && (

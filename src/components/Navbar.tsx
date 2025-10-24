@@ -72,7 +72,7 @@ export default function Navbar() {
     },
     {
       path: "/home/solicitantes",
-      label: "Solicitantes",
+      label: "Personal",
       icon: UserCheck,
       roles: ["supervisor"]
     },
@@ -263,7 +263,7 @@ export default function Navbar() {
                 {/* Botón de cerrar sesión - siempre visible */}
                 <button
                   onClick={openLogoutModal}
-                  className="flex items-center gap-2 cursor-pointer bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-colors transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  className="flex items-center gap-2 cursor-pointer bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
                   <LogOut size={18} />
                   {isClient && isHomeRoute() && <span>Cerrar Sesión</span>}

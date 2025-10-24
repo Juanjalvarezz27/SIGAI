@@ -35,7 +35,7 @@ const routes = [
   },
   {
     path: "/home/solicitantes",
-    label: "Solicitantes",
+    label: "Personal",
     icon: UserCheck,
     roles: ["supervisor"]
   },

@@ -163,7 +163,7 @@ export default function FiltroTipoEquipo({
                   <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2"> {/* Grid de 2 columnas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2"> 
                   {tipos.map((tipo) => (
                     <div
                       key={tipo.id}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Plus, Trash2, Monitor, Cpu, Edit, Search, X } from "lucide-react"
 import axios from "axios"
+import MiniModalBusqueda from ".././equipos/MiniModalBusqueda"
 
 // Interfaces
 interface TipoEquipo {
@@ -52,8 +53,6 @@ interface AsignacionEquiposProps {
 
 // Tipos de equipos que requieren especificaciones adicionales
 const EQUIPOS_CON_ESPECIFICACIONES = ["Ordenador", "Laptop", "AllInOne"]
-
-// Tipos de equipos que pueden tener bien nacional y serial opcional
 const EQUIPOS_CON_CAMPOS_OPCIONALES = ["Mouse"]
 
 export default function AsignacionEquipos({ onEquiposChange, disabled = false }: AsignacionEquiposProps) {
@@ -70,6 +69,37 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
   const [nuevoTipo, setNuevoTipo] = useState("")
   const [mostrarListaTipos, setMostrarListaTipos] = useState(false)
   const [errores, setErrores] = useState<string[]>([])
+
+  // Estados para los mini modales de marca y modelo
+  const [mostrarModalMarca, setMostrarModalMarca] = useState(false)
+  const [mostrarModalModelo, setMostrarModalModelo] = useState(false)
+  const [marcaSeleccionada, setMarcaSeleccionada] = useState<{id: number, nombre: string} | null>(null)
+  const [esMarcaNueva, setEsMarcaNueva] = useState(false)
+
+  // Estado para el formulario actual
+  const [formData, setFormData] = useState({
+    tipoEquipoId: 0,
+    tipoEquipoNombre: "",
+    marca: "",
+    modelo: "",
+    bienNacional: "",
+    serial: "",
+    observaciones: "",
+    statusId: 0,
+    estadoId: 0,
+    especificaciones: {
+      memoriaRam: "",
+      modulosRam: "",
+      capacidadDisco: "",
+      tipoDisco: "",
+      procesador: ""
+    }
+  })
+
+  const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoEquipo | null>(null)
+  const [usandoNuevoTipo, setUsandoNuevoTipo] = useState(false)
+  const [mostrarEspecificaciones, setMostrarEspecificaciones] = useState(false)
+  const [camposOpcionales, setCamposOpcionales] = useState(false)
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -99,89 +129,228 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
     cargarDatosIniciales()
   }, [])
 
+  // Determinar si mostrar especificaciones y campos opcionales
+  useEffect(() => {
+    const tipoNombre = tipoSeleccionado?.nombre || formData.tipoEquipoNombre
+    const requiereEspec = Boolean(tipoNombre && EQUIPOS_CON_ESPECIFICACIONES.includes(tipoNombre))
+    const tieneCamposOpcionales = Boolean(tipoNombre && EQUIPOS_CON_CAMPOS_OPCIONALES.includes(tipoNombre))
+
+    setMostrarEspecificaciones(requiereEspec)
+    setCamposOpcionales(tieneCamposOpcionales)
+  }, [tipoSeleccionado, formData.tipoEquipoNombre])
+
   const agregarEquipo = () => {
     setEquipoEditando(null)
+    resetForm()
     setModalTipoAbierto(true)
     setMostrarListaTipos(true)
     setErrores([])
   }
 
   const editarEquipo = (index: number) => {
+    const equipo = equipos[index]
     setEquipoEditando(index)
+    
+    // Inicializar el formulario con los datos del equipo
+    setFormData({
+      tipoEquipoId: equipo.tipoEquipoId,
+      tipoEquipoNombre: equipo.tipoEquipoNombre || "",
+      marca: equipo.marca,
+      modelo: equipo.modelo,
+      bienNacional: equipo.bienNacional,
+      serial: equipo.serial,
+      observaciones: equipo.observaciones,
+      statusId: equipo.statusId,
+      estadoId: equipo.estadoId,
+      especificaciones: equipo.especificaciones || {
+        memoriaRam: "",
+        modulosRam: "",
+        capacidadDisco: "",
+        tipoDisco: "",
+        procesador: ""
+      }
+    })
+
+    // Establecer tipo seleccionado si existe
+    if (equipo.tipoEquipoId) {
+      const tipo = tiposEquipo.find(t => t.id === equipo.tipoEquipoId)
+      setTipoSeleccionado(tipo || null)
+      setUsandoNuevoTipo(!tipo)
+    }
+
     setModalTipoAbierto(true)
-    setMostrarListaTipos(false) // No mostrar lista al editar, ya tiene tipo seleccionado
+    setMostrarListaTipos(false)
     setErrores([])
   }
 
   const eliminarEquipo = (index: number) => {
     setEquipos(prev => prev.filter((_, i) => i !== index))
-    setErrores([]) // Limpiar errores al eliminar equipo
+    setErrores([])
   }
 
-  const guardarEquipo = async (equipoData: Omit<EquipoConEspecificaciones, 'id'>) => {
+  // Handlers para marcas y modelos
+  const handleSeleccionarMarca = async (marca: {id: number, nombre: string} | "otro", nombreNuevo?: string) => {
+    if (marca === "otro") {
+      if (nombreNuevo) {
+        try {
+          const response = await axios.post('/api/equipos/marcas/crearMarca', {
+            nombre: nombreNuevo
+          })
+          
+          if (response.data.marca) {
+            const nuevaMarca = response.data.marca
+            setFormData(prev => ({ ...prev, marca: nuevaMarca.nombre }))
+            setMarcaSeleccionada(nuevaMarca)
+            setEsMarcaNueva(true)
+          }
+        } catch (error) {
+          console.error('Error creando nueva marca:', error)
+          setFormData(prev => ({ ...prev, marca: nombreNuevo }))
+          setMarcaSeleccionada(null)
+          setEsMarcaNueva(true)
+        }
+      } else {
+        setFormData(prev => ({ ...prev, marca: "" }))
+        setMarcaSeleccionada(null)
+        setEsMarcaNueva(true)
+      }
+    } else {
+      setFormData(prev => ({ ...prev, marca: marca.nombre }))
+      setMarcaSeleccionada(marca)
+      setEsMarcaNueva(false)
+    }
+    
+    setFormData(prev => ({ ...prev, modelo: "" }))
+    setMostrarModalMarca(false)
+  }
+
+  const handleSeleccionarModelo = async (modelo: {id: number, nombre: string} | "otro", nombreNuevo?: string) => {
+    if (modelo === "otro") {
+      if (nombreNuevo && marcaSeleccionada) {
+        try {
+          const response = await axios.post('/api/equipos/modelos/crearModelo', {
+            nombre: nombreNuevo,
+            marcaId: marcaSeleccionada.id
+          })
+          
+          if (response.data.modelo) {
+            const nuevoModelo = response.data.modelo
+            setFormData(prev => ({ ...prev, modelo: nuevoModelo.nombre }))
+          }
+        } catch (error) {
+          console.error('Error creando nuevo modelo:', error)
+          setFormData(prev => ({ ...prev, modelo: nombreNuevo }))
+        }
+      } else {
+        setFormData(prev => ({ ...prev, modelo: nombreNuevo || "" }))
+      }
+    } else {
+      setFormData(prev => ({ ...prev, modelo: modelo.nombre }))
+    }
+    setMostrarModalModelo(false)
+  }
+
+  const crearNuevoTipoEquipo = async (): Promise<TipoEquipo | null> => {
+    if (!nuevoTipo.trim()) return null
+
     try {
-      // Validaciones
-      const nuevosErrores: string[] = []
-      
-      if (!equipoData.tipoEquipoId && !equipoData.tipoEquipoNombre) {
-        nuevosErrores.push("El tipo de equipo es requerido")
+      const response = await axios.post('/api/equipos/tipos', {
+        nombre: nuevoTipo.trim()
+      })
+
+      if (response.data.tipo) {
+        setTiposEquipo(prev => [...prev, response.data.tipo])
+        return response.data.tipo
       }
-      
-      if (!equipoData.marca.trim()) {
-        nuevosErrores.push("La marca es requerida")
-      }
-      
-      if (!equipoData.modelo.trim()) {
-        nuevosErrores.push("El modelo es requerido")
-      }
-      
-      if (!equipoData.statusId) {
-        nuevosErrores.push("El status es requerido")
-      }
-      
-      if (!equipoData.estadoId) {
-        nuevosErrores.push("El estado es requerido")
+      return null
+    } catch (error) {
+      console.error('Error creando tipo de equipo:', error)
+      throw error
+    }
+  }
+
+  const esTipoConCamposOpcionales = (tipoNombre: string): boolean => {
+    return EQUIPOS_CON_CAMPOS_OPCIONALES.includes(tipoNombre)
+  }
+
+  const validarFormulario = (): string[] => {
+    const nuevosErrores: string[] = []
+
+    if (!tipoSeleccionado && !usandoNuevoTipo && !nuevoTipo.trim() && !formData.tipoEquipoNombre) {
+      nuevosErrores.push("El tipo de equipo es requerido")
+    }
+
+    if (!formData.marca.trim()) {
+      nuevosErrores.push("La marca es requerida")
+    }
+
+    if (!formData.modelo.trim()) {
+      nuevosErrores.push("El modelo es requerido")
+    }
+
+    if (!formData.statusId) {
+      nuevosErrores.push("El status es requerido")
+    }
+
+    if (!formData.estadoId) {
+      nuevosErrores.push("El estado es requerido")
+    }
+
+    const tipoEquipoNombre = tipoSeleccionado?.nombre || nuevoTipo || formData.tipoEquipoNombre
+    const esTipoOpcional = esTipoConCamposOpcionales(tipoEquipoNombre)
+
+    if (!esTipoOpcional) {
+      if (!formData.bienNacional.trim()) {
+        nuevosErrores.push("El bien nacional es requerido")
       }
 
-      // Validar campos específicos basados en el tipo de equipo
-      const tipoEquipoNombre = equipoData.tipoEquipoNombre?.toLowerCase() || ""
-      const esMouse = tipoEquipoNombre.includes("mouse")
-      
-      if (!esMouse) {
-        // Para todos los equipos excepto Mouse, bien nacional y serial son requeridos
-        if (!equipoData.bienNacional.trim()) {
-          nuevosErrores.push("El bien nacional es requerido")
-        }
-        
-        if (!equipoData.serial.trim()) {
-          nuevosErrores.push("El serial es requerido")
-        }
+      if (!formData.serial.trim()) {
+        nuevosErrores.push("El serial es requerido")
+      }
+    }
+
+    if (mostrarEspecificaciones && formData.especificaciones) {
+      const especs = formData.especificaciones
+      if (!especs.memoriaRam.trim()) nuevosErrores.push("La memoria RAM es requerida")
+      if (!especs.modulosRam.trim()) nuevosErrores.push("Los módulos RAM son requeridos")
+      if (!especs.capacidadDisco.trim()) nuevosErrores.push("La capacidad del disco es requerida")
+      if (!especs.tipoDisco.trim()) nuevosErrores.push("El tipo de disco es requerido")
+      if (!especs.procesador.trim()) nuevosErrores.push("El procesador es requerido")
+    }
+
+    return nuevosErrores
+  }
+
+  const guardarEquipo = async () => {
+    const nuevosErrores = validarFormulario()
+    
+    if (nuevosErrores.length > 0) {
+      setErrores(nuevosErrores)
+      return
+    }
+
+    try {
+      let tipoFinal: TipoEquipo | null = tipoSeleccionado
+
+      if (usandoNuevoTipo && nuevoTipo.trim()) {
+        tipoFinal = await crearNuevoTipoEquipo()
       }
 
-      // Validar especificaciones técnicas si aplican
-      if (EQUIPOS_CON_ESPECIFICACIONES.includes(equipoData.tipoEquipoNombre || "")) {
-        if (equipoData.especificaciones) {
-          if (!equipoData.especificaciones.memoriaRam.trim()) {
-            nuevosErrores.push("La memoria RAM es requerida")
-          }
-          if (!equipoData.especificaciones.modulosRam.trim()) {
-            nuevosErrores.push("Los módulos RAM son requeridos")
-          }
-          if (!equipoData.especificaciones.capacidadDisco.trim()) {
-            nuevosErrores.push("La capacidad del disco es requerida")
-          }
-          if (!equipoData.especificaciones.tipoDisco.trim()) {
-            nuevosErrores.push("El tipo de disco es requerido")
-          }
-          if (!equipoData.especificaciones.procesador.trim()) {
-            nuevosErrores.push("El procesador es requerido")
-          }
-        }
+      if (!tipoFinal && !usandoNuevoTipo && !formData.tipoEquipoNombre) {
+        throw new Error("No se pudo determinar el tipo de equipo")
       }
 
-      if (nuevosErrores.length > 0) {
-        setErrores(nuevosErrores)
-        return
+      const equipoData: Omit<EquipoConEspecificaciones, 'id'> = {
+        tipoEquipoId: tipoFinal?.id || 0,
+        tipoEquipoNombre: tipoFinal?.nombre || nuevoTipo.trim() || formData.tipoEquipoNombre,
+        marca: formData.marca,
+        modelo: formData.modelo,
+        bienNacional: formData.bienNacional,
+        serial: formData.serial,
+        observaciones: formData.observaciones,
+        statusId: formData.statusId,
+        estadoId: formData.estadoId,
+        especificaciones: mostrarEspecificaciones ? formData.especificaciones : undefined
       }
 
       // Si estamos editando, actualizar el equipo existente
@@ -190,7 +359,7 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
           const nuevosEquipos = [...prev]
           nuevosEquipos[equipoEditando] = {
             ...equipoData,
-            id: nuevosEquipos[equipoEditando].id // Mantener el ID si existe
+            id: nuevosEquipos[equipoEditando].id
           }
           return nuevosEquipos
         })
@@ -198,49 +367,104 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
         // Si es nuevo, agregar con un ID temporal
         const nuevoEquipo: EquipoConEspecificaciones = {
           ...equipoData,
-          id: Date.now() // ID temporal
+          id: Date.now()
         }
         setEquipos(prev => [...prev, nuevoEquipo])
       }
 
       setModalTipoAbierto(false)
       setEquipoEditando(null)
-      setBusquedaTipo("")
-      setNuevoTipo("")
-      setMostrarListaTipos(false)
+      resetForm()
       setErrores([])
     } catch (error) {
       console.error('Error guardando equipo:', error)
     }
   }
 
-  const seleccionarTipoEquipo = async (tipo: TipoEquipo | null, esNuevo: boolean = false): Promise<TipoEquipo | null> => {
-    if (esNuevo && nuevoTipo.trim()) {
-      try {
-        // Crear nuevo tipo de equipo
-        const response = await axios.post('/api/equipos/tipos', {
-          nombre: nuevoTipo.trim()
-        })
-        
-        if (response.data.tipo) {
-          setTiposEquipo(prev => [...prev, response.data.tipo])
-          return response.data.tipo
-        }
-      } catch (error) {
-        console.error('Error creando tipo de equipo:', error)
-        throw error
+  const resetForm = () => {
+    setFormData({
+      tipoEquipoId: 0,
+      tipoEquipoNombre: "",
+      marca: "",
+      modelo: "",
+      bienNacional: "",
+      serial: "",
+      observaciones: "",
+      statusId: 0,
+      estadoId: 0,
+      especificaciones: {
+        memoriaRam: "",
+        modulosRam: "",
+        capacidadDisco: "",
+        tipoDisco: "",
+        procesador: ""
       }
-    }
-    return tipo
+    })
+    setTipoSeleccionado(null)
+    setUsandoNuevoTipo(false)
+    setBusquedaTipo("")
+    setNuevoTipo("")
+    setMostrarListaTipos(false)
+    setMarcaSeleccionada(null)
+    setEsMarcaNueva(false)
+  }
+
+  const handleChange = (field: string, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleEspecificacionChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      especificaciones: {
+        ...prev.especificaciones,
+        [field]: value
+      }
+    }))
+  }
+
+  const handleSeleccionarTipo = (tipo: TipoEquipo) => {
+    setTipoSeleccionado(tipo)
+    setUsandoNuevoTipo(false)
+    setFormData(prev => ({
+      ...prev,
+      tipoEquipoId: tipo.id,
+      tipoEquipoNombre: tipo.nombre
+    }))
+    setBusquedaTipo("")
+    setMostrarListaTipos(false)
+  }
+
+  const handleSeleccionarNuevoTipo = () => {
+    setTipoSeleccionado(null)
+    setUsandoNuevoTipo(true)
+    setFormData(prev => ({
+      ...prev,
+      tipoEquipoId: 0,
+      tipoEquipoNombre: ""
+    }))
+    setMostrarListaTipos(false)
+  }
+
+  const handleEliminarTipoSeleccionado = () => {
+    setTipoSeleccionado(null)
+    setUsandoNuevoTipo(false)
+    setFormData(prev => ({
+      ...prev,
+      tipoEquipoId: 0,
+      tipoEquipoNombre: ""
+    }))
+    setNuevoTipo("")
+    setMostrarListaTipos(true)
   }
 
   // Notificar cambios al componente padre
   useEffect(() => {
     onEquiposChange(equipos)
   }, [equipos, onEquiposChange])
-
-  // Obtener equipo actual para edición
-  const equipoActual = equipoEditando !== null ? equipos[equipoEditando] : null
 
   // Filtrar tipos de equipo basado en la búsqueda
   const tiposFiltrados = tiposEquipo.filter(tipo =>
@@ -357,571 +581,400 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
 
       {/* Modal para agregar/editar equipo */}
       {modalTipoAbierto && (
-        <FormularioEquipoModal
-          equipo={equipoActual}
-          tiposEquipo={tiposEquipo}
-          tiposFiltrados={tiposFiltrados}
-          status={status}
-          estados={estados}
-          busquedaTipo={busquedaTipo}
-          nuevoTipo={nuevoTipo}
-          mostrarListaTipos={mostrarListaTipos}
-          errores={errores}
-          onBusquedaTipoChange={setBusquedaTipo}
-          onNuevoTipoChange={setNuevoTipo}
-          onMostrarListaTiposChange={setMostrarListaTipos}
-          onSeleccionarTipo={seleccionarTipoEquipo}
-          onGuardar={guardarEquipo}
-          onCancelar={() => {
-            setModalTipoAbierto(false)
-            setEquipoEditando(null)
-            setBusquedaTipo("")
-            setNuevoTipo("")
-            setMostrarListaTipos(false)
-            setErrores([])
-          }}
-          disabled={disabled}
-        />
-      )}
-    </div>
-  )
-}
-
-// Componente Modal para el formulario de equipo
-interface FormularioEquipoModalProps {
-  equipo: EquipoConEspecificaciones | null
-  tiposEquipo: TipoEquipo[]
-  tiposFiltrados: TipoEquipo[]
-  status: Status[]
-  estados: Estado[]
-  busquedaTipo: string
-  nuevoTipo: string
-  mostrarListaTipos: boolean
-  errores: string[]
-  onBusquedaTipoChange: (value: string) => void
-  onNuevoTipoChange: (value: string) => void
-  onMostrarListaTiposChange: (value: boolean) => void
-  onSeleccionarTipo: (tipo: TipoEquipo | null, esNuevo: boolean) => Promise<TipoEquipo | null>
-  onGuardar: (equipo: Omit<EquipoConEspecificaciones, 'id'>) => void
-  onCancelar: () => void
-  disabled?: boolean
-}
-
-function FormularioEquipoModal({
-  equipo,
-  tiposEquipo,
-  tiposFiltrados,
-  status,
-  estados,
-  busquedaTipo,
-  nuevoTipo,
-  mostrarListaTipos,
-  errores,
-  onBusquedaTipoChange,
-  onNuevoTipoChange,
-  onMostrarListaTiposChange,
-  onSeleccionarTipo,
-  onGuardar,
-  onCancelar,
-  disabled = false
-}: FormularioEquipoModalProps) {
-  const [formData, setFormData] = useState({
-    tipoEquipoId: equipo?.tipoEquipoId || 0,
-    tipoEquipoNombre: equipo?.tipoEquipoNombre || "",
-    marca: equipo?.marca || "",
-    modelo: equipo?.modelo || "",
-    bienNacional: equipo?.bienNacional || "",
-    serial: equipo?.serial || "",
-    observaciones: equipo?.observaciones || "",
-    statusId: equipo?.statusId || 0,
-    estadoId: equipo?.estadoId || 0,
-    especificaciones: equipo?.especificaciones || {
-      memoriaRam: "",
-      modulosRam: "",
-      capacidadDisco: "",
-      tipoDisco: "",
-      procesador: ""
-    }
-  })
-
-  const [mostrarEspecificaciones, setMostrarEspecificaciones] = useState(false)
-  const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoEquipo | null>(null)
-  const [usandoNuevoTipo, setUsandoNuevoTipo] = useState(false)
-  const [camposOpcionales, setCamposOpcionales] = useState(false)
-
-  // Determinar si mostrar especificaciones y campos opcionales
-  useEffect(() => {
-    const tipoNombre = tipoSeleccionado?.nombre || formData.tipoEquipoNombre
-    const requiereEspec = Boolean(tipoNombre && EQUIPOS_CON_ESPECIFICACIONES.includes(tipoNombre))
-    const esMouse = tipoNombre?.toLowerCase().includes("mouse") || false
-    
-    setMostrarEspecificaciones(requiereEspec)
-    setCamposOpcionales(esMouse)
-  }, [tipoSeleccionado, formData.tipoEquipoNombre])
-
-  // Inicializar tipo seleccionado si estamos editando
-  useEffect(() => {
-    if (equipo && equipo.tipoEquipoId) {
-      const tipo = tiposEquipo.find(t => t.id === equipo.tipoEquipoId)
-      setTipoSeleccionado(tipo || null)
-      setUsandoNuevoTipo(!tipo)
-      if (tipo) {
-        setFormData(prev => ({
-          ...prev,
-          tipoEquipoNombre: tipo.nombre
-        }))
-      }
-    }
-  }, [equipo, tiposEquipo])
-
-  const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  const handleEspecificacionChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      especificaciones: {
-        ...prev.especificaciones,
-        [field]: value
-      }
-    }))
-  }
-
-  const handleSeleccionarTipo = (tipo: TipoEquipo) => {
-    setTipoSeleccionado(tipo)
-    setUsandoNuevoTipo(false)
-    setFormData(prev => ({
-      ...prev,
-      tipoEquipoId: tipo.id,
-      tipoEquipoNombre: tipo.nombre
-    }))
-    onBusquedaTipoChange("")
-    onMostrarListaTiposChange(false) // Cerrar la lista después de seleccionar
-  }
-
-  const handleSeleccionarNuevoTipo = () => {
-    setTipoSeleccionado(null)
-    setUsandoNuevoTipo(true)
-    setFormData(prev => ({
-      ...prev,
-      tipoEquipoId: 0,
-      tipoEquipoNombre: ""
-    }))
-    onMostrarListaTiposChange(false) // Cerrar la lista
-  }
-
-  const handleEliminarTipoSeleccionado = () => {
-    setTipoSeleccionado(null)
-    setUsandoNuevoTipo(false)
-    setFormData(prev => ({
-      ...prev,
-      tipoEquipoId: 0,
-      tipoEquipoNombre: ""
-    }))
-    onNuevoTipoChange("")
-    onMostrarListaTiposChange(true) // Mostrar lista para nueva selección
-  }
-
-  const handleAbrirListaTipos = () => {
-    onMostrarListaTiposChange(true)
-  }
-
-  const handleGuardar = async () => {
-    let tipoFinal: TipoEquipo | null = tipoSeleccionado
-
-    // Si está usando un nuevo tipo, crearlo
-    if (usandoNuevoTipo && nuevoTipo.trim()) {
-      try {
-        tipoFinal = await onSeleccionarTipo(null, true)
-      } catch (error) {
-        console.error('Error creando tipo de equipo:', error)
-        return
-      }
-    }
-
-    const equipoData: Omit<EquipoConEspecificaciones, 'id'> = {
-      tipoEquipoId: tipoFinal?.id || 0,
-      tipoEquipoNombre: tipoFinal?.nombre || nuevoTipo.trim() || formData.tipoEquipoNombre,
-      marca: formData.marca,
-      modelo: formData.modelo,
-      bienNacional: formData.bienNacional,
-      serial: formData.serial,
-      observaciones: formData.observaciones,
-      statusId: formData.statusId,
-      estadoId: formData.estadoId,
-      especificaciones: mostrarEspecificaciones ? formData.especificaciones : undefined
-    }
-
-    onGuardar(equipoData)
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[0.5]">
-      <div className="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {equipo ? 'Editar Equipo' : 'Agregar Nuevo Equipo'}
-          </h3>
-          <button
-            onClick={onCancelar}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Contenido */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Mostrar errores - SOLO si hay errores */}
-          {errores.length > 0 && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <h4 className="font-medium text-red-800 mb-2">Por favor complete los siguientes campos:</h4>
-              <ul className="list-disc list-inside text-red-700 text-sm">
-                {errores.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[0.5]">
+          <div className="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {equipoEditando !== null ? 'Editar Equipo' : 'Agregar Nuevo Equipo'}
+              </h3>
+              <button
+                onClick={() => {
+                  setModalTipoAbierto(false)
+                  setEquipoEditando(null)
+                  resetForm()
+                  setErrores([])
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
             </div>
-          )}
 
-          <div className="space-y-4">
-            {/* Selección de Tipo de Equipo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Equipo *
-              </label>
-              
-              {/* Mostrar tipo seleccionado o botón para seleccionar */}
-              {(tipoSeleccionado || usandoNuevoTipo || formData.tipoEquipoNombre) ? (
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex-1 p-2 bg-green-50 border border-green-200 rounded-md">
-                    <span className="text-green-700 font-medium">
-                      Tipo seleccionado: {tipoSeleccionado?.nombre || nuevoTipo || formData.tipoEquipoNombre}
-                      {camposOpcionales && " (Bien Nacional y Serial opcionales)"}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleEliminarTipoSeleccionado}
-                    className="text-red-500 hover:text-red-700 transition-colors p-2"
-                    disabled={disabled}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+            {/* Contenido */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {errores.length > 0 && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <h4 className="font-medium text-red-800 mb-2">Por favor complete los siguientes campos:</h4>
+                  <ul className="list-disc list-inside text-red-700 text-sm">
+                    {errores.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleAbrirListaTipos}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  disabled={disabled}
-                >
-                  <span className="text-gray-500">Seleccionar tipo de equipo...</span>
-                </button>
               )}
 
-              {/* Búsqueda y lista de tipos */}
-              {mostrarListaTipos && (
-                <>
-                  <div className="relative mt-4">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    <input
-                      type="text"
-                      value={busquedaTipo}
-                      onChange={(e) => onBusquedaTipoChange(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                      placeholder="Buscar tipo de equipo..."
-                      disabled={disabled}
-                    />
-                  </div>
-
-                  {/* Lista de tipos */}
-                  <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-md mt-2">
-                    {tiposFiltrados.map((tipo) => (
+              <div className="space-y-4">
+                {/* Selección de Tipo de Equipo */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Equipo *
+                  </label>
+                  
+                  {(tipoSeleccionado || usandoNuevoTipo || formData.tipoEquipoNombre) ? (
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 p-2 bg-green-50 border border-green-200 rounded-md">
+                        <span className="text-green-700 font-medium">
+                          Tipo seleccionado: {tipoSeleccionado?.nombre || nuevoTipo || formData.tipoEquipoNombre}
+                          {camposOpcionales && " (Bien Nacional y Serial opcionales)"}
+                        </span>
+                      </div>
                       <button
-                        key={tipo.id}
                         type="button"
-                        onClick={() => handleSeleccionarTipo(tipo)}
-                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 ${
-                          tipoSeleccionado?.id === tipo.id ? 'bg-blue-50 text-blue-700' : ''
-                        }`}
+                        onClick={handleEliminarTipoSeleccionado}
+                        className="text-red-500 hover:text-red-700 transition-colors p-2"
                         disabled={disabled}
                       >
-                        {tipo.nombre}
+                        <Trash2 size={16} />
                       </button>
-                    ))}
-                    
-                    {/* Opción para nuevo tipo */}
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      onClick={handleSeleccionarNuevoTipo}
-                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                        usandoNuevoTipo ? 'bg-blue-50 text-blue-700' : ''
-                      }`}
+                      onClick={() => setMostrarListaTipos(true)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
                       disabled={disabled}
                     >
-                      + Agregar nuevo tipo
+                      <span className="text-gray-500">Seleccionar tipo de equipo...</span>
+                    </button>
+                  )}
+
+                  {mostrarListaTipos && (
+                    <>
+                      <div className="relative mt-4">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                        <input
+                          type="text"
+                          value={busquedaTipo}
+                          onChange={(e) => setBusquedaTipo(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                          placeholder="Buscar tipo de equipo..."
+                          disabled={disabled}
+                        />
+                      </div>
+
+                      <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-md mt-2">
+                        {tiposFiltrados.map((tipo) => (
+                          <button
+                            key={tipo.id}
+                            type="button"
+                            onClick={() => handleSeleccionarTipo(tipo)}
+                            className={`w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 ${
+                              tipoSeleccionado?.id === tipo.id ? 'bg-blue-50 text-blue-700' : ''
+                            }`}
+                            disabled={disabled}
+                          >
+                            {tipo.nombre}
+                          </button>
+                        ))}
+                        
+                        <button
+                          type="button"
+                          onClick={handleSeleccionarNuevoTipo}
+                          className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
+                            usandoNuevoTipo ? 'bg-blue-50 text-blue-700' : ''
+                          }`}
+                          disabled={disabled}
+                        >
+                          + Agregar nuevo tipo
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {usandoNuevoTipo && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={nuevoTipo}
+                        onChange={(e) => setNuevoTipo(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                        placeholder="Escriba el nuevo tipo de equipo..."
+                        disabled={disabled}
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Marca y Modelo */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Marca *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setMostrarModalMarca(true)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#001F3F] flex items-center justify-between"
+                      disabled={disabled}
+                    >
+                      <span className={formData.marca ? "text-gray-900" : "text-gray-500"}>
+                        {formData.marca || "Seleccionar marca..."}
+                      </span>
+                      <Search size={16} className="text-gray-400" />
                     </button>
                   </div>
-                </>
-              )}
 
-              {/* Campo para nuevo tipo */}
-              {usandoNuevoTipo && (
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    value={nuevoTipo}
-                    onChange={(e) => onNuevoTipoChange(e.target.value)}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Modelo *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setMostrarModalModelo(true)}
+                      disabled={disabled || !formData.marca}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#001F3F] flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className={formData.modelo ? "text-gray-900" : "text-gray-500"}>
+                        {formData.modelo || "Seleccionar modelo..."}
+                      </span>
+                      <Search size={16} className="text-gray-400" />
+                    </button>
+                    {!formData.marca && (
+                      <p className="text-xs text-gray-500 mt-1">Primero selecciona una marca</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bien Nacional y Serial */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bien Nacional {!camposOpcionales && "*"}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.bienNacional}
+                      onChange={(e) => handleChange('bienNacional', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                      placeholder="Número de bien nacional"
+                      disabled={disabled}
+                      required={!camposOpcionales}
+                    />
+                    {camposOpcionales && (
+                      <p className="text-xs text-gray-500 mt-1">Opcional para este tipo de equipo</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Serial {!camposOpcionales && "*"}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.serial}
+                      onChange={(e) => handleChange('serial', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                      placeholder="Número de serie"
+                      disabled={disabled}
+                      required={!camposOpcionales}
+                    />
+                    {camposOpcionales && (
+                      <p className="text-xs text-gray-500 mt-1">Opcional para este tipo de equipo</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status y Estado */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status *
+                    </label>
+                    <select
+                      value={formData.statusId}
+                      onChange={(e) => handleChange('statusId', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                      disabled={disabled}
+                      required
+                    >
+                      <option value={0}>Selecciona status</option>
+                      {status.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.estado}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estado *
+                    </label>
+                    <select
+                      value={formData.estadoId}
+                      onChange={(e) => handleChange('estadoId', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                      disabled={disabled}
+                      required
+                    >
+                      <option value={0}>Selecciona estado</option>
+                      {estados.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Especificaciones Técnicas */}
+                {mostrarEspecificaciones && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-[#001F3F] mb-3 flex items-center gap-2">
+                      <Cpu size={16} />
+                      Especificaciones Técnicas *
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Memoria RAM *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.especificaciones.memoriaRam}
+                          onChange={(e) => handleEspecificacionChange('memoriaRam', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                          placeholder="Ej: 8GB"
+                          disabled={disabled}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Módulos RAM *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.especificaciones.modulosRam}
+                          onChange={(e) => handleEspecificacionChange('modulosRam', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                          placeholder="Ej: 2x4GB"
+                          disabled={disabled}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Capacidad Disco *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.especificaciones.capacidadDisco}
+                          onChange={(e) => handleEspecificacionChange('capacidadDisco', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                          placeholder="Ej: 500GB"
+                          disabled={disabled}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Tipo Disco *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.especificaciones.tipoDisco}
+                          onChange={(e) => handleEspecificacionChange('tipoDisco', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                          placeholder="Ej: SSD, HDD"
+                          disabled={disabled}
+                          required
+                        />
+                      </div>
+                      <div className="md:col-span-2 lg:col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Procesador *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.especificaciones.procesador}
+                          onChange={(e) => handleEspecificacionChange('procesador', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
+                          placeholder="Ej: Intel i5"
+                          disabled={disabled}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Observaciones */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Observaciones
+                  </label>
+                  <textarea
+                    value={formData.observaciones}
+                    onChange={(e) => handleChange('observaciones', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                    placeholder="Escriba el nuevo tipo de equipo..."
+                    placeholder="Observaciones sobre el equipo"
+                    rows={3}
                     disabled={disabled}
-                    required
                   />
-                </div>
-              )}
-            </div>
-
-            {/* Marca y Modelo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Marca *
-                </label>
-                <input
-                  type="text"
-                  value={formData.marca}
-                  onChange={(e) => handleChange('marca', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  placeholder="Ej: Dell, HP, Lenovo"
-                  disabled={disabled}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Modelo *
-                </label>
-                <input
-                  type="text"
-                  value={formData.modelo}
-                  onChange={(e) => handleChange('modelo', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  placeholder="Ej: Optiplex 7070, ThinkPad X1"
-                  disabled={disabled}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Bien Nacional y Serial */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bien Nacional {!camposOpcionales && "*"}
-                </label>
-                <input
-                  type="text"
-                  value={formData.bienNacional}
-                  onChange={(e) => handleChange('bienNacional', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  placeholder="Número de bien nacional"
-                  disabled={disabled}
-                  required={!camposOpcionales}
-                />
-                {camposOpcionales && (
-                  <p className="text-xs text-gray-500 mt-1">Opcional para este tipo de equipo</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Serial {!camposOpcionales && "*"}
-                </label>
-                <input
-                  type="text"
-                  value={formData.serial}
-                  onChange={(e) => handleChange('serial', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  placeholder="Número de serie"
-                  disabled={disabled}
-                  required={!camposOpcionales}
-                />
-                {camposOpcionales && (
-                  <p className="text-xs text-gray-500 mt-1">Opcional para este tipo de equipo</p>
-                )}
-              </div>
-            </div>
-
-            {/* Status y Estado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status *
-                </label>
-                <select
-                  value={formData.statusId}
-                  onChange={(e) => handleChange('statusId', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  disabled={disabled}
-                  required
-                >
-                  <option value={0}>Selecciona status</option>
-                  {status.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.estado}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado *
-                </label>
-                <select
-                  value={formData.estadoId}
-                  onChange={(e) => handleChange('estadoId', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                  disabled={disabled}
-                  required
-                >
-                  <option value={0}>Selecciona estado</option>
-                  {estados.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Especificaciones Técnicas (solo para ordenadores) */}
-            {mostrarEspecificaciones && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-[#001F3F] mb-3 flex items-center gap-2">
-                  <Cpu size={16} />
-                  Especificaciones Técnicas *
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Memoria RAM *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.especificaciones.memoriaRam}
-                      onChange={(e) => handleEspecificacionChange('memoriaRam', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                      placeholder="Ej: 8GB"
-                      disabled={disabled}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Módulos RAM *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.especificaciones.modulosRam}
-                      onChange={(e) => handleEspecificacionChange('modulosRam', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                      placeholder="Ej: 2x4GB"
-                      disabled={disabled}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Capacidad Disco *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.especificaciones.capacidadDisco}
-                      onChange={(e) => handleEspecificacionChange('capacidadDisco', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                      placeholder="Ej: 500GB"
-                      disabled={disabled}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo Disco *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.especificaciones.tipoDisco}
-                      onChange={(e) => handleEspecificacionChange('tipoDisco', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                      placeholder="Ej: SSD, HDD"
-                      disabled={disabled}
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2 lg:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Procesador *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.especificaciones.procesador}
-                      onChange={(e) => handleEspecificacionChange('procesador', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                      placeholder="Ej: Intel i5"
-                      disabled={disabled}
-                      required
-                    />
-                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Campo opcional</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Observaciones */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Observaciones
-              </label>
-              <textarea
-                value={formData.observaciones}
-                onChange={(e) => handleChange('observaciones', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F]"
-                placeholder="Observaciones sobre el equipo"
-                rows={3}
+            {/* Footer con botones */}
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalTipoAbierto(false)
+                  setEquipoEditando(null)
+                  resetForm()
+                  setErrores([])
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors disabled:opacity-50"
                 disabled={disabled}
-              />
-              <p className="text-xs text-gray-500 mt-1">Campo opcional</p>
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={guardarEquipo}
+                className="px-4 py-2 bg-[#001F3F] text-white hover:bg-[#003366] rounded-md transition-colors disabled:opacity-50"
+                disabled={disabled}
+              >
+                {equipoEditando !== null ? 'Actualizar Equipo' : 'Agregar Equipo'}
+              </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Footer con botones */}
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0">
-          <button
-            type="button"
-            onClick={onCancelar}
-            className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors disabled:opacity-50"
-            disabled={disabled}
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleGuardar}
-            className="px-4 py-2 bg-[#001F3F] text-white hover:bg-[#003366] rounded-md transition-colors disabled:opacity-50"
-            disabled={disabled}
-          >
-            {equipo ? 'Actualizar Equipo' : 'Agregar Equipo'}
-          </button>
-        </div>
-      </div>
+      {/* Mini Modals para marca y modelo */}
+      <MiniModalBusqueda
+        isOpen={mostrarModalMarca}
+        onClose={() => setMostrarModalMarca(false)}
+        onSeleccionar={handleSeleccionarMarca}
+        tipo="marca"
+        valorActual={formData.marca}
+      />
+
+      <MiniModalBusqueda
+        isOpen={mostrarModalModelo}
+        onClose={() => setMostrarModalModelo(false)}
+        onSeleccionar={handleSeleccionarModelo}
+        tipo="modelo"
+        marcaId={marcaSeleccionada?.id}
+        valorActual={formData.modelo}
+        esMarcaNueva={esMarcaNueva}
+      />
     </div>
   )
 }

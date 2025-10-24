@@ -32,7 +32,7 @@ export default function ListaUsuariosSupervisor({
   error = '',
   rolFiltro
 }: ListaUsuariosSupervisorProps) {
-  // Si hay error, no mostrar nada (el error se maneja en otro componente)
+  // Si hay error, no mostrar nada 
   if (error) return null
 
   // Si está cargando, mostrar loader

@@ -189,7 +189,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="group relative mx-auto w-6/12 flex justify-center py-2 px-4 border border-transparent text-md font-medium rounded-2xl text-white bg-[#4c678a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#003366] disabled:opacity-50"
+                    className="group relative mx-auto cursor-pointer w-6/12 flex justify-center py-2 px-4 border border-transparent text-md font-medium rounded-2xl text-white bg-[#4c678a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#003366] disabled:opacity-50"
                   >
                     {/* Texto dinámico del botón según estado de carga */}
                     {loading ? "Iniciando sesión..." : "Iniciar Sesión"}

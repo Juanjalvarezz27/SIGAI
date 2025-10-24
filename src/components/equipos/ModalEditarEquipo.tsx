@@ -76,6 +76,7 @@ export default function ModalEditarEquipo({
   const [cargandoDatos, setCargandoDatos] = useState(true)
   const [errores, setErrores] = useState<string[]>([])
   const [mensajeExito, setMensajeExito] = useState<string>("")
+  const [miRol, setMiRol] = useState({ rolId: 0, rol: '', loading: true })
 
   // Estados para el formulario
   const [formData, setFormData] = useState<EquipoFormData>({
@@ -110,6 +111,27 @@ export default function ModalEditarEquipo({
   const [mostrarModalModelo, setMostrarModalModelo] = useState(false)
   const [marcaSeleccionada, setMarcaSeleccionada] = useState<{id: number, nombre: string} | null>(null)
   const [esMarcaNueva, setEsMarcaNueva] = useState(false)
+
+  // Obtener mi rol al cargar el componente
+  useEffect(() => {
+    const obtenerMiRol = async () => {
+      try {
+        const response = await axios.get('/api/auth/usuarioRol')
+        setMiRol({ 
+          ...response.data, 
+          loading: false 
+        })
+      } catch (error) {
+        console.error('Error obteniendo rol:', error)
+        setMiRol(prev => ({ ...prev, loading: false }))
+      }
+    }
+
+    obtenerMiRol()
+  }, [])
+
+  // Determinar si el usuario puede reasignar equipos (admin = 1, supervisor = 2)
+  const puedeReasignarEquipos = miRol.rolId === 1 || miRol.rolId === 2
 
   // Efecto para controlar el scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -312,7 +334,7 @@ export default function ModalEditarEquipo({
           const response = await axios.post('/api/equipos/marcas/crearMarca', {
             nombre: nombreNuevo
           })
-          
+
           if (response.data.marca) {
             const nuevaMarca = response.data.marca
             setFormData(prev => ({ ...prev, marca: nuevaMarca.nombre }))
@@ -335,7 +357,7 @@ export default function ModalEditarEquipo({
       setMarcaSeleccionada(marca)
       setEsMarcaNueva(false)
     }
-    
+
     setFormData(prev => ({ ...prev, modelo: "" }))
     setMostrarModalMarca(false)
   }
@@ -348,7 +370,7 @@ export default function ModalEditarEquipo({
             nombre: nombreNuevo,
             marcaId: marcaSeleccionada.id
           })
-          
+
           if (response.data.modelo) {
             const nuevoModelo = response.data.modelo
             setFormData(prev => ({ ...prev, modelo: nuevoModelo.nombre }))
@@ -530,7 +552,7 @@ export default function ModalEditarEquipo({
 
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto p-6">
-          {cargandoDatos && (
+          {(cargandoDatos || miRol.loading) && (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <div className="w-8 h-8 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
@@ -564,9 +586,10 @@ export default function ModalEditarEquipo({
             </div>
           )}
 
-          {!cargandoDatos && (
+          {!cargandoDatos && !miRol.loading && (
             <div className="space-y-4">
-              {equipo.usuario && (
+              {/* Solo mostrar reasignación si tiene permisos */}
+              {puedeReasignarEquipos && equipo.usuario && (
                 <ReasignacionEquipo
                   equipoId={equipo.id}
                   usuarioActual={{

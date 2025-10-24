@@ -6,7 +6,7 @@ async function Solicitantes () {
   return (
     <>
       <Navbar />
-      <Title text={"Solicitantes"} />
+      <Title text={"Personal"} />
       
       <div className="container mx-auto px-4 py-8">
         <VistaPersonalSupervisor />

@@ -14,6 +14,7 @@ import BarraBusquedaPersonalizado from "@/components/personal/BarraBusquedaPerso
 import BotonNuevoUsuario from "@/components/personal/BotonNuevoUsuario"
 import axios from "axios"
 import { Usuario, PaginationInfo } from "../../../../types/personal"
+import { CheckCircle } from "lucide-react"
 
 interface ApiError {
   response?: {
@@ -42,10 +43,12 @@ export default function Personal() {
   const [rolFiltro, setRolFiltro] = useState<string>('todos')
   const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null)
   
-  // Estados para el modal
+  // Estados para el modal y mensajes
   const [modalAbierto, setModalAbierto] = useState<boolean>(false)
   const [usuarioADeshabilitar, setUsuarioADeshabilitar] = useState<Usuario | null>(null)
   const [deshabilitando, setDeshabilitando] = useState<boolean>(false)
+  const [successMessage, setSuccessMessage] = useState<string>("")
+  const [mostrarExitoEnModal, setMostrarExitoEnModal] = useState<boolean>(false)
 
   // Función para cargar usuarios (actualizada para manejar múltiples pisos)
   const cargarUsuarios = useCallback(async (page: number, rol: string, ubicacionFiltro: FiltroUbicacionTipo) => {
@@ -93,6 +96,16 @@ export default function Personal() {
   useEffect(() => {
     cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
   }, [currentPage, rolFiltro, filtroUbicacion, cargarUsuarios])
+
+  // Efecto para limpiar mensaje de éxito automáticamente
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("")
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [successMessage])
 
   // Función para manejar cambio de rol
   const handleRolChange = (nuevoRol: string) => {
@@ -142,14 +155,14 @@ export default function Personal() {
   const abrirModalDeshabilitacion = (usuario: Usuario) => {
     setUsuarioADeshabilitar(usuario)
     setModalAbierto(true)
+    setMostrarExitoEnModal(false)
   }
 
   // Función para cerrar el modal
   const cerrarModal = () => {
-    if (!deshabilitando) {
-      setModalAbierto(false)
-      setUsuarioADeshabilitar(null)
-    }
+    setModalAbierto(false)
+    setUsuarioADeshabilitar(null)
+    setMostrarExitoEnModal(false)
   }
 
   // Función para manejar errores de API
@@ -177,23 +190,35 @@ export default function Personal() {
       })
 
       if (response.status === 200) {
-        // Recargar los datos
-        await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
+        // Mostrar mensaje de éxito en el modal primero
+        setMostrarExitoEnModal(true)
+        
+        // Esperar 2 segundos con el modal abierto mostrando el éxito
+        setTimeout(async () => {
+          // Cerrar el modal después de 2 segundos
+          cerrarModal()
+          
+          // Mostrar mensaje de éxito global por 3 segundos
+          setSuccessMessage(`Usuario ${usuarioADeshabilitar.nombre} ${usuarioADeshabilitar.apellido} deshabilitado exitosamente`)
 
-        // Si estamos en vista detalle, actualizar el usuario seleccionado
-        if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioADeshabilitar.id) {
-          setUsuarioSeleccionado({
-            ...usuarioSeleccionado,
-            estado: 'Deshabilitado'
-          })
-        }
+          // Recargar los datos después de que se cierra el modal
+          await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
 
-        setError('')
-        cerrarModal()
+          // Si estamos en vista detalle, actualizar el usuario seleccionado
+          if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioADeshabilitar.id) {
+            setUsuarioSeleccionado({
+              ...usuarioSeleccionado,
+              estado: 'Deshabilitado'
+            })
+          }
+
+          setError('')
+        }, 2000)
       }
     } catch (error: unknown) {
       console.error('Error deshabilitando usuario:', error)
       setError(manejarErrorAPI(error))
+      setMostrarExitoEnModal(false)
     } finally {
       setDeshabilitando(false)
     }
@@ -209,16 +234,25 @@ export default function Personal() {
       })
 
       if (response.status === 200) {
-        await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
-
-        if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioId) {
-          setUsuarioSeleccionado({
-            ...usuarioSeleccionado,
-            estado: 'Activo'
-          })
+        // Mostrar mensaje de éxito para habilitación
+        const usuario = usuarios.find(u => u.id === usuarioId)
+        if (usuario) {
+          setSuccessMessage(`Usuario ${usuario.nombre} ${usuario.apellido} habilitado exitosamente`)
         }
 
-        setError('')
+        // Esperar 3 segundos antes de recargar los datos
+        setTimeout(async () => {
+          await cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
+
+          if (usuarioSeleccionado && usuarioSeleccionado.id === usuarioId) {
+            setUsuarioSeleccionado({
+              ...usuarioSeleccionado,
+              estado: 'Activo'
+            })
+          }
+
+          setError('')
+        }, 3000)
       }
     } catch (error: unknown) {
       console.error('Error habilitando usuario:', error)
@@ -232,6 +266,21 @@ export default function Personal() {
     <>
       <Navbar />
       <Title text={"Personal"} />
+
+      {/* Mensaje de éxito global */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 p-4 bg-green-50 border border-green-200 rounded-lg shadow-lg max-w-sm">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-10 h-10 text-green-600 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-green-800">{successMessage}</p>
+              <p className="text-sm text-green-700 mt-1">
+                La página se actualizará automáticamente.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-8">
         {/* Filtros en la parte superior */}
@@ -327,6 +376,7 @@ export default function Personal() {
         onConfirm={confirmarDeshabilitacion}
         usuarioNombre={usuarioADeshabilitar ? `${usuarioADeshabilitar.nombre} ${usuarioADeshabilitar.apellido}` : ''}
         loading={deshabilitando}
+        mostrarExito={mostrarExitoEnModal}
       />
     </>
   )

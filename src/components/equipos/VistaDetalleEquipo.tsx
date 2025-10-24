@@ -662,18 +662,18 @@ export default function VistaDetalleEquipo({
                       <div className="space-y-2 text-sm">
                         {equipoUsuario.bienNacional && (
                           <p>
-                            <span className="font-medium">Bien Nacional:</span>{" "}
+                            <span className="font-semibold">Bien Nacional:</span>{" "}
                             {equipoUsuario.bienNacional}
                           </p>
                         )}
                         {equipoUsuario.serial && (
                           <p>
-                            <span className="font-medium">Serial:</span>{" "}
+                            <span className="font-semibold">Serial:</span>{" "}
                             {equipoUsuario.serial}
                           </p>
                         )}
                         {equipoUsuario.estado && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 font-semibold">
                             <Circle
                               size={12}
                               className={`${
@@ -702,7 +702,7 @@ export default function VistaDetalleEquipo({
                                   : "text-gray-500 fill-gray-500"
                               }`}
                             />
-                            <span className="text-gray-600">
+                            <span className="text-gray-600 font-semibold">
                               Status: {equipoUsuario.status.estado}
                             </span>{" "}
                           </div>

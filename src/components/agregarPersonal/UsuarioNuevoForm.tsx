@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react"
 import { Eye, EyeOff, CheckCircle, XCircle, Building, MapPin, Layers, ChevronDown } from "lucide-react"
 import axios, { AxiosError } from "axios"
 import SelectModal from "./SelectModal"
-import { useSession } from "next-auth/react"
 import AsignacionEquipos from "./AsignacionEquipos"
 
 // Interfaces
@@ -85,12 +84,19 @@ interface UsuarioNuevoFormProps {
 
 const IconoValidacion = ({ valido }: { valido: boolean }) =>
   valido ?
-    <CheckCircle className="w-10 h-10 text-green-500" /> :
+    <CheckCircle className="w-4 h-4 text-green-500" /> :
     <XCircle size={16} className="text-red-500" />
 
 // Función para capitalizar la primera letra
 const capitalizarPrimeraLetra = (texto: string): string => {
   return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase()
+}
+
+// Función simple para obtener roles permitidos según el rol del usuario
+function obtenerRolesPermitidos(rolId: number): number[] {
+  if (rolId === 1) return [2, 3, 4] // Admin: todos los roles
+  if (rolId === 2) return [3, 4]    // Supervisor: solo solicitante y analista
+  return []                         // Otros: ningún rol
 }
 
 export default function UsuarioNuevoForm({
@@ -112,8 +118,8 @@ export default function UsuarioNuevoForm({
   })
   const [modalAbierto, setModalAbierto] = useState<'direccion' | 'area' | null>(null)
   const [loading, setLoading] = useState(false)
+  const [miRol, setMiRol] = useState({ rolId: 0, rol: '', loading: true })
 
-  const { data: session } = useSession()
   const formRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState<FormData>({
@@ -137,15 +143,31 @@ export default function UsuarioNuevoForm({
     maximo: false
   })
 
-  // Determinar si el usuario es supervisor basado en la sesión
-  const esSupervisor = session?.user?.rol === 'supervisor'
-
   // Función para hacer scroll al inicio del formulario
   const scrollToTop = () => {
     if (formRef.current) {
       formRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
+
+  // Obtener mi rol al cargar el componente
+  useEffect(() => {
+    const obtenerMiRol = async () => {
+      try {
+        const response = await axios.get('/api/auth/usuarioRol')
+        setMiRol({ 
+          ...response.data, 
+          rol: capitalizarPrimeraLetra(response.data.rol),
+          loading: false 
+        })
+      } catch (error) {
+        console.error('Error obteniendo rol:', error)
+        setMiRol(prev => ({ ...prev, loading: false }))
+      }
+    }
+
+    obtenerMiRol()
+  }, [])
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -162,8 +184,8 @@ export default function UsuarioNuevoForm({
         let rolesDisponibles = rolesResponse.data.roles || []
 
         // Si el usuario es supervisor, filtrar para quitar el rol de supervisor
-        if (esSupervisor) {
-          rolesDisponibles = rolesDisponibles.filter((rol: Rol) => rol.rol.toLowerCase() !== 'supervisor')
+        if (miRol.rolId === 2) {
+          rolesDisponibles = rolesDisponibles.filter((rol: Rol) => rol.id !== 2) // Quitar rol supervisor (id: 2)
         }
 
         // Capitalizar la primera letra de cada rol
@@ -182,8 +204,10 @@ export default function UsuarioNuevoForm({
       }
     }
 
-    cargarDatosIniciales()
-  }, [onError, esSupervisor])
+    if (!miRol.loading) {
+      cargarDatosIniciales()
+    }
+  }, [onError, miRol.rolId, miRol.loading])
 
   // Cargar direcciones cuando se selecciona un piso
   useEffect(() => {
@@ -315,6 +339,14 @@ export default function UsuarioNuevoForm({
       return
     }
 
+    // Validar que el rol seleccionado esté permitido para este usuario
+    const rolesPermitidos = obtenerRolesPermitidos(miRol.rolId)
+    if (!rolesPermitidos.includes(formData.rolId)) {
+      onError('No tienes permisos para asignar este rol')
+      scrollToTop()
+      return
+    }
+
     if (formData.password !== formData.confirmarPassword) {
       onError('Las contraseñas no coinciden')
       scrollToTop()
@@ -372,15 +404,17 @@ export default function UsuarioNuevoForm({
     formData.rolId &&
     formData.pisoId &&
     formData.direccionId &&
+    obtenerRolesPermitidos(miRol.rolId).includes(formData.rolId) &&
     formData.password === formData.confirmarPassword &&
     Object.values(validacionContraseña).every(Boolean)
 
-  if (cargandoDatos) {
+  if (miRol.loading || cargandoDatos) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
         </div>
+        <p className="text-gray-600">Cargando información...</p>
       </div>
     )
   }
@@ -389,6 +423,13 @@ export default function UsuarioNuevoForm({
     <>
       <div ref={formRef} className="overflow-y-auto flex-1">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Información del usuario actual */}
+          <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
+            <p className="text-sm text-gray-700">
+              Usuario actual: <span className="font-semibold">{miRol.rol}</span>
+            </p>
+          </div>
+
           {/* Información Personal */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-[#001F3F] mb-4 flex items-center gap-2">
@@ -427,7 +468,7 @@ export default function UsuarioNuevoForm({
                   onChange={handleChange}
                   className="w-full px-3 py-2 cursor-pointer border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
                   required
-                  disabled={loading}
+                  disabled={loading || roles.length === 0}
                 >
                   <option value="">Selecciona un rol</option>
                   {roles.map((rol) => (
@@ -436,9 +477,14 @@ export default function UsuarioNuevoForm({
                     </option>
                   ))}
                 </select>
-                {esSupervisor && (
+                {miRol.rolId === 2 && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Los supervisores solo pueden crear Analistas, Solicitantes y Personal
+                    Los supervisores solo pueden crear Analistas y Solicitantes
+                  </p>
+                )}
+                {roles.length === 0 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    No tienes permisos para crear usuarios
                   </p>
                 )}
               </div>

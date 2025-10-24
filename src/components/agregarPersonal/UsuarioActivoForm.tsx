@@ -37,8 +37,7 @@ interface UsuarioActivoFormProps {
   onSuccess: (message: string) => void
   onError: (message: string) => void
   onClose: () => void
-  usuarioPrecargado?: Usuario // Nueva prop opcional
-  esSupervisor?: boolean // Nueva prop para identificar si es supervisor
+  usuarioPrecargado?: Usuario
 }
 
 const IconoValidacion = ({ valido }: { valido: boolean }) =>
@@ -46,15 +45,28 @@ const IconoValidacion = ({ valido }: { valido: boolean }) =>
     <CheckCircle className="w-10 h-10 text-green-500" /> :
     <XCircle size={16} className="text-red-500" />
 
+// Función para capitalizar la primera letra
+function capitalizarPrimeraLetra(texto: string): string {
+  if (!texto) return ''
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase()
+}
+
+// Función simple para obtener roles permitidos según el rol del usuario
+function obtenerRolesPermitidos(rolId: number): number[] {
+  if (rolId === 1) return [2, 3, 4] // Admin: todos los roles
+  if (rolId === 2) return [3, 4]    // Supervisor: solo solicitante y analista
+  return []                         // Otros: ningún rol
+}
+
 export default function UsuarioActivoForm({
   loading,
   onLoadingChange,
   onSuccess,
   onError,
   onClose,
-  usuarioPrecargado, // Nueva prop
-  esSupervisor = false // Nueva prop con valor por defecto
+  usuarioPrecargado
 }: UsuarioActivoFormProps) {
+  const [miRol, setMiRol] = useState({ rolId: 0, rol: '', loading: true })
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(usuarioPrecargado || null)
   const [roles, setRoles] = useState<Rol[]>([])
   const [showPassword, setShowPassword] = useState({
@@ -80,42 +92,47 @@ export default function UsuarioActivoForm({
 
   const formRef = useRef<HTMLDivElement>(null)
 
-  // Cargar roles disponibles
+  // Obtener mi rol al cargar el componente
   useEffect(() => {
-    const cargarRoles = async () => {
+    const obtenerMiRol = async () => {
       try {
-        // Roles para admin (todos los roles)
-        const rolesAdmin = [
-          { id: 2, rol: 'Supervisor' },
-          { id: 3, rol: 'Solicitante' },
-          { id: 4, rol: 'Analista' }
-        ]
-
-        // Roles para supervisor (solo analistas y solicitantes)
-        const rolesSupervisor = [
-          { id: 3, rol: 'Solicitante' },
-          { id: 4, rol: 'Analista' }
-        ]
-
-        // Elegir los roles según el tipo de usuario
-        const rolesDisponibles = esSupervisor ? rolesSupervisor : rolesAdmin
-        
-        setRoles(rolesDisponibles)
-
-        // Si es supervisor y el rol actual es supervisor (2), resetear a 0
-        if (esSupervisor && formData.rolId === 2) {
-          setFormData(prev => ({
-            ...prev,
-            rolId: 0
-          }))
-        }
+        const response = await axios.get('/api/auth/usuarioRol')
+        setMiRol({ 
+          ...response.data, 
+          rol: capitalizarPrimeraLetra(response.data.rol),
+          loading: false 
+        })
       } catch (error) {
-        console.error('Error cargando roles:', error)
+        console.error('Error obteniendo rol:', error)
+        setMiRol(prev => ({ ...prev, loading: false }))
       }
     }
 
-    cargarRoles()
-  }, [esSupervisor, formData.rolId])
+    obtenerMiRol()
+  }, [])
+
+  // Cargar roles disponibles según mi rol
+  useEffect(() => {
+    if (miRol.loading) return
+
+    const todosLosRoles = [
+      { id: 2, rol: 'Supervisor' },
+      { id: 3, rol: 'Solicitante' },
+      { id: 4, rol: 'Analista' }
+    ]
+
+    const rolesPermitidos = obtenerRolesPermitidos(miRol.rolId)
+    const rolesDisponibles = todosLosRoles.filter(rol => 
+      rolesPermitidos.includes(rol.id)
+    )
+    
+    setRoles(rolesDisponibles)
+
+    // Resetear si el rol actual no está permitido
+    if (formData.rolId !== 0 && !rolesPermitidos.includes(formData.rolId)) {
+      setFormData(prev => ({ ...prev, rolId: 0 }))
+    }
+  }, [miRol.rolId, miRol.loading, formData.rolId])
 
   // Si hay usuario precargado, establecerlo automáticamente
   useEffect(() => {
@@ -211,9 +228,10 @@ export default function UsuarioActivoForm({
       return
     }
 
-    // Validación adicional para supervisores - no pueden asignar rol de supervisor
-    if (esSupervisor && formData.rolId === 2) {
-      onError('Los supervisores no pueden crear o asignar el rol de supervisor')
+    // Validar que el rol seleccionado esté permitido para este usuario
+    const rolesPermitidos = obtenerRolesPermitidos(miRol.rolId)
+    if (!rolesPermitidos.includes(formData.rolId)) {
+      onError('No tienes permisos para asignar este rol')
       scrollToTop()
       return
     }
@@ -229,12 +247,11 @@ export default function UsuarioActivoForm({
     onError('')
 
     try {
-      // CORRECCIÓN: Mantener cédula actual si ya existe, pero permitir cambiar email
       const datosActualizacion = {
         usuarioId: usuarioSeleccionado.id,
         cedula: usuarioSeleccionado.cedula ? usuarioSeleccionado.cedula : (formData.cedula || null),
-        email: formData.email || null, // Siempre permitir cambiar el email
-        password: formData.password || null, // Permitir contraseña vacía para no cambiarla
+        email: formData.email || null,
+        password: formData.password || null,
         rolId: formData.rolId
       }
 
@@ -259,12 +276,30 @@ export default function UsuarioActivoForm({
 
   const isFormValid = usuarioSeleccionado &&
     formData.rolId &&
-    formData.rolId !== 2 && // Para supervisores, no permitir rol 2 (Supervisor)
+    obtenerRolesPermitidos(miRol.rolId).includes(formData.rolId) &&
     (!formData.password || (formData.password === formData.confirmarPassword && Object.values(validacionContraseña).every(Boolean)))
+
+  if (miRol.loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p className="text-gray-600">Cargando información...</p>
+      </div>
+    )
+  }
 
   return (
     <div ref={formRef} className="overflow-y-auto flex-1">
       <form onSubmit={handleSubmit} className="space-y-6 w-11/12 mx-auto py-4">
+        {/* Información del usuario actual */}
+        <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
+          <p className="text-sm text-gray-700">
+            Usuario actual: <span className="font-semibold">{miRol.rol}</span>
+          </p>
+        </div>
+
         {/* Buscador de usuarios - Solo mostrar si no hay usuario precargado */}
         {!usuarioPrecargado && !usuarioSeleccionado && (
           <BarraBusqueda
@@ -344,7 +379,6 @@ export default function UsuarioActivoForm({
                     <p className="text-gray-700">
                       {usuarioSeleccionado.email || 'No tiene email registrado'}
                     </p>
-                    {/* Mostrar mensaje solo si hay email registrado */}
                     {usuarioSeleccionado.email && (
                       <p className="text-xs text-green-600 mt-1">
                         El email se puede modificar
@@ -414,7 +448,7 @@ export default function UsuarioActivoForm({
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
                 required
-                disabled={loading}
+                disabled={loading || roles.length === 0}
               >
                 <option value="">Selecciona un rol</option>
                 {roles.map((rol) => (
@@ -423,9 +457,14 @@ export default function UsuarioActivoForm({
                   </option>
                 ))}
               </select>
-              {esSupervisor && (
+              {miRol.rolId === 2 && (
                 <p className="text-xs text-gray-500 mt-1">
                   Los supervisores solo pueden crear/editar Analistas y Solicitantes
+                </p>
+              )}
+              {roles.length === 0 && (
+                <p className="text-xs text-red-500 mt-1">
+                  No tienes permisos para asignar roles
                 </p>
               )}
             </div>

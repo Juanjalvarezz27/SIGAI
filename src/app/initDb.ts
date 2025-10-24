@@ -571,7 +571,7 @@ export async function def() {
       equipos: [{ bienNacional: "20814", serial: "MXL7270D" }, { bienNacional: "27694", serial: "KBD624K10968A" }, { bienNacional: "261447", serial: "V19LW-B" }, { bienNacional: "26986", serial: "21325238" }, { bienNacional: "8807", serial: "423432432342" }]
       },
       {
-      usuario: { nombre: "Aixa", apellido: "Vasquez", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
+      usuario: { nombre: "Aixa", apellido: "Vasquez", rolId: 3, email:"solicitanteSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
       equipos: [{ bienNacional: "27794", serial: "A000679533" }, { bienNacional: "29910", serial: "3CQ144C46W" }, { bienNacional: "31383", serial: "0065818882890" }, { bienNacional: "32020", serial: "230331-0560758" }, { bienNacional: "19024", serial: "42342234" }, { bienNacional: "28107", serial: "S25K342282" }]
       },
       {
@@ -623,7 +623,7 @@ export async function def() {
       equipos: [{ bienNacional: "29779", serial: "CNG1476W0X" }, { bienNacional: "25813", serial: "ZUHJHTKC401180P" }, { bienNacional: "20349", serial: "B945KGASX33A" }, { bienNacional: "16684", serial: "32354345" }, { id:1499 }, { bienNacional: "28106", serial: "S25K342817" }]
       },
       {
-      usuario: { nombre: "Angel", apellido: "Rivas", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
+      usuario: { nombre: "Angel", apellido: "Rivas", rolId: 4, email:"analistaSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
       equipos: [{ bienNacional: "27900", serial: "A000679654" }, { bienNacional: "27880", serial: "C16D8BA000534" }, { bienNacional: "020356", serial: "B94540KGASX0VU" }, { bienNacional: "27842", serial: "13355498332" }, { bienNacional: "27329", serial: "C16D8BA000973" }, { bienNacional: "30460", serial: "7591186002016" }]
       },
       {
@@ -643,7 +643,7 @@ export async function def() {
       equipos: [{ bienNacional: "29768", serial: "CNG1466952" }, { bienNacional: "29742", serial: "3CQ143CDNV" }, { bienNacional: "25924", serial: "2827458" }, { bienNacional: "020135", serial: "3L0651X26223" }, { bienNacional: "CN16N1C33F", serial: "CN16N1C33F" }]
       },
       {
-      usuario: { nombre: "Carlos", apellido: "Chirinos", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
+      usuario: { nombre: "Carlos", apellido: "Chirinos", rolId: 4, email:"analistaRedes@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
       equipos: [{ bienNacional: "31704", serial: "A001333657" }, { id:1208 }, { id:1209 }, { bienNacional: "31612", serial: "221716341399" }]
       },
       {
@@ -663,7 +663,7 @@ export async function def() {
       equipos: [{ bienNacional: "24591", serial: "010228A10018SP0007" }, { bienNacional: "5048120", serial: "KBE901K12045A" }]
       },
       {
-      usuario: { nombre: "Diego", apellido: "Gomez", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
+      usuario: { nombre: "Diego", apellido: "Gomez", rolId: 4, email:"analistaDesarrollo@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
       equipos: [{ bienNacional: "27310", serial: "A000679769" }, { bienNacional: "27661", serial: "C16D8BA000451" }, { bienNacional: "26159", serial: "A59C6BA007363" }, { bienNacional: "20014", serial: "B94540AVBSX4WM" }, { bienNacional: "27417", serial: "13355499166" }]
       },
       {
@@ -699,7 +699,7 @@ export async function def() {
       equipos: [{ bienNacional: "27705", serial: "A000679555" }, { bienNacional: "024752", serial: "C0B2Y09000000000" }, { bienNacional: "16380", serial: "C0403116640" }, { bienNacional: "27399", serial: "13355499890" }]
       }, 
       {
-      usuario: { nombre: "Gabriel", apellido: "Vegas", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
+      usuario: { nombre: "Gabriel", apellido: "Vegas", rolId: 2, email:"supervisorServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
       equipos: [{ bienNacional: "31817", serial: "A001332822" }, { bienNacional: "27913", serial: "C16D8BA000473" }, { id:1203  }, { bienNacional: "27860", serial: "KBD624K14413A" }, { bienNacional: "27430", serial: "13355499094" }, { bienNacional: "021944", serial: "641063190" }]
       },
       {
@@ -807,7 +807,7 @@ export async function def() {
       equipos: [{ bienNacional: "29766", serial: "CNG1476PT0" }, { bienNacional: "29741", serial: "3CQ144C27Z" }, { bienNacional: "16467", serial: "C0403116670" }, { bienNacional: "13074", serial: "353465" }]
       },
       {
-      usuario: { nombre: "Keimmer", apellido: "Altuve", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
+      usuario: { nombre: "Keimmer", apellido: "Altuve", rolId: 2, email:"supervisordesarollo@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
       equipos: [{ bienNacional: "27356", serial: "C16D8BA000474" }, { bienNacional: "27331", serial: "C16D8BA000463" }, { bienNacional: "31719", serial: "05726514" }, { bienNacional: "31611", serial: "221716347224" }]
       }, 
       {
@@ -867,7 +867,7 @@ export async function def() {
       equipos: [{ bienNacional: "024651", serial: "A000091910" }, { bienNacional: "26148", serial: "A59C6BA005331" }, { bienNacional: "ZM2520002645", serial: "ZM2520002645" }, { bienNacional: "020857", serial: "321321312" }, { bienNacional: "26984", serial: "21323436" }, { id:1486 }]
       },
       {
-      usuario: { nombre: "Marlene", apellido: "Graterol", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
+      usuario: { nombre: "Marlene", apellido: "Graterol", rolId: 4, email:"analistaSiges@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
       equipos: [{ bienNacional: "27703", serial: "A000679695" }, { bienNacional: "27363", serial: "C16D8BA000506" }, { bienNacional: "27637", serial: "KBD624K14414A" }, { bienNacional: "27374", serial: "13355495291" }]
       },
       {
@@ -927,11 +927,11 @@ export async function def() {
       equipos: [{ bienNacional: "29750", serial: "CNG146692H" }, { bienNacional: "29735", serial: "3CQ144C264" }, { bienNacional: "25820", serial: "BAVT0BHH2E5T5" }, { id:1502 }, { bienNacional: "22963", serial: "20138478" }, { bienNacional: "27495", serial: "13355499220" }]
       },
       {
-      usuario: { nombre: "Richard", apellido: "Quijada", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Richard", apellido: "Quijada", rolId: 4, email:"analistaServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "31895", serial: "A00136205" }, { id:1194 }, { id:1195 }, { id:247 }, { bienNacional: "27728", serial: "C16D8BA000471" }, { bienNacional: "31380", serial: "0065818882892" }, { bienNacional: "31496", serial: "KA19021E000811" }, { bienNacional: "31611", serial: "221716347224" }, { id:1915 }]
       },
       {
-      usuario: { nombre: "Rodolfo", apellido: "Martinez", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Rodolfo", apellido: "Martinez", rolId: 4, email:"analistaSoporte2@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "29263", serial: "02EYHCLG205430A" }, { bienNacional: "27903", serial: "KBD624K10947A" }, { bienNacional: "27543", serial: "13355496312" }, { bienNacional: "29202", serial: "CNG1476Q73" }, { bienNacional: "26128", serial: "A59C6BA005286" }, { bienNacional: "26068", serial: "KBC518K11707A" }]
       },
       {
@@ -983,7 +983,7 @@ export async function def() {
       equipos: [{ bienNacional: "29803", serial: "CNG14669669" }, { bienNacional: "29811", serial: "3CQ144C280" }, { bienNacional: "20222", serial: "B94540KGASX34E" }, { bienNacional: "14868", serial: "5-91451000532" }, { id:1492 }]
       },
       {
-      usuario: { nombre: "Tomas", apellido: "Díaz", rolId: 5, direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Tomas", apellido: "Díaz", rolId: 2, email:"supervisorSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "31893", serial: "M242023220014" }, { id:1190 }, { bienNacional: "27729", serial: "C16D8BA000478" }, { id:243 }, { bienNacional: "31605", serial: "221716347219" }, { bienNacional: "27316", serial: "A000679750" }, { bienNacional: "26230", serial: "KBC525K10340A" }, { bienNacional: "28013", serial: "JP400113070382" }]
       },
       {
