@@ -214,6 +214,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
 export async function GET() {
   try {
     const tickets = await prisma.ticket.findMany({
@@ -245,9 +246,11 @@ export async function GET() {
             cedula: true,
             direccion: {
               select: {
+                id: true, 
                 direccion: true,
                 piso: {
                   select: {
+                    id: true, 
                     piso: true
                   }
                 }
@@ -292,8 +295,8 @@ export async function GET() {
     return NextResponse.json(tickets);
   } catch (error) {
     console.error('Error fetching tickets:', error);
-    return NextResponse.json({ 
-      error: 'Error interno del servidor' 
+    return NextResponse.json({
+      error: 'Error interno del servidor'
     }, { status: 500 });
   }
 }

@@ -5,7 +5,6 @@ export interface TicketEstado {
 export interface TipoTicket {
   tipo: string;
 }
-
 export interface UsuarioBasico {
   id: number;
   nombre: string;
@@ -13,8 +12,10 @@ export interface UsuarioBasico {
   cedula?: string | null;
   email?: string | null;
   direccion?: {
+    id: number; 
     direccion: string;
     piso: {
+      id: number; 
       piso: string;
     };
   };
@@ -22,7 +23,6 @@ export interface UsuarioBasico {
     nombre: string;
   } | null;
 }
-
 export interface Equipo {
   id: number;
   bienNacional?: string | null;
@@ -81,4 +81,12 @@ export interface TicketFormData {
   tipoTicketId: string
   usuarioAfectadoId?: string
   equiposSeleccionados?: number[]
+}
+
+export interface PaginationInfo {
+  currentPage: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
 }
