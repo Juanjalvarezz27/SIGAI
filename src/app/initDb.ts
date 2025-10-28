@@ -623,7 +623,7 @@ export async function def() {
       equipos: [{ bienNacional: "29779", serial: "CNG1476W0X" }, { bienNacional: "25813", serial: "ZUHJHTKC401180P" }, { bienNacional: "20349", serial: "B945KGASX33A" }, { bienNacional: "16684", serial: "32354345" }, { id:1499 }, { bienNacional: "28106", serial: "S25K342817" }]
       },
       {
-      usuario: { nombre: "Angel", apellido: "Rivas", rolId: 4, email:"analistaSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
+      usuario: { nombre: "Angel", apellido: "Rivas", tipoAnalistaId: 1 ,rolId: 4, email:"analistaSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
       equipos: [{ bienNacional: "27900", serial: "A000679654" }, { bienNacional: "27880", serial: "C16D8BA000534" }, { bienNacional: "020356", serial: "B94540KGASX0VU" }, { bienNacional: "27842", serial: "13355498332" }, { bienNacional: "27329", serial: "C16D8BA000973" }, { bienNacional: "30460", serial: "7591186002016" }]
       },
       {
@@ -643,7 +643,7 @@ export async function def() {
       equipos: [{ bienNacional: "29768", serial: "CNG1466952" }, { bienNacional: "29742", serial: "3CQ143CDNV" }, { bienNacional: "25924", serial: "2827458" }, { bienNacional: "020135", serial: "3L0651X26223" }, { bienNacional: "CN16N1C33F", serial: "CN16N1C33F" }]
       },
       {
-      usuario: { nombre: "Carlos", apellido: "Chirinos", rolId: 4, email:"analistaRedes@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
+      usuario: { nombre: "Carlos", apellido: "Chirinos", rolId: 4, tipoAnalistaId: 2 , email:"analistaRedes@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
       equipos: [{ bienNacional: "31704", serial: "A001333657" }, { id:1208 }, { id:1209 }, { bienNacional: "31612", serial: "221716341399" }]
       },
       {
@@ -663,7 +663,7 @@ export async function def() {
       equipos: [{ bienNacional: "24591", serial: "010228A10018SP0007" }, { bienNacional: "5048120", serial: "KBE901K12045A" }]
       },
       {
-      usuario: { nombre: "Diego", apellido: "Gomez", rolId: 4, email:"analistaDesarrollo@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
+      usuario: { nombre: "Diego", apellido: "Gomez", rolId: 4, tipoAnalistaId: 3 ,email:"analistaDesarrollo@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
       equipos: [{ bienNacional: "27310", serial: "A000679769" }, { bienNacional: "27661", serial: "C16D8BA000451" }, { bienNacional: "26159", serial: "A59C6BA007363" }, { bienNacional: "20014", serial: "B94540AVBSX4WM" }, { bienNacional: "27417", serial: "13355499166" }]
       },
       {
@@ -867,7 +867,7 @@ export async function def() {
       equipos: [{ bienNacional: "024651", serial: "A000091910" }, { bienNacional: "26148", serial: "A59C6BA005331" }, { bienNacional: "ZM2520002645", serial: "ZM2520002645" }, { bienNacional: "020857", serial: "321321312" }, { bienNacional: "26984", serial: "21323436" }, { id:1486 }]
       },
       {
-      usuario: { nombre: "Marlene", apellido: "Graterol", rolId: 4, email:"analistaSiges@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
+      usuario: { nombre: "Marlene", apellido: "Graterol", tipoAnalistaId: 4, rolId: 4, email:"analistaSiges@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
       equipos: [{ bienNacional: "27703", serial: "A000679695" }, { bienNacional: "27363", serial: "C16D8BA000506" }, { bienNacional: "27637", serial: "KBD624K14414A" }, { bienNacional: "27374", serial: "13355495291" }]
       },
       {
@@ -927,11 +927,11 @@ export async function def() {
       equipos: [{ bienNacional: "29750", serial: "CNG146692H" }, { bienNacional: "29735", serial: "3CQ144C264" }, { bienNacional: "25820", serial: "BAVT0BHH2E5T5" }, { id:1502 }, { bienNacional: "22963", serial: "20138478" }, { bienNacional: "27495", serial: "13355499220" }]
       },
       {
-      usuario: { nombre: "Richard", apellido: "Quijada", rolId: 4, email:"analistaServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Richard", apellido: "Quijada", tipoAnalistaId: 2 ,rolId: 4, email:"analistaServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "31895", serial: "A00136205" }, { id:1194 }, { id:1195 }, { id:247 }, { bienNacional: "27728", serial: "C16D8BA000471" }, { bienNacional: "31380", serial: "0065818882892" }, { bienNacional: "31496", serial: "KA19021E000811" }, { bienNacional: "31611", serial: "221716347224" }, { id:1915 }]
       },
       {
-      usuario: { nombre: "Rodolfo", apellido: "Martinez", rolId: 4, email:"analistaSoporte2@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Rodolfo", apellido: "Martinez", tipoAnalistaId: 1 ,rolId: 4, email:"analistaSoporte2@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "29263", serial: "02EYHCLG205430A" }, { bienNacional: "27903", serial: "KBD624K10947A" }, { bienNacional: "27543", serial: "13355496312" }, { bienNacional: "29202", serial: "CNG1476Q73" }, { bienNacional: "26128", serial: "A59C6BA005286" }, { bienNacional: "26068", serial: "KBC518K11707A" }]
       },
       {
@@ -1385,8 +1385,7 @@ export async function def() {
       equipos: [{ bienNacional: "26069", serial: "A000403884" }, { bienNacional: "30371", serial: "D72E6BA000529" }, { bienNacional: "30372", serial: "KBD917K11368A" }, { bienNacional: "25791", serial: "932843274823" }, { id:1711 }]
       },
     ];
-
-      // Crear Usuarios
+    // Crear Usuarios
     const createUsuarios = async () => {
       console.log("Iniciando creación de usuarios...");
       
@@ -1432,20 +1431,28 @@ export async function def() {
           console.log(`Contraseña ya hasheada para: ${dataUsuario.usuario.nombre}`);
         }
 
-        // 4. Crear usuario con contraseña hasheada
+        // 4. Crear usuario usando el operador spread para incluir tipoAnalistaId condicionalmente
         const usuario = await prismadb.usuario.create({
           data: {
             nombre: dataUsuario.usuario.nombre,
             apellido: dataUsuario.usuario.apellido,
             email: dataUsuario.usuario.email, 
-            password: hashedPassword, // ← Ahora hasheada
+            password: hashedPassword,
             rolId: dataUsuario.usuario.rolId,
             direccionId: direccion.id,
-            areaId: areaId
+            areaId: areaId,
+            // Agregar tipoAnalistaId solo si existe
+            ...(dataUsuario.usuario.tipoAnalistaId !== undefined && dataUsuario.usuario.tipoAnalistaId !== null && {
+              tipoAnalistaId: dataUsuario.usuario.tipoAnalistaId
+            })
           }
         });
 
-        console.log(`Usuario creado: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
+        if (dataUsuario.usuario.tipoAnalistaId) {
+          console.log(`Usuario creado con tipoAnalistaId ${dataUsuario.usuario.tipoAnalistaId}: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
+        } else {
+          console.log(`Usuario creado: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
+        }
 
         // 5. Asignar equipos (tu código existente)
         let equiposAsignados = 0;
@@ -1497,12 +1504,10 @@ export async function def() {
     };
 
     // EJECUTAR la función
-    createUsuarios()
-      .then(() => console.log("Script ejecutado exitosamente"))
-      .catch((error) => console.error("Error:", error));
+    await createUsuarios();
+    console.log("Script ejecutado exitosamente");
     
-
   } catch (error) {
-    console.log(error);
+    console.error("Error en la ejecución del script:", error);
   }
 }

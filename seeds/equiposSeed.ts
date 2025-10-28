@@ -68,14 +68,34 @@ export default async function seedEquipos(prisma: PrismaClient) {
       ],  skipDuplicates: true,
     });
 
-    // Crear estados de los tickets
+    // Tipos de tickets y analistas
+    await prisma.tipoTicket.createMany({
+      data: [
+        { tipo: "Soporte" },
+        { tipo: "Redes y Servidores" },
+        { tipo: "Desarrollo" },
+        { tipo: "Sigesp" }
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.tipoAnalista.createMany({
+      data: [
+        { tipo: "Soporte" },
+        { tipo: "Redes y Servidores" },
+        { tipo: "Desarrollo" },
+        { tipo: "Sigesp" }
+      ],
+      skipDuplicates: true,
+    });
+
     await prisma.ticketEstado.createMany({
       data: [
         { estado: "Abierto" },
-        { estado: "En_progreso" },
-        { estado: "Cerrado" },
-        { estado: "Cancelado" },
+        { estado: "En Progreso" },
+        { estado: "Cerrado" }
       ],
+      skipDuplicates: true,
     });
     
     const equiposData = [
