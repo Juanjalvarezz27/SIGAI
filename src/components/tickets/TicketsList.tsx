@@ -96,7 +96,7 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
 
   if (error) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 animate-fade-in">
         <div className="text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="font-medium">Error al cargar los tickets</p>
           <p className="text-sm mt-1">{error}</p>
@@ -107,7 +107,7 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="flex justify-center items-center py-12 animate-fade-in">
         <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
           <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -117,7 +117,7 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
 
   if (tickets.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 animate-fade-in">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <MessageSquare className="w-8 h-8 text-gray-400" />
         </div>
@@ -131,7 +131,7 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
 
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
-      {tickets.map((ticket) => {
+      {tickets.map((ticket, index) => {
         const fechaCreacion = new Date(ticket.fecha_creacion);
         const fechaCierre = ticket.fecha_cierre ? new Date(ticket.fecha_cierre) : null;
         const estaExpandido = ticketsExpandidos[ticket.id] || {
@@ -143,13 +143,21 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
         return (
           <div
             key={ticket.id}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-6"
+            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 p-6 animate-fade-in-up"
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             {/* Header con título y badges */}
             <div className="flex items-start justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 flex-1 mr-2">
-                {ticket.titulo}
-              </h3>
+              <div className="flex-1 mr-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    #{ticket.id}
+                  </span>
+                </div>
+                <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">
+                  {ticket.titulo}
+                </h3>
+              </div>
               <div className="flex flex-col gap-2 items-end">
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getEstadoColor(ticket.estado.estado)}`}>
                   {ticket.estado.estado}
@@ -164,21 +172,21 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
             <div className="mb-4">
               <button
                 onClick={() => toggleSeccion(ticket.id, 'descripcion')}
-                className="flex items-center justify-between w-full p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                className="flex items-center justify-between w-full p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all duration-200 cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-gray-600" />
                   <span className="font-medium text-gray-900">Descripción</span>
                 </div>
                 {estaExpandido.descripcion ? (
-                  <ChevronUp className="w-4 h-4 text-gray-600" />
+                  <ChevronUp className="w-4 h-4 text-gray-600 transition-transform duration-200" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                  <ChevronDown className="w-4 h-4 text-gray-600 transition-transform duration-200" />
                 )}
               </button>
               
               {estaExpandido.descripcion && (
-                <div className="mt-2 p-3 bg-white border border-gray-200 rounded-lg">
+                <div className="mt-2 p-3 bg-white border border-gray-200 rounded-lg animate-slide-down">
                   <p className="text-gray-600 text-sm">{ticket.descripcion}</p>
                 </div>
               )}
@@ -189,21 +197,21 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
               <div className="mb-4">
                 <button
                   onClick={() => toggleSeccion(ticket.id, 'usuarioAfectado')}
-                  className="flex items-center justify-between w-full p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
+                  className="flex items-center justify-between w-full p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-blue-600" />
                     <span className="font-medium text-blue-900">Usuario Afectado</span>
                   </div>
                   {estaExpandido.usuarioAfectado ? (
-                    <ChevronUp className="w-4 h-4 text-blue-600" />
+                    <ChevronUp className="w-4 h-4 text-blue-600 transition-transform duration-200" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-blue-600" />
+                    <ChevronDown className="w-4 h-4 text-blue-600 transition-transform duration-200" />
                   )}
                 </button>
                 
                 {estaExpandido.usuarioAfectado && (
-                  <div className="mt-2 p-3 bg-white border border-blue-200 rounded-lg">
+                  <div className="mt-2 p-3 bg-white border border-blue-200 rounded-lg animate-slide-down">
                     <div className="grid grid-cols-1 gap-2 text-sm">
                       <div>
                         <span className="text-gray-600">Nombre: </span>
@@ -253,7 +261,7 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
               <div className="mb-4">
                 <button
                   onClick={() => toggleSeccion(ticket.id, 'equipos')}
-                  className="flex items-center justify-between w-full p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                  className="flex items-center justify-between w-full p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Monitor className="w-4 h-4 text-orange-600" />
@@ -262,14 +270,14 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
                     </span>
                   </div>
                   {estaExpandido.equipos ? (
-                    <ChevronUp className="w-4 h-4 text-orange-600" />
+                    <ChevronUp className="w-4 h-4 text-orange-600 transition-transform duration-200" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-orange-600" />
+                    <ChevronDown className="w-4 h-4 text-orange-600 transition-transform duration-200" />
                   )}
                 </button>
                 
                 {estaExpandido.equipos && (
-                  <div className="mt-2 p-3 bg-white border border-orange-200 rounded-lg">
+                  <div className="mt-2 p-3 bg-white border border-orange-200 rounded-lg animate-slide-down">
                     <div className="space-y-3">
                       {ticket.ticketEquipos.map((ticketEquipo) => {
                         const infoEquipo = getInfoEquipo(ticketEquipo.equipo);
