@@ -9,18 +9,15 @@ interface PaginacionSuperiorTicketsProps {
   onPageChange: (page: number) => void
   loading?: boolean
   tipoFiltro: string
+  estadoFiltro: string
 }
 
 // Función para obtener el nombre del filtro actual
-function getNombreFiltro(filtro: string) {
-  switch (filtro) {
-    case 'todos': return 'todos los tickets'
-    case 'soporte': return 'tickets de soporte'
-    case 'redes': return 'tickets de redes'
-    case 'desarrollo': return 'tickets de desarrollo'
-    case 'sigesp': return 'tickets de SIGESP'
-    default: return 'tickets'
-  }
+function getNombreFiltro(tipoFiltro: string, estadoFiltro: string) {
+  const tipoText = tipoFiltro === 'todos' ? 'todos los' : `de ${tipoFiltro}`;
+  const estadoText = estadoFiltro === 'activos' ? 'activos' : 'cerrados';
+  
+  return `${tipoText} tickets ${estadoText}`;
 }
 
 // Función para generar números de página a mostrar
@@ -56,7 +53,8 @@ export default function PaginacionSuperiorTickets({
   currentPage,
   onPageChange,
   loading = false,
-  tipoFiltro
+  tipoFiltro,
+  estadoFiltro
 }: PaginacionSuperiorTicketsProps) {
   if (!pagination || pagination.totalCount === 0) return null
 
@@ -68,7 +66,7 @@ export default function PaginacionSuperiorTickets({
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
           <p className="text-sm text-gray-600">
-            Mostrando <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, pagination.totalCount)}</span> de <span className="font-semibold">{pagination.totalCount}</span> {getNombreFiltro(tipoFiltro)}
+            Mostrando <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, pagination.totalCount)}</span> de <span className="font-semibold">{pagination.totalCount}</span> {getNombreFiltro(tipoFiltro, estadoFiltro)}
           </p>
         </div>
         <div className="flex items-center gap-2">

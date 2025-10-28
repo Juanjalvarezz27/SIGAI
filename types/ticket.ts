@@ -1,10 +1,12 @@
 export interface TicketEstado {
+  id: number; 
   estado: string;
 }
 
 export interface TipoTicket {
   tipo: string;
 }
+
 export interface UsuarioBasico {
   id: number;
   nombre: string;
@@ -23,6 +25,7 @@ export interface UsuarioBasico {
     nombre: string;
   } | null;
 }
+
 export interface Equipo {
   id: number;
   bienNacional?: string | null;
@@ -60,19 +63,35 @@ export interface AnalistaAsignado extends UsuarioBasico {
     tipo: string;
   };
 }
-
+export interface TicketCierre {
+  id: number;
+  ticketId: number;
+  usuarioCerradorId: number;
+  fechaCierre: string;
+  condicion: string;
+  memoFinalizacion: string;
+  observaciones?: string;
+  tiempoEjecucionMinutos?: number;
+  usuarioCerrador?: {
+    nombre: string;
+    apellido?: string;
+  };
+}
 export interface Ticket {
   id: number;
   titulo: string;
   descripcion: string;
   fecha_creacion: string;
   fecha_cierre?: string | null;
+  estadoId: number;
   estado: TicketEstado;
   tipoTicket: TipoTicket;
   usuarioCreador: UsuarioBasico;
   usuarioCerrador?: AnalistaAsignado | null;
   usuarioAfectado?: UsuarioBasico | null;
   ticketEquipos?: TicketEquipo[];
+  ticketCierre?: TicketCierre;
+  tiempoEjecucion?: string;
 }
 
 export interface TicketFormData {
@@ -89,4 +108,9 @@ export interface PaginationInfo {
   totalCount: number
   hasNextPage: boolean
   hasPrevPage: boolean
+}
+export interface TicketCierreFormData {
+  condicion: 'Finalizado' | 'Rechazado' | 'Cancelado'
+  memoFinalizacion: string
+  observaciones?: string
 }

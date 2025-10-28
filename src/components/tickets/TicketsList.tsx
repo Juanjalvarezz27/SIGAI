@@ -1,23 +1,32 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  MessageSquare, 
-  User, 
-  MapPin, 
-  Building, 
-  Monitor, 
-  Briefcase, 
+import {
+  MessageSquare,
+  User,
+  MapPin,
+  Building,
+  Monitor,
+  Briefcase,
   ChevronDown,
   ChevronUp,
-  FileText
+  FileText,
+  CheckCircle,
+  XCircle,
+  Ban,
+  Clock,
+  Shield,
+  Calendar,
+  UserCheck
 } from "lucide-react"
 import { Ticket, Equipo } from "../../../types/ticket"
+import CerrarTicketModal from "./CerrarTicketModal"
 
 interface TicketsListProps {
   tickets: Ticket[]
   loading?: boolean
   error?: string
+  onTicketClosed?: () => void
 }
 
 // Interface para la información del equipo
@@ -32,10 +41,13 @@ interface TicketExpandido {
   usuarioAfectado: boolean;
   equipos: boolean;
   descripcion: boolean;
+  cierre: boolean;
 }
 
-export default function TicketsList({ tickets, loading = false, error = '' }: TicketsListProps) {
+export default function TicketsList({ tickets, loading = false, error = '', onTicketClosed }: TicketsListProps) {
   const [ticketsExpandidos, setTicketsExpandidos] = useState<Record<number, TicketExpandido>>({})
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [isCloseModalOpen, setIsCloseModalOpen] = useState(false)
 
   const toggleSeccion = (ticketId: number, seccion: keyof TicketExpandido) => {
     setTicketsExpandidos(prev => ({
@@ -47,6 +59,21 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
     }))
   }
 
+  const handleCloseTicket = (ticket: Ticket) => {
+    if (ticket.estadoId === 1) {
+      setSelectedTicket(ticket)
+      setIsCloseModalOpen(true)
+    }
+  }
+
+  const handleTicketClosed = () => {
+    setIsCloseModalOpen(false)
+    setSelectedTicket(null)
+    if (onTicketClosed) {
+      onTicketClosed()
+    }
+  }
+
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'Abierto':
@@ -54,7 +81,7 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
       case 'En Progreso':
         return 'bg-yellow-100 text-yellow-800'
       case 'Cerrado':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-red-100 text-red-800'
       default:
         return 'bg-blue-100 text-blue-800'
     }
@@ -67,17 +94,41 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
     }
   }
 
-  // Función para obtener el nombre completo
+  const getCondicionIcon = (condicion: string) => {
+    switch (condicion) {
+      case 'Finalizado':
+        return <CheckCircle className="w-4 h-4 text-green-600" />
+      case 'Rechazado':
+        return <XCircle className="w-4 h-4 text-red-600" />
+      case 'Cancelado':
+        return <Ban className="w-4 h-4 text-orange-600" />
+      default:
+        return null
+    }
+  }
+
+  const getCondicionColor = (condicion: string) => {
+    switch (condicion) {
+      case 'Finalizado':
+        return 'text-green-600 bg-green-50'
+      case 'Rechazado':
+        return 'text-red-600 bg-red-50'
+      case 'Cancelado':
+        return 'text-orange-600 bg-orange-50'
+      default:
+        return 'text-gray-600 bg-gray-50'
+    }
+  }
+
   const getNombreCompleto = (usuario: { nombre: string; apellido?: string | null }) => {
     return usuario.apellido ? `${usuario.nombre} ${usuario.apellido}` : usuario.nombre;
   };
 
-  // Función para obtener información del equipo de forma segura
   const getInfoEquipo = (equipo: Equipo): InfoEquipo => {
     const tipo = equipo.tipoEquipo?.nombre || 'Equipo'
     const marca = equipo.modelo?.marca?.nombre || ''
     const modelo = equipo.modelo?.nombre || ''
-    
+
     return {
       nombre: `${tipo} ${marca} ${modelo}`.trim(),
       bienNacional: equipo.bienNacional || 'No asignado',
@@ -122,244 +173,391 @@ export default function TicketsList({ tickets, loading = false, error = '' }: Ti
   }
 
   return (
-    <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
-      {tickets.map((ticket, index) => {
-        const fechaCreacion = new Date(ticket.fecha_creacion);
-        const fechaCierre = ticket.fecha_cierre ? new Date(ticket.fecha_cierre) : null;
-        const estaExpandido = ticketsExpandidos[ticket.id] || {
-          usuarioAfectado: false,
-          equipos: false,
-          descripcion: false
-        };
-        
-        return (
-          <div
-            key={ticket.id}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 p-6 animate-fade-in-up"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            {/* Header con título y badges */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1 mr-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    #{ticket.id}
-                  </span>
-                </div>
-                <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">
-                  {ticket.titulo}
-                </h3>
-              </div>
-              <div className="flex flex-col gap-2 items-end">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getEstadoColor(ticket.estado.estado)}`}>
-                  {ticket.estado.estado}
-                </span>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTipoColor(ticket.tipoTicket.tipo)}`}>
-                  {ticket.tipoTicket.tipo}
-                </span>
-              </div>
-            </div>
+    <>
+      {/* Grid container con items stretch para que todas las tarjetas tengan la misma altura */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 items-stretch">
+        {tickets.map((ticket, index) => {
+          const fechaCreacion = new Date(ticket.fecha_creacion);
+          const fechaCierre = ticket.fecha_cierre ? new Date(ticket.fecha_cierre) : null;
+          const estaExpandido = ticketsExpandidos[ticket.id] || {
+            usuarioAfectado: false,
+            equipos: false,
+            descripcion: false,
+            cierre: false
+          };
 
-            {/* Descripción desplegable */}
-            <div className="mb-4">
-              <button
-                onClick={() => toggleSeccion(ticket.id, 'descripcion')}
-                className="flex items-center justify-between w-full p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all duration-200 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">Descripción</span>
-                </div>
-                {estaExpandido.descripcion ? (
-                  <ChevronUp className="w-4 h-4 text-gray-600 transition-transform duration-200" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-600 transition-transform duration-200" />
-                )}
-              </button>
-              
-              {estaExpandido.descripcion && (
-                <div className="mt-2 p-3 bg-white border border-gray-200 rounded-lg animate-slide-down">
-                  <p className="text-gray-600 text-sm">{ticket.descripcion}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Información del usuario afectado desplegable */}
-            {ticket.usuarioAfectado && (
-              <div className="mb-4">
-                <button
-                  onClick={() => toggleSeccion(ticket.id, 'usuarioAfectado')}
-                  className="flex items-center justify-between w-full p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium text-blue-900">Usuario Afectado</span>
-                  </div>
-                  {estaExpandido.usuarioAfectado ? (
-                    <ChevronUp className="w-4 h-4 text-blue-600 transition-transform duration-200" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-blue-600 transition-transform duration-200" />
-                  )}
-                </button>
-                
-                {estaExpandido.usuarioAfectado && (
-                  <div className="mt-2 p-3 bg-white border border-blue-200 rounded-lg animate-slide-down">
-                    <div className="grid grid-cols-1 gap-2 text-sm">
-                      <div>
-                        <span className="text-gray-600">Nombre: </span>
-                        <span className="font-medium">
-                          {getNombreCompleto(ticket.usuarioAfectado)}
-                        </span>
-                      </div>
-                      
-                      {ticket.usuarioAfectado.cedula && (
-                        <div>
-                          <span className="text-gray-600">Cédula: </span>
-                          <span className="font-medium">{ticket.usuarioAfectado.cedula}</span>
-                        </div>
-                      )}
-
-                      {ticket.usuarioAfectado.direccion && (
-                        <>
-                          <div className="flex items-center gap-1">
-                            <Building className="w-3 h-3 text-gray-500" />
-                            <span className="text-gray-600">Piso: </span>
-                            <span className="font-medium">{ticket.usuarioAfectado.direccion.piso.piso}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-gray-500" />
-                            <span className="text-gray-600">Dirección: </span>
-                            <span className="font-medium">{ticket.usuarioAfectado.direccion.direccion}</span>
-                          </div>
-                        </>
-                      )}
-
-                      {ticket.usuarioAfectado.area && (
-                        <div className="flex items-center gap-1">
-                          <Briefcase className="w-3 h-3 text-gray-500" />
-                          <span className="text-gray-600">Área: </span>
-                          <span className="font-medium">{ticket.usuarioAfectado.area.nombre}</span>
-                        </div>
-                      )}
+          return (
+            <div
+              key={ticket.id}
+              // h-full para que ocupe toda la altura disponible del grid item
+              className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 p-6 animate-fade-in-up flex flex-col h-full"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              {/* Contenido principal que crece para ocupar el espacio */}
+              <div className="flex-1 flex flex-col">
+                {/* Header con título y badges */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 mr-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        #{ticket.id}
+                      </span>
                     </div>
+                    <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">
+                      {ticket.titulo}
+                    </h3>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Equipos afectados desplegable */}
-            {ticket.ticketEquipos && ticket.ticketEquipos.length > 0 && (
-              <div className="mb-4">
-                <button
-                  onClick={() => toggleSeccion(ticket.id, 'equipos')}
-                  className="flex items-center justify-between w-full p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <Monitor className="w-4 h-4 text-orange-600" />
-                    <span className="font-medium text-orange-900">
-                      Equipos Afectados ({ticket.ticketEquipos.length})
+                  <div className="flex flex-col gap-2 items-end">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getEstadoColor(ticket.estado.estado)}`}>
+                      {ticket.estado.estado}
+                    </span>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTipoColor(ticket.tipoTicket.tipo)}`}>
+                      {ticket.tipoTicket.tipo}
                     </span>
                   </div>
-                  {estaExpandido.equipos ? (
-                    <ChevronUp className="w-4 h-4 text-orange-600 transition-transform duration-200" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-orange-600 transition-transform duration-200" />
-                  )}
-                </button>
-                
-                {estaExpandido.equipos && (
-                  <div className="mt-2 p-3 bg-white border border-orange-200 rounded-lg animate-slide-down">
-                    <div className="space-y-3">
-                      {ticket.ticketEquipos.map((ticketEquipo) => {
-                        const infoEquipo = getInfoEquipo(ticketEquipo.equipo);
-                        return (
-                          <div key={ticketEquipo.id} className="pb-2 border-b border-gray-100 last:border-b-0 last:pb-0">
-                            <div className="font-medium text-sm mb-1">{infoEquipo.nombre}</div>
-                            <div className="text-gray-600 text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span>Bien Nacional:</span>
-                                <span className="font-medium">{infoEquipo.bienNacional}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Serial:</span>
-                                <span className="font-medium">{infoEquipo.serial}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Status:</span>
-                                <span className="font-medium">{infoEquipo.status}</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                </div>
+
+                {/* Botón de cerrar ticket (solo para tickets abiertos) */}
+                {ticket.estadoId === 1 && (
+                  <div className="mb-4">
+                    <button
+                      onClick={() => handleCloseTicket(ticket)}
+                      className="w-full px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Cerrar Ticket
+                    </button>
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* Información del ticket (siempre visible) */}
-            <div className="space-y-2 text-sm text-gray-500 border-t border-gray-100 pt-3">
-              <div className="flex justify-between">
-                <span>Creado por:</span>
-                <span className="font-medium text-gray-700">
-                  {getNombreCompleto(ticket.usuarioCreador)}
-                </span>
-              </div>
+                {/* Contenedor para las secciones desplegables con scroll si es necesario */}
+                <div className="flex-1 overflow-hidden">
+                  {/* Descripción desplegable */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => toggleSeccion(ticket.id, 'descripcion')}
+                      className="flex items-center justify-between w-full p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-gray-600" />
+                        <span className="font-medium text-gray-900">Descripción</span>
+                      </div>
+                      {estaExpandido.descripcion ? (
+                        <ChevronUp className="w-4 h-4 text-gray-600 transition-transform duration-200" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-600 transition-transform duration-200" />
+                      )}
+                    </button>
 
-              {ticket.usuarioCerrador && (
-                <div className="flex justify-between">
-                  <span>Asignado a:</span>
-                  <span className="font-medium text-gray-700">
-                    {getNombreCompleto(ticket.usuarioCerrador)}
-                    {ticket.usuarioCerrador.tipoAnalista && (
-                      <span className="text-xs text-gray-400 ml-1">
-                        ({ticket.usuarioCerrador.tipoAnalista.tipo})
-                      </span>
+                    {estaExpandido.descripcion && (
+                      <div className="mt-2 p-3 bg-white border border-gray-200 rounded-lg animate-slide-down">
+                        <p className="text-gray-600 text-sm">{ticket.descripcion}</p>
+                      </div>
                     )}
-                  </span>
-                </div>
-              )}
-              
-              <div className="flex justify-between">
-                <span>Fecha creación:</span>
-                <span className="font-medium text-gray-700">
-                  {fechaCreacion.toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </span>
-              </div>
+                  </div>
 
-              {fechaCierre ? (
-                <div className="flex justify-between">
-                  <span>Fecha cierre:</span>
-                  <span className="font-medium text-gray-700">
-                    {fechaCierre.toLocaleDateString('es-ES', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
+                  {/* Información del usuario afectado desplegable */}
+                  {ticket.usuarioAfectado && (
+                    <div className="mb-4">
+                      <button
+                        onClick={() => toggleSeccion(ticket.id, 'usuarioAfectado')}
+                        className="flex items-center justify-between w-full p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-blue-600" />
+                          <span className="font-medium text-blue-900">Usuario Afectado</span>
+                        </div>
+                        {estaExpandido.usuarioAfectado ? (
+                          <ChevronUp className="w-4 h-4 text-blue-600 transition-transform duration-200" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-blue-600 transition-transform duration-200" />
+                        )}
+                      </button>
+
+                      {estaExpandido.usuarioAfectado && (
+                        <div className="mt-2 p-3 bg-white border border-blue-200 rounded-lg animate-slide-down">
+                          <div className="grid grid-cols-1 gap-2 text-sm">
+                            <div>
+                              <span className="text-gray-600">Nombre: </span>
+                              <span className="font-medium">
+                                {getNombreCompleto(ticket.usuarioAfectado)}
+                              </span>
+                            </div>
+
+                            {ticket.usuarioAfectado.cedula && (
+                              <div>
+                                <span className="text-gray-600">Cédula: </span>
+                                <span className="font-medium">{ticket.usuarioAfectado.cedula}</span>
+                              </div>
+                            )}
+
+                            {ticket.usuarioAfectado.direccion && (
+                              <>
+                                <div className="flex items-center gap-1">
+                                  <Building className="w-3 h-3 text-gray-500" />
+                                  <span className="text-gray-600">Piso: </span>
+                                  <span className="font-medium">{ticket.usuarioAfectado.direccion.piso.piso}</span>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-gray-500" />
+                                  <span className="text-gray-600">Dirección: </span>
+                                  <span className="font-medium">{ticket.usuarioAfectado.direccion.direccion}</span>
+                                </div>
+                              </>
+                            )}
+
+                            {ticket.usuarioAfectado.area && (
+                              <div className="flex items-center gap-1">
+                                <Briefcase className="w-3 h-3 text-gray-500" />
+                                <span className="text-gray-600">Área: </span>
+                                <span className="font-medium">{ticket.usuarioAfectado.area.nombre}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Equipos afectados desplegable */}
+                  {ticket.ticketEquipos && ticket.ticketEquipos.length > 0 && (
+                    <div className="mb-4">
+                      <button
+                        onClick={() => toggleSeccion(ticket.id, 'equipos')}
+                        className="flex items-center justify-between w-full p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Monitor className="w-4 h-4 text-orange-600" />
+                          <span className="font-medium text-orange-900">
+                            Equipos Afectados ({ticket.ticketEquipos.length})
+                          </span>
+                        </div>
+                        {estaExpandido.equipos ? (
+                          <ChevronUp className="w-4 h-4 text-orange-600 transition-transform duration-200" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-orange-600 transition-transform duration-200" />
+                        )}
+                      </button>
+
+                      {estaExpandido.equipos && (
+                        <div className="mt-2 p-3 bg-white border border-orange-200 rounded-lg animate-slide-down">
+                          <div className="space-y-3">
+                            {ticket.ticketEquipos.map((ticketEquipo) => {
+                              const infoEquipo = getInfoEquipo(ticketEquipo.equipo);
+                              return (
+                                <div key={ticketEquipo.id} className="pb-2 border-b border-gray-100 last:border-b-0 last:pb-0">
+                                  <div className="font-medium text-sm mb-1">{infoEquipo.nombre}</div>
+                                  <div className="text-gray-600 text-xs space-y-1">
+                                    <div className="flex justify-between">
+                                      <span>Bien Nacional:</span>
+                                      <span className="font-medium">{infoEquipo.bienNacional}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Serial:</span>
+                                      <span className="font-medium">{infoEquipo.serial}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Status:</span>
+                                      <span className="font-medium">{infoEquipo.status}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Información de cierre desplegable (solo para tickets cerrados) */}
+                  {ticket.estadoId === 2 && ticket.ticketCierre && (
+                    <div className="mb-4">
+                      <button
+                        onClick={() => toggleSeccion(ticket.id, 'cierre')}
+                        className="flex items-center justify-between w-full p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-green-600" />
+                          <span className="font-medium text-green-900">Información de Cierre</span>
+                        </div>
+                        {estaExpandido.cierre ? (
+                          <ChevronUp className="w-4 h-4 text-green-600 transition-transform duration-200" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-green-600 transition-transform duration-200" />
+                        )}
+                      </button>
+
+                      {estaExpandido.cierre && (
+                        <div className="mt-2 p-3 bg-white border border-green-200 rounded-lg animate-slide-down">
+                          <div className="space-y-4">
+                            {/* Condición del cierre */}
+                            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                              {getCondicionIcon(ticket.ticketCierre.condicion)}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-gray-900">Condición</div>
+                                <div className={`text-sm font-semibold px-2 py-1 rounded-md inline-block mt-1 ${getCondicionColor(ticket.ticketCierre.condicion)}`}>
+                                  {ticket.ticketCierre.condicion}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Memo de Finalización */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <FileText className="w-4 h-4 text-gray-600" />
+                                <div className="text-sm font-medium text-gray-900">Memo de Finalización</div>
+                              </div>
+                              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                {ticket.ticketCierre.memoFinalizacion}
+                              </div>
+                            </div>
+
+                            {/* Observaciones (si existen) */}
+                            {ticket.ticketCierre.observaciones && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <FileText className="w-4 h-4 text-gray-600" />
+                                  <div className="text-sm font-medium text-gray-900">Observaciones Adicionales</div>
+                                </div>
+                                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                  {ticket.ticketCierre.observaciones}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Información del cierre */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-blue-600" />
+                                <div>
+                                  <div className="text-xs text-gray-500">Cerrado por</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {getNombreCompleto(ticket.ticketCierre.usuarioCerrador || ticket.usuarioCerrador!)}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-blue-600" />
+                                <div>
+                                  <div className="text-xs text-gray-500">Fecha de cierre</div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {fechaCierre?.toLocaleDateString('es-ES', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Tiempo de ejecución */}
+                            {ticket.tiempoEjecucion && (
+                              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <Clock className="w-5 h-5 text-blue-600" />
+                                <div>
+                                  <div className="text-sm font-medium text-blue-900">Tiempo de Ejecución</div>
+                                  <div className="text-lg font-bold text-blue-700">
+                                    {ticket.tiempoEjecucion}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex justify-between">
-                  <span>Fecha cierre:</span>
-                  <span className="font-medium text-yellow-600 text-xs">
-                    Aún no cerrado
-                  </span>
+
+                {/* Información del ticket (siempre visible) - Se mantiene al fondo */}
+                <div className="mt-auto pt-4 border-t border-gray-100">
+                  <div className="space-y-2 text-sm text-gray-500">
+                    <div className="flex justify-between">
+                      <span>Creado por:</span>
+                      <span className="font-medium text-gray-700">
+                        {getNombreCompleto(ticket.usuarioCreador)}
+                      </span>
+                    </div>
+
+                    {ticket.usuarioCerrador && (
+                      <div className="flex justify-between">
+                        <span>Asignado a:</span>
+                        <span className="font-medium text-gray-700">
+                          {getNombreCompleto(ticket.usuarioCerrador)}
+                          {ticket.usuarioCerrador.tipoAnalista && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              ({ticket.usuarioCerrador.tipoAnalista.tipo})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between">
+                      <span>Fecha creación:</span>
+                      <span className="font-medium text-gray-700">
+                        {fechaCreacion.toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+
+                    {fechaCierre ? (
+                      <div className="flex justify-between">
+                        <span>Fecha cierre:</span>
+                        <span className="font-medium text-gray-700">
+                          {fechaCierre.toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between">
+                        <span>Fecha cierre:</span>
+                        <span className="font-medium text-yellow-600 text-xs">
+                          Aún no cerrado
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Tiempo de ejecución para tickets cerrados */}
+                    {ticket.estadoId === 2 && ticket.tiempoEjecucion && (
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                        <span className="text-gray-600">Tiempo de ejecución:</span>
+                        <span className="font-medium text-blue-600 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {ticket.tiempoEjecucion}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      <CerrarTicketModal
+        isOpen={isCloseModalOpen}
+        onClose={() => setIsCloseModalOpen(false)}
+        onTicketClosed={handleTicketClosed}
+        ticket={selectedTicket}
+      />
+    </>
   )
 }

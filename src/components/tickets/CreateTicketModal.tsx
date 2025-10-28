@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { X, CheckCircle } from "lucide-react"
 import FormularioSoporteRedes from "./FormularioSoporteRedes"
 import { TicketFormData } from "../../../types/ticket"
@@ -22,6 +22,8 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errores, setErrores] = useState<string[]>([])
   const [mensajeExito, setMensajeExito] = useState<string>("")
+  const modalRef = useRef<HTMLDivElement>(null)
+  const mensajeExitoRef = useRef<HTMLDivElement>(null)
 
   // Efecto para controlar el scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -42,13 +44,13 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
     }
   }, [isOpen])
 
-  // Efecto para mostrar mensaje de éxito por 5 segundos
+  // Efecto para hacer scroll al mensaje de éxito
   useEffect(() => {
-    if (mensajeExito) {
-      const timer = setTimeout(() => {
-        setMensajeExito("")
-      }, 5000)
-      return () => clearTimeout(timer)
+    if (mensajeExito && mensajeExitoRef.current) {
+      mensajeExitoRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
     }
   }, [mensajeExito])
 
@@ -167,7 +169,10 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[0.5]">
-      <div className="bg-white rounded-lg shadow-xl w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] overflow-hidden flex flex-col max-w-4xl">
+      <div 
+        ref={modalRef}
+        className="bg-white rounded-lg shadow-xl w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] overflow-hidden flex flex-col max-w-4xl"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -184,12 +189,16 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
 
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Mensaje de éxito con ref para scroll automático */}
           {mensajeExito && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div 
+              ref={mensajeExitoRef}
+              className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg animate-fade-in"
+            >
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-10 h-10 text-green-500 flex-shrink-0" />
                 <div>
-                  <p className="text-green-800 font-medium">{mensajeExito}</p>
+                  <p className="text-green-800 font-medium text-lg">{mensajeExito}</p>
                   <p className="text-green-600 text-sm mt-1">
                     El modal se cerrará automáticamente...
                   </p>
@@ -199,9 +208,9 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
           )}
 
           {errores.length > 0 && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <h4 className="font-medium text-red-800 mb-2">Por favor complete los siguientes campos:</h4>
-              <ul className="list-disc list-inside text-red-700 text-sm">
+              <ul className="list-disc list-inside text-red-700 text-sm space-y-1">
                 {errores.map((error, index) => (
                   <li key={index}>{error}</li>
                 ))}

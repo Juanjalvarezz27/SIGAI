@@ -92,7 +92,6 @@ export default async function seedEquipos(prisma: PrismaClient) {
     await prisma.ticketEstado.createMany({
       data: [
         { estado: "Abierto" },
-        { estado: "En Progreso" },
         { estado: "Cerrado" }
       ],
       skipDuplicates: true,

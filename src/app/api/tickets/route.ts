@@ -244,13 +244,14 @@ export async function GET() {
             nombre: true,
             apellido: true,
             cedula: true,
+            email: true,
             direccion: {
               select: {
-                id: true, 
+                id: true,
                 direccion: true,
                 piso: {
                   select: {
-                    id: true, 
+                    id: true,
                     piso: true
                   }
                 }
@@ -285,6 +286,16 @@ export async function GET() {
               }
             }
           }
+        },
+        ticketCierre: {
+          include: {
+            usuarioCerrador: {
+              select: {
+                nombre: true,
+                apellido: true
+              }
+            }
+          }
         }
       },
       orderBy: {
@@ -292,7 +303,32 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json(tickets);
+    // Procesar los tickets para incluir el tiempo de ejecución formateado
+    const ticketsConTiempo = tickets.map(ticket => {
+      let tiempoEjecucion = '';
+      
+      if (ticket.ticketCierre && ticket.ticketCierre.tiempoEjecucionMinutos) {
+        const minutos = ticket.ticketCierre.tiempoEjecucionMinutos;
+        const dias = Math.floor(minutos / (60 * 24));
+        const horas = Math.floor((minutos % (60 * 24)) / 60);
+        const mins = minutos % 60;
+
+        if (dias > 0) {
+          tiempoEjecucion = `${dias}d ${horas}h ${mins}m`;
+        } else if (horas > 0) {
+          tiempoEjecucion = `${horas}h ${mins}m`;
+        } else {
+          tiempoEjecucion = `${mins}m`;
+        }
+      }
+
+      return {
+        ...ticket,
+        tiempoEjecucion
+      };
+    });
+
+    return NextResponse.json(ticketsConTiempo);
   } catch (error) {
     console.error('Error fetching tickets:', error);
     return NextResponse.json({

@@ -59,6 +59,7 @@ model Usuario {
   ticketAfectado                      Ticket[]                     @relation("TicketAfectado")
 
   @@map("usuarios")
+  TicketCierre TicketCierre[]
 }
 
 model TipoAnalista {
@@ -87,25 +88,25 @@ model Rol {
   usuarios Usuario[]
 }
 model Ticket {
-  id               Int            @id @default(autoincrement())
-  titulo           String
-  descripcion      String
+  id Int @id @default(autoincrement())
+  titulo String
+  descripcion String
   usuarioCreadorId Int
   usuarioCerradorId Int?
-  usuarioAfectadoId Int?        
-  estadoId         Int
-  tipoTicketId     Int
-  fecha_creacion   DateTime       @default(now())
-  fecha_cierre     DateTime?
-  
-  // Relaciones
-  estado           TicketEstado   @relation(fields: [estadoId], references: [id])
-  tipoTicket       TipoTicket     @relation(fields: [tipoTicketId], references: [id])
-  usuarioCerrador  Usuario?       @relation("TicketCerrado", fields: [usuarioCerradorId], references: [id])
-  usuarioCreador   Usuario        @relation("TicketCreado", fields: [usuarioCreadorId], references: [id])
-  usuarioAfectado  Usuario?       @relation("TicketAfectado", fields: [usuarioAfectadoId], references: [id]) 
-  ticketEquipos    TicketEquipo[]
-  ticketEvento     TicketEvento?
+  usuarioAfectadoId Int?
+  estadoId Int
+  tipoTicketId Int
+  fecha_creacion DateTime @default(now())
+  fecha_cierre DateTime?
+
+  estado TicketEstado @relation(fields: [estadoId], references: [id])
+  tipoTicket TipoTicket @relation(fields: [tipoTicketId], references: [id])
+  usuarioCerrador Usuario? @relation("TicketCerrado", fields: [usuarioCerradorId], references: [id])
+  usuarioCreador Usuario @relation("TicketCreado", fields: [usuarioCreadorId], references: [id])
+  usuarioAfectado Usuario? @relation("TicketAfectado", fields: [usuarioAfectadoId], references: [id])
+  ticketEquipos TicketEquipo[]
+  ticketEvento TicketEvento?
+  ticketCierre TicketCierre? 
 
   @@map("tickets")
 }
@@ -124,6 +125,22 @@ model TicketEstado {
   ticket  Ticket[]
   
   @@map("ticket_estado")
+}
+
+model TicketCierre {
+  id Int @id @default(autoincrement())
+  ticketId Int @unique
+  usuarioCerradorId Int
+  fechaCierre DateTime @default(now())
+  condicion String 
+  memoFinalizacion String?
+  observaciones String?
+  tiempoEjecucionMinutos Int?
+  
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  usuarioCerrador Usuario @relation(fields: [usuarioCerradorId], references: [id])
+
+  @@map("ticket_cierre")
 }
 
 model TicketEvento {

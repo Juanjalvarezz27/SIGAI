@@ -8,11 +8,13 @@ import CreateTicketModal from "../../../components/tickets/CreateTicketModal";
 import TicketsList from "../../../components/tickets/TicketsList";
 import BotonNuevoTicket from "../../../components/tickets/BotonNuevoTicket";
 import ToggleTickets, { TipoTicketFiltro } from "../../../components/tickets/ToggleTickets";
+import ToggleEstadoTickets, { EstadoTicketFiltro } from "../../../components/tickets/ToggleEstadoTickets";
 import { Ticket } from "../../../../types/ticket";
 import FiltroUbicacion, { FiltroUbicacionTipo } from "../../../components/personal/FiltroUbicacion";
 import PaginacionSuperiorTickets from "../../../components/tickets/PaginacionSuperiorTickets";
 import PaginacionInferiorTickets from "../../../components/tickets/PaginacionInferiorTickets";
 import { PaginationInfo } from "../../../../types/ticket";
+import { CheckCircle } from "lucide-react";
 
 // Constantes para paginación
 const ITEMS_PER_PAGE = 10;
@@ -23,12 +25,14 @@ export default function Tickets() {
   const [ticketsMostrados, setTicketsMostrados] = useState<Ticket[]>([]);
   const [ticketsPaginados, setTicketsPaginados] = useState<Ticket[]>([]);
   const [tipoFiltro, setTipoFiltro] = useState<TipoTicketFiltro>("todos");
+  const [estadoFiltro, setEstadoFiltro] = useState<EstadoTicketFiltro>("activos");
   const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [mensajeExito, setMensajeExito] = useState<string>('');
 
   const fetchTickets = async () => {
     try {
@@ -37,6 +41,7 @@ export default function Tickets() {
       const response = await fetch('/api/tickets');
       if (response.ok) {
         const data = await response.json();
+        // Los tickets ya vienen con tiempoEjecucion calculado desde el backend
         setTickets(data);
         setTicketsFiltrados(data);
         setTicketsMostrados(data);
@@ -54,14 +59,22 @@ export default function Tickets() {
     }
   };
 
+  // Función para mostrar mensaje de éxito temporal
+  const mostrarMensajeExito = (mensaje: string) => {
+    setMensajeExito(mensaje);
+    setTimeout(() => {
+      setMensajeExito('');
+    }, 3000); // 3 segundos
+  };
+
   // Función para calcular la paginación
   const calcularPaginacion = useCallback((ticketsList: Ticket[], page: number) => {
     const startIndex = (page - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     const paginatedTickets = ticketsList.slice(startIndex, endIndex);
-    
+
     setTicketsPaginados(paginatedTickets);
-    
+
     const totalPages = Math.ceil(ticketsList.length / ITEMS_PER_PAGE);
     setPagination({
       currentPage: page,
@@ -116,7 +129,16 @@ export default function Tickets() {
     });
   }, []);
 
-  // Filtrar tickets por tipo
+  // Función para aplicar filtro de estado
+  const aplicarFiltroEstado = useCallback((ticketsList: Ticket[], estado: EstadoTicketFiltro): Ticket[] => {
+    if (estado === "activos") {
+      return ticketsList.filter(ticket => ticket.estadoId === 1); // Estado "Abierto"
+    } else {
+      return ticketsList.filter(ticket => ticket.estadoId === 2); // Estado "Cerrado"
+    }
+  }, []);
+
+  // Filtrar tickets por tipo y estado
   useEffect(() => {
     let ticketsFiltradosPorTipo: Ticket[] = [];
 
@@ -140,10 +162,13 @@ export default function Tickets() {
       });
     }
 
+    // Aplicar filtro de estado
+    const ticketsConEstado = aplicarFiltroEstado(ticketsFiltradosPorTipo, estadoFiltro);
+
     // Aplicar filtro de ubicación si existe
-    const ticketsConUbicacion = aplicarFiltroUbicacion(ticketsFiltradosPorTipo, filtroUbicacion);
+    const ticketsConUbicacion = aplicarFiltroUbicacion(ticketsConEstado, filtroUbicacion);
     setTicketsFiltrados(ticketsConUbicacion);
-  }, [tickets, tipoFiltro, filtroUbicacion, aplicarFiltroUbicacion]);
+  }, [tickets, tipoFiltro, estadoFiltro, filtroUbicacion, aplicarFiltroUbicacion, aplicarFiltroEstado]);
 
   // Actualizar tickets mostrados cuando cambian los filtrados
   useEffect(() => {
@@ -162,6 +187,10 @@ export default function Tickets() {
     setTipoFiltro(tipo);
   };
 
+  const handleEstadoFiltroChange = (estado: EstadoTicketFiltro) => {
+    setEstadoFiltro(estado);
+  };
+
   const handleFiltroUbicacionChange = (filtro: FiltroUbicacionTipo) => {
     setFiltroUbicacion(filtro);
   };
@@ -176,12 +205,27 @@ export default function Tickets() {
     fetchTickets();
   };
 
+  const handleTicketClosed = () => {
+    fetchTickets(); // Recargar tickets después de cerrar uno
+    mostrarMensajeExito('Ticket cerrado con éxito');
+  };
+
   return (
     <>
       <Navbar />
       <Title text={"Tickets"} />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Mensaje de éxito */}
+        {mensajeExito && (
+          <div className="fixed top-20 right-4 z-50 animate-fade-in">
+            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">{mensajeExito}</span>
+            </div>
+          </div>
+        )}
+
         {/* Toggle de filtros justo debajo del título */}
         <div className="flex justify-center mb-6">
           <ToggleTickets 
@@ -204,9 +248,10 @@ export default function Tickets() {
           onPageChange={handlePageChange}
           loading={isLoading}
           tipoFiltro={tipoFiltro}
+          estadoFiltro={estadoFiltro}
         />
 
-        {/* Contenedor principal con filtros de ubicación y botón de nuevo ticket */}
+        {/* Contenedor principal con filtros de ubicación y botones a la derecha */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             {/* Filtros de ubicación a la izquierda */}
@@ -217,11 +262,15 @@ export default function Tickets() {
               />
             </div>
 
-            {/* Botón de nuevo ticket a la derecha */}
-            <div className="w-full sm:w-auto">
-              <BotonNuevoTicket 
+            {/* Botones a la derecha: Toggle estado y Nuevo ticket */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+              <BotonNuevoTicket
                 onClick={() => setIsModalOpen(true)}
                 loading={isLoading}
+              />
+              <ToggleEstadoTickets
+                onEstadoChange={handleEstadoFiltroChange}
+                estadoActivo={estadoFiltro}
               />
             </div>
           </div>
@@ -232,6 +281,7 @@ export default function Tickets() {
           tickets={ticketsPaginados}
           loading={isLoading}
           error={error}
+          onTicketClosed={handleTicketClosed}
         />
 
         {/* Paginación Inferior */}

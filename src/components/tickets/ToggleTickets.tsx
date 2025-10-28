@@ -62,7 +62,7 @@ export default function ToggleTickets({ onTipoChange, tipoActivo = "todos" }: To
                 ${
                   estaActivo
                     ? 'bg-white text-[#001F3F] shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-600 hover:text-gray-800 transition-all duration-200 cursor-pointer hover:scale-105'
                 }
               `}
             >
