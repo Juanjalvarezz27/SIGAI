@@ -62,4 +62,5 @@ export interface BarraBusquedaProps {
   loading?: boolean
   placeholder?: string
   label?: string
+  esSolicitante?: boolean 
 }

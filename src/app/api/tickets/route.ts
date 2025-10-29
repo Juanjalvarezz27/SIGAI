@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -177,7 +177,12 @@ export async function POST(request: NextRequest) {
             }
           }
         },
-        tipoTicket: true,
+        tipoTicket: { 
+          select: {
+            id: true, 
+            tipo: true
+          }
+        },
         estado: true,
         ticketEquipos: {
           include: {
@@ -214,17 +219,134 @@ export async function POST(request: NextRequest) {
   }
 }
 
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // Obtener el usuario actual con su dirección y supervisorTipo
+    const usuarioActual = await prisma.usuario.findUnique({
+      where: { email: session.user.email },
+      include: {
+        direccion: true,
+        rol: true,
+        supervisorTipo: true
+      }
+    });
+
+    if (!usuarioActual) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    // Usar el tipo correcto de Prisma
+    let whereClause: Prisma.TicketWhereInput = {};
+
+    // Filtrar tickets según el rol
+    switch (usuarioActual.rolId) {
+      case 1: // Admin - ve todos los tickets
+        // No aplicar filtros
+        break;
+      
+      case 2: // Supervisor - solo tickets de su dirección Y de su tipo de supervisor
+        if (usuarioActual.supervisorTipoId && usuarioActual.direccionId) {
+          whereClause = {
+            AND: [
+              {
+                OR: [
+                  // Tickets donde el usuario afectado está en la misma dirección
+                  {
+                    usuarioAfectado: {
+                      direccionId: usuarioActual.direccionId
+                    }
+                  },
+                  // O tickets creados por usuarios de la misma dirección
+                  {
+                    usuarioCreador: {
+                      direccionId: usuarioActual.direccionId
+                    }
+                  }
+                ]
+              },
+              // Solo tickets del tipo que supervisa
+              {
+                tipoTicketId: usuarioActual.supervisorTipoId
+              }
+            ]
+          };
+        } else {
+          // Si no tiene supervisorTipoId o dirección, no mostrar tickets
+          whereClause = {
+            id: -1
+          };
+        }
+        break;
+      
+      case 3: // Solicitante - solo tickets creados por él O tickets donde el usuario afectado está en su misma dirección
+        if (usuarioActual.direccionId) {
+          whereClause = {
+            OR: [
+              // Tickets creados por él
+              {
+                usuarioCreadorId: usuarioActual.id
+              },
+              // O tickets donde el usuario afectado está en su misma dirección
+              {
+                usuarioAfectado: {
+                  direccionId: usuarioActual.direccionId
+                }
+              }
+            ]
+          };
+        } else {
+          // Si no tiene dirección, solo mostrar tickets creados por él
+          whereClause = {
+            usuarioCreadorId: usuarioActual.id
+          };
+        }
+        break;
+      
+      case 4: // Analista - solo tickets asignados a él
+        whereClause = {
+          usuarioCerradorId: usuarioActual.id
+        };
+        break;
+      
+      default:
+        // Por defecto, solo sus tickets creados
+        whereClause = {
+          usuarioCreadorId: usuarioActual.id
+        };
+    }
+
     const tickets = await prisma.ticket.findMany({
+      where: whereClause,
       include: {
         estado: true,
-        tipoTicket: true,
+        tipoTicket: {
+          select: {
+            id: true,
+            tipo: true
+          }
+        },
         usuarioCreador: {
           select: {
             nombre: true,
-            apellido: true
+            apellido: true,
+            direccion: {
+              select: {
+                id: true,
+                direccion: true,
+                piso: {
+                  select: {
+                    id: true,
+                    piso: true
+                  }
+                }
+              }
+            }
           }
         },
         usuarioCerrador: {
@@ -296,6 +418,31 @@ export async function GET() {
               }
             }
           }
+        },
+        reasignaciones: {
+          include: {
+            analistaAnterior: {
+              select: {
+                nombre: true,
+                apellido: true
+              }
+            },
+            analistaNuevo: {
+              select: {
+                nombre: true,
+                apellido: true
+              }
+            },
+            supervisor: {
+              select: {
+                nombre: true,
+                apellido: true
+              }
+            }
+          },
+          orderBy: {
+            fechaReasignacion: 'desc'
+          }
         }
       },
       orderBy: {
@@ -306,7 +453,7 @@ export async function GET() {
     // Procesar los tickets para incluir el tiempo de ejecución formateado
     const ticketsConTiempo = tickets.map(ticket => {
       let tiempoEjecucion = '';
-      
+
       if (ticket.ticketCierre && ticket.ticketCierre.tiempoEjecucionMinutos) {
         const minutos = ticket.ticketCierre.tiempoEjecucionMinutos;
         const dias = Math.floor(minutos / (60 * 24));
@@ -324,7 +471,8 @@ export async function GET() {
 
       return {
         ...ticket,
-        tiempoEjecucion
+        tiempoEjecucion,
+        ticketReasignaciones: ticket.reasignaciones
       };
     });
 

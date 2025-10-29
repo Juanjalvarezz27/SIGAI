@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { User, MapPin, Building, Monitor, Check, Briefcase } from "lucide-react"
-import BarraBusqueda from "@/components/BarraBusqueda"
+import BarraBusquedaPersonal from "./BarraBusquedaPersonal"
 import { UsuarioBasico, Equipo } from "../../../types/ticket"
+import axios from 'axios'
 
 interface FormularioSoporteRedesProps {
   formData: {
@@ -15,6 +16,7 @@ interface FormularioSoporteRedesProps {
     equiposSeleccionados?: number[]
   }) => void
   isSubmitting: boolean
+  esSolicitante?: boolean
 }
 
 // Función helper para los equipos duplicados
@@ -41,34 +43,70 @@ const eliminarEquiposDuplicados = (equipos: Equipo[]): Equipo[] => {
   return Array.from(equiposUnicos.values())
 }
 
-export default function FormularioSoporteRedes({ 
-  formData, 
-  onFormDataChange 
+export default function FormularioSoporteRedes({
+  formData,
+  onFormDataChange,
+  isSubmitting,
+  esSolicitante = false
 }: FormularioSoporteRedesProps) {
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<UsuarioBasico | null>(null)
   const [equiposUsuario, setEquiposUsuario] = useState<Equipo[]>([])
   const [cargandoEquipos, setCargandoEquipos] = useState(false)
   const [equiposSeleccionados, setEquiposSeleccionados] = useState<Equipo[]>([])
+  const [direccionUsuarioActual, setDireccionUsuarioActual] = useState<number | null>(null)
+  const [cargandoDireccion, setCargandoDireccion] = useState(false)
 
-  // Manejar selección de usuario desde BarraBusqueda
+  // Obtener la dirección del usuario actual si es solicitante
+  useEffect(() => {
+    const obtenerDireccionUsuarioActual = async () => {
+      if (esSolicitante) {
+        try {
+          setCargandoDireccion(true)
+          const response = await axios.get('/api/auth/usuario-direccion')
+          setDireccionUsuarioActual(response.data.direccionId)
+        } catch (error) {
+          console.error('Error obteniendo dirección del usuario:', error)
+        } finally {
+          setCargandoDireccion(false)
+        }
+      }
+    }
+
+    obtenerDireccionUsuarioActual()
+  }, [esSolicitante])
+
+  // Manejar selección de usuario desde BarraBusquedaPersonal
   const handleUsuarioSeleccionado = async (usuario: UsuarioBasico) => {
+    // Para solicitantes, ya no necesitamos validar aquí porque el endpoint lo hace
+    // Pero mantenemos la validación por seguridad
+    if (esSolicitante && direccionUsuarioActual) {
+      if (usuario.direccion?.id !== direccionUsuarioActual) {
+        alert('Solo puedes seleccionar usuarios de tu misma dirección')
+        return
+      }
+    }
+
     setUsuarioSeleccionado(usuario)
     onFormDataChange({
       ...formData,
       usuarioAfectadoId: usuario.id.toString()
     })
 
+    // Resetear equipos anteriores
+    setEquiposSeleccionados([])
+    onFormDataChange({
+      ...formData,
+      usuarioAfectadoId: usuario.id.toString(),
+      equiposSeleccionados: []
+    })
+
     // Cargar equipos del usuario seleccionado
     setCargandoEquipos(true)
     try {
-      const response = await fetch(`/api/usuario/${usuario.id}/equipos`)
-      if (response.ok) {
-        const equipos = await response.json()
-        const equiposUnicos = eliminarEquiposDuplicados(equipos)
-        setEquiposUsuario(equiposUnicos)
-      } else {
-        setEquiposUsuario([])
-      }
+      const response = await axios.get(`/api/usuario/${usuario.id}/equipos`)
+      const equipos = response.data
+      const equiposUnicos = eliminarEquiposDuplicados(equipos)
+      setEquiposUsuario(equiposUnicos)
     } catch (error) {
       console.error('Error cargando equipos:', error)
       setEquiposUsuario([])
@@ -84,7 +122,7 @@ export default function FormularioSoporteRedes({
       : [...equiposSeleccionados, equipo]
 
     setEquiposSeleccionados(nuevosSeleccionados)
-    
+
     onFormDataChange({
       ...formData,
       equiposSeleccionados: nuevosSeleccionados.map(e => e.id)
@@ -118,14 +156,26 @@ export default function FormularioSoporteRedes({
 
   return (
     <div className="space-y-6">
+      {/* Mensaje informativo para solicitante */}
+      {esSolicitante && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-700">
+            <strong>Restricción:</strong> Solo puedes seleccionar usuarios de tu misma dirección.
+            {cargandoDireccion && " (Cargando información de dirección...)"}
+          </p>
+        </div>
+      )}
+
       {/* Búsqueda de usuario afectado */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Usuario Afectado *
         </label>
-        <BarraBusqueda
+        <BarraBusquedaPersonal
           onUsuarioSeleccionado={handleUsuarioSeleccionado}
           placeholder="Buscar usuario por nombre, cédula o email..."
+          loading={isSubmitting}
+          esSolicitante={esSolicitante}
         />
       </div>
 
@@ -217,7 +267,7 @@ export default function FormularioSoporteRedes({
                         ? 'border-[#001F3F] bg-blue-50 shadow-sm'
                         : 'border-gray-200 bg-white hover:border-gray-300'
                     }`}
-                    onClick={() => toggleEquipoSeleccionado(equipo)}
+                    onClick={() => !isSubmitting && toggleEquipoSeleccionado(equipo)}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`flex-shrink-0 w-5 h-5 border rounded mt-0.5 flex items-center justify-center ${
@@ -249,7 +299,10 @@ export default function FormularioSoporteRedes({
               })}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">El usuario no tiene equipos asignados</p>
+            <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
+              <Monitor className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">El usuario no tiene equipos asignados</p>
+            </div>
           )}
         </div>
       )}

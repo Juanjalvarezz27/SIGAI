@@ -1,3 +1,4 @@
+// app/tickets/page.tsx - Corregido
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,6 +16,7 @@ import PaginacionSuperiorTickets from "../../../components/tickets/PaginacionSup
 import PaginacionInferiorTickets from "../../../components/tickets/PaginacionInferiorTickets";
 import { PaginationInfo } from "../../../../types/ticket";
 import { CheckCircle } from "lucide-react";
+import { useUserRol } from '../../hooks/useUserRol';
 
 // Constantes para paginación
 const ITEMS_PER_PAGE = 10;
@@ -34,38 +36,12 @@ export default function Tickets() {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string>('');
 
-  const fetchTickets = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      const response = await fetch('/api/tickets');
-      if (response.ok) {
-        const data = await response.json();
-        // Los tickets ya vienen con tiempoEjecucion calculado desde el backend
-        setTickets(data);
-        setTicketsFiltrados(data);
-        setTicketsMostrados(data);
-        
-        // Calcular paginación inicial
-        calcularPaginacion(data, 1);
-      } else {
-        setError('Error al cargar los tickets');
-      }
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      setError('Error al cargar los tickets');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { userRol, loading: loadingRol } = useUserRol();
 
-  // Función para mostrar mensaje de éxito temporal
-  const mostrarMensajeExito = (mensaje: string) => {
-    setMensajeExito(mensaje);
-    setTimeout(() => {
-      setMensajeExito('');
-    }, 3000); // 3 segundos
-  };
+  // Determinar qué elementos mostrar según el rol
+  const puedeCrearTickets = userRol ? (userRol.rolId === 1 || userRol.rolId === 3) : false;
+  const puedeVerFiltrosUbicacion = userRol ? userRol.rolId === 1 : false;
+  const puedeReasignarTickets = userRol ? (userRol.rolId === 1 || userRol.rolId === 2) : false;
 
   // Función para calcular la paginación
   const calcularPaginacion = useCallback((ticketsList: Ticket[], page: number) => {
@@ -85,56 +61,83 @@ export default function Tickets() {
     });
   }, []);
 
+  // Función para cargar tickets
+  const fetchTickets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      const response = await fetch('/api/tickets');
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data);
+        setTicketsFiltrados(data);
+        setTicketsMostrados(data);
+
+        // Calcular paginación inicial
+        calcularPaginacion(data, 1);
+      } else {
+        setError('Error al cargar los tickets');
+      }
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      setError('Error al cargar los tickets');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [calcularPaginacion]);
+
+  // Función para mostrar mensaje de éxito temporal
+  const mostrarMensajeExito = useCallback((mensaje: string) => {
+    setMensajeExito(mensaje);
+    setTimeout(() => {
+      setMensajeExito('');
+    }, 3000);
+  }, []);
+
   // Función para cambiar de página
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     calcularPaginacion(ticketsMostrados, page);
-  };
+  }, [ticketsMostrados, calcularPaginacion]);
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (!loadingRol) {
+      fetchTickets();
+    }
+  }, [loadingRol, fetchTickets]);
 
   // Función para aplicar filtro de ubicación
   const aplicarFiltroUbicacion = useCallback((ticketsList: Ticket[], filtro: FiltroUbicacionTipo): Ticket[] => {
-    if (!filtro) return ticketsList;
+    if (!filtro || !puedeVerFiltrosUbicacion) return ticketsList;
 
     return ticketsList.filter(ticket => {
-      // Solo filtrar tickets que tengan usuario afectado con dirección
       if (!ticket.usuarioAfectado?.direccion) return false;
 
       const direccionUsuario = ticket.usuarioAfectado.direccion;
-      
-      // Asegurarnos de que tenemos los datos necesarios
+
       if (!direccionUsuario.piso || !direccionUsuario.piso.id) {
         return false;
       }
 
       switch (filtro.tipo) {
         case 'piso':
-          // Filtrar por ID de piso - asegurar comparación numérica
           return direccionUsuario.piso.id === Number(filtro.valor);
-
         case 'multi-piso':
-          // Filtrar por múltiples IDs de piso - asegurar comparación numérica
           return filtro.valores.includes(Number(direccionUsuario.piso.id));
-
         case 'direccion':
-          // Filtrar por ID de dirección - asegurar comparación numérica
           return direccionUsuario.id === Number(filtro.valor);
-
         default:
           return true;
       }
     });
-  }, []);
+  }, [puedeVerFiltrosUbicacion]);
 
   // Función para aplicar filtro de estado
   const aplicarFiltroEstado = useCallback((ticketsList: Ticket[], estado: EstadoTicketFiltro): Ticket[] => {
     if (estado === "activos") {
-      return ticketsList.filter(ticket => ticket.estadoId === 1); // Estado "Abierto"
+      return ticketsList.filter(ticket => ticket.estadoId === 1);
     } else {
-      return ticketsList.filter(ticket => ticket.estadoId === 2); // Estado "Cerrado"
+      return ticketsList.filter(ticket => ticket.estadoId === 2);
     }
   }, []);
 
@@ -165,7 +168,7 @@ export default function Tickets() {
     // Aplicar filtro de estado
     const ticketsConEstado = aplicarFiltroEstado(ticketsFiltradosPorTipo, estadoFiltro);
 
-    // Aplicar filtro de ubicación si existe
+    // Aplicar filtro de ubicación si existe y tiene permisos
     const ticketsConUbicacion = aplicarFiltroUbicacion(ticketsConEstado, filtroUbicacion);
     setTicketsFiltrados(ticketsConUbicacion);
   }, [tickets, tipoFiltro, estadoFiltro, filtroUbicacion, aplicarFiltroUbicacion, aplicarFiltroEstado]);
@@ -173,7 +176,6 @@ export default function Tickets() {
   // Actualizar tickets mostrados cuando cambian los filtrados
   useEffect(() => {
     setTicketsMostrados(ticketsFiltrados);
-    // Resetear a página 1 cuando cambian los filtros
     setCurrentPage(1);
     calcularPaginacion(ticketsFiltrados, 1);
   }, [ticketsFiltrados, calcularPaginacion]);
@@ -206,15 +208,36 @@ export default function Tickets() {
   };
 
   const handleTicketClosed = () => {
-    fetchTickets(); // Recargar tickets después de cerrar uno
+    fetchTickets();
     mostrarMensajeExito('Ticket cerrado con éxito');
   };
+
+  const handleTicketReasigned = () => {
+    fetchTickets();
+    mostrarMensajeExito('Ticket reasignado con éxito');
+  };
+
+  if (loadingRol) {
+    return (
+      <>
+        <Navbar />
+        <Title text={"Tickets"} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center py-12">
+            <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
       <Title text={"Tickets"} />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Mensaje de éxito */}
         {mensajeExito && (
@@ -228,7 +251,7 @@ export default function Tickets() {
 
         {/* Toggle de filtros justo debajo del título */}
         <div className="flex justify-center mb-6">
-          <ToggleTickets 
+          <ToggleTickets
             onTipoChange={handleTipoFiltroChange}
             tipoActivo={tipoFiltro}
           />
@@ -254,20 +277,25 @@ export default function Tickets() {
         {/* Contenedor principal con filtros de ubicación y botones a la derecha */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {/* Filtros de ubicación a la izquierda */}
-            <div className="flex-1 w-full sm:w-auto">
-              <FiltroUbicacion 
-                onFiltroChange={handleFiltroUbicacionChange}
-                loading={isLoading}
-              />
-            </div>
+            {/* Filtros de ubicación a la izquierda - Solo para Admin */}
+            {puedeVerFiltrosUbicacion && (
+              <div className="flex-1 w-full sm:w-auto">
+                <FiltroUbicacion
+                  onFiltroChange={handleFiltroUbicacionChange}
+                  loading={isLoading}
+                />
+              </div>
+            )}
 
             {/* Botones a la derecha: Toggle estado y Nuevo ticket */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-              <BotonNuevoTicket
-                onClick={() => setIsModalOpen(true)}
-                loading={isLoading}
-              />
+              {/* Botón Nuevo Ticket - Solo para Admin y Solicitante */}
+              {puedeCrearTickets && (
+                <BotonNuevoTicket
+                  onClick={() => setIsModalOpen(true)}
+                  loading={isLoading}
+                />
+              )}
               <ToggleEstadoTickets
                 onEstadoChange={handleEstadoFiltroChange}
                 estadoActivo={estadoFiltro}
@@ -277,11 +305,13 @@ export default function Tickets() {
         </div>
 
         {/* Lista de tickets paginados */}
-        <TicketsList 
+        <TicketsList
           tickets={ticketsPaginados}
           loading={isLoading}
           error={error}
           onTicketClosed={handleTicketClosed}
+          onTicketReasigned={handleTicketReasigned}
+          puedeReasignar={puedeReasignarTickets}
         />
 
         {/* Paginación Inferior */}
@@ -292,11 +322,15 @@ export default function Tickets() {
           loading={isLoading}
         />
 
-        <CreateTicketModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onTicketCreated={handleTicketCreated}
-        />
+        {/* Modal de crear ticket - Solo para Admin y Solicitante */}
+        {puedeCrearTickets && (
+          <CreateTicketModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onTicketCreated={handleTicketCreated}
+            userRol={userRol}
+          />
+        )}
       </div>
     </>
   );

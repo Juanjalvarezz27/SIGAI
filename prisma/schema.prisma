@@ -31,43 +31,74 @@ model Piso {
 }
 
 model Usuario {
-  id          Int                         @id @default(autoincrement())
-  cedula      String?
-  nombre      String
-  apellido    String?
-  email       String?                     @unique
-  rolId       Int
+  id Int @id @default(autoincrement())
+  cedula String?
+  nombre String
+  apellido String?
+  email String? @unique
+  rolId Int
   direccionId Int
-  areaId      Int?
-  password    String?
-  estado      String                      @default("Activo")
+  areaId Int?
+  password String?
+  estado String @default("Activo")
   tipoAnalistaId Int?
-  
-  equipos                           Equipos[]
-  ticketCerrado                     Ticket[]                     @relation("TicketCerrado")
-  ticketCreado                      Ticket[]                     @relation("TicketCreado")
-  ticketAnalistaEquipo              TicketEquipo[]               @relation("EquiposAnalista")
-  ticketAnalista                    TicketEvento[]               @relation("EventosAnalista")
-  area                              Area?                        @relation(fields: [areaId], references: [id])
-  direccion                         Direcciones                  @relation(fields: [direccionId], references: [id])
-  rol                               Rol                          @relation(fields: [rolId], references: [id])
-  tipoAnalista                      TipoAnalista?                @relation(fields: [tipoAnalistaId], references: [id])
-  
-  deshabilitacionesRealizadas       DeshabilitacionHistorial[]   @relation("DeshabilitacionesRealizadas")
-  deshabilitacionesRecibidas        DeshabilitacionHistorial[]   @relation("DeshabilitacionesRecibidas")
+  supervisorTipoId Int? 
+
+  equipos Equipos[]
+  ticketCerrado Ticket[] @relation("TicketCerrado")
+  ticketCreado Ticket[] @relation("TicketCreado")
+  ticketAnalistaEquipo TicketEquipo[] @relation("EquiposAnalista")
+  ticketAnalista TicketEvento[] @relation("EventosAnalista")
+  area Area? @relation(fields: [areaId], references: [id])
+  direccion Direcciones @relation(fields: [direccionId], references: [id])
+  rol Rol @relation(fields: [rolId], references: [id])
+  tipoAnalista TipoAnalista? @relation(fields: [tipoAnalistaId], references: [id])
+  supervisorTipo SupervisorTipo? @relation(fields: [supervisorTipoId], references: [id]) // Nueva relación
+
+  deshabilitacionesRealizadas DeshabilitacionHistorial[] @relation("DeshabilitacionesRealizadas")
+  deshabilitacionesRecibidas DeshabilitacionHistorial[] @relation("DeshabilitacionesRecibidas")
   deshabilitacionesEquiposRealizadas DesincorporacionHistorialEquipos[] @relation("DeshabilitacionesEquiposRealizadas")
-  ticketAfectado                      Ticket[]                     @relation("TicketAfectado")
+  
+  reasignacionesAnterior TicketReasignacion[] @relation("ReasignacionAnterior")
+  reasignacionesNueva    TicketReasignacion[] @relation("ReasignacionNueva")
+  reasignacionesSupervisor TicketReasignacion[] @relation("ReasignacionSupervisor")
+
+  ticketAfectado Ticket[] @relation("TicketAfectado")
+  ticketCierre TicketCierre[]
 
   @@map("usuarios")
-  TicketCierre TicketCierre[]
 }
-
 model TipoAnalista {
   id    Int       @id @default(autoincrement())
   tipo  String
   usuarios Usuario[]
   
   @@map("tipo_analista")
+}
+model SupervisorTipo {
+  id Int @id @default(autoincrement())
+  tipo String
+  usuarios Usuario[]
+
+  @@map("supervisor_tipo")
+}
+
+model TicketReasignacion {
+  id Int @id @default(autoincrement())
+  ticketId Int
+  analistaAnteriorId Int
+  analistaNuevoId Int
+  supervisorId Int
+  motivo String?
+  fechaReasignacion DateTime @default(now())
+
+  // Relaciones
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  analistaAnterior Usuario @relation("ReasignacionAnterior", fields: [analistaAnteriorId], references: [id])
+  analistaNuevo Usuario @relation("ReasignacionNueva", fields: [analistaNuevoId], references: [id])
+  supervisor Usuario @relation("ReasignacionSupervisor", fields: [supervisorId], references: [id])
+
+  @@map("ticket_reasignacion")
 }
 
 model DeshabilitacionHistorial {
@@ -107,6 +138,7 @@ model Ticket {
   ticketEquipos TicketEquipo[]
   ticketEvento TicketEvento?
   ticketCierre TicketCierre? 
+  reasignaciones TicketReasignacion[]
 
   @@map("tickets")
 }

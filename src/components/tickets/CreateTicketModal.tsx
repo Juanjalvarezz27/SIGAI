@@ -9,9 +9,15 @@ interface CreateTicketModalProps {
   isOpen: boolean
   onClose: () => void
   onTicketCreated: () => void
+  userRol?: { rolId: number; rol: string } | null
 }
 
-export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: CreateTicketModalProps) {
+export default function CreateTicketModal({ 
+  isOpen, 
+  onClose, 
+  onTicketCreated, 
+  userRol 
+}: CreateTicketModalProps) {
   const [formData, setFormData] = useState<TicketFormData>({
     titulo: '',
     descripcion: '',
@@ -24,6 +30,9 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
   const [mensajeExito, setMensajeExito] = useState<string>("")
   const modalRef = useRef<HTMLDivElement>(null)
   const mensajeExitoRef = useRef<HTMLDivElement>(null)
+
+  // Determinar si es solicitante (rolId 3)
+  const esSolicitante = userRol?.rolId === 3;
 
   // Efecto para controlar el scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -47,7 +56,7 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
   // Efecto para hacer scroll al mensaje de éxito
   useEffect(() => {
     if (mensajeExito && mensajeExitoRef.current) {
-      mensajeExitoRef.current.scrollIntoView({ 
+      mensajeExitoRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       })
@@ -169,7 +178,7 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[0.5]">
-      <div 
+      <div
         ref={modalRef}
         className="bg-white rounded-lg shadow-xl w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] overflow-hidden flex flex-col max-w-4xl"
       >
@@ -189,9 +198,18 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
 
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Mensaje informativo para solicitante */}
+          {esSolicitante && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Nota:</strong> Como solicitante, solo puedes crear tickets para usuarios de tu misma dirección.
+              </p>
+            </div>
+          )}
+
           {/* Mensaje de éxito con ref para scroll automático */}
           {mensajeExito && (
-            <div 
+            <div
               ref={mensajeExitoRef}
               className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg animate-fade-in"
             >
@@ -254,8 +272,7 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
                   <option value="">Seleccionar tipo</option>
                   <option value="1">Soporte</option>
                   <option value="2">Redes y Servidores</option>
-                  <option value="3">Desarrollo</option>
-                  <option value="4">Sigesp</option>
+                  <option value="3">Sistemas</option>
                 </select>
               </div>
             </div>
@@ -266,6 +283,7 @@ export default function CreateTicketModal({ isOpen, onClose, onTicketCreated }: 
                 formData={formData}
                 onFormDataChange={handleFormSoporteRedesChange}
                 isSubmitting={isSubmitting}
+                esSolicitante={esSolicitante}
               />
             )}
 

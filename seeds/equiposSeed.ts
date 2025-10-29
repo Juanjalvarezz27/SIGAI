@@ -79,6 +79,17 @@ export default async function seedEquipos(prisma: PrismaClient) {
       skipDuplicates: true,
     });
 
+      // Nuevos tipos de supervisores
+    await prisma.supervisorTipo.createMany({
+      data: [
+        { tipo: "Soporte" },
+        { tipo: "Redes y Servidores" },
+        { tipo: "Desarrollo" },
+        { tipo: "Sigesp" }
+      ],
+      skipDuplicates: true,
+    });
+
     await prisma.tipoAnalista.createMany({
       data: [
         { tipo: "Soporte" },
@@ -97,8 +108,10 @@ export default async function seedEquipos(prisma: PrismaClient) {
       skipDuplicates: true,
     });
     
-    const equiposData = [
-    //Teclados
+        //Teclados
+
+    const equiposData = 
+    [
       { tipo: "Teclado", marca: "GENERICO", modelo: "GENERICO", bienNacional: "29643", serial: null, observaciones: null, statusId: 1, estadoId: 1, usuarioId: null },
       { tipo: "Teclado", marca: "SIRAGON", modelo: "SVCPC-1005", bienNacional: "30292", serial: "H15001205001854", observaciones: null, statusId: 1, estadoId: 1, usuarioId: null },
       { tipo: "Teclado", marca: "VIT", modelo: "DOK-K5313", bienNacional: "26034", serial: "KBC220K10630A", observaciones: null, statusId: 1, estadoId: 1, usuarioId: null },
@@ -3030,7 +3043,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
 {tipo: "Regulador", marca: "CDP", modelo: "B-AVR1006", bienNacional: "20839", serial: "070527-1290912", statusId: 1, estadoId: 2, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Telefono", marca: "AVAYA", modelo: "4610SW IP", bienNacional: "19240", serial: "NO POSEE", statusId: 1, estadoId: 2, observaciones: "EXT 1519", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Chromecast", marca: "GOOGLE", modelo: "GZRRNN", bienNacional: "31551", serial: "18101HFDD31R8S", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-    ];
+];
 
     //Validar campos de equipos
       for (const eq of equiposData) {

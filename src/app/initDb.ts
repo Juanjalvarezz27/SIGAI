@@ -699,7 +699,7 @@ export async function def() {
       equipos: [{ bienNacional: "27705", serial: "A000679555" }, { bienNacional: "024752", serial: "C0B2Y09000000000" }, { bienNacional: "16380", serial: "C0403116640" }, { bienNacional: "27399", serial: "13355499890" }]
       }, 
       {
-      usuario: { nombre: "Gabriel", apellido: "Vegas", rolId: 2, email:"supervisorServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
+      usuario: { nombre: "Gabriel", apellido: "Vegas", supervisorTipoId: 2 ,rolId: 2, email:"supervisorServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de infraestructura" },
       equipos: [{ bienNacional: "31817", serial: "A001332822" }, { bienNacional: "27913", serial: "C16D8BA000473" }, { id:1203  }, { bienNacional: "27860", serial: "KBD624K14413A" }, { bienNacional: "27430", serial: "13355499094" }, { bienNacional: "021944", serial: "641063190" }]
       },
       {
@@ -807,7 +807,7 @@ export async function def() {
       equipos: [{ bienNacional: "29766", serial: "CNG1476PT0" }, { bienNacional: "29741", serial: "3CQ144C27Z" }, { bienNacional: "16467", serial: "C0403116670" }, { bienNacional: "13074", serial: "353465" }]
       },
       {
-      usuario: { nombre: "Keimmer", apellido: "Altuve", rolId: 2, email:"supervisordesarollo@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
+      usuario: { nombre: "Keimmer", apellido: "Altuve", supervisorTipoId: 3 , rolId: 2, email:"supervisordesarollo@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de programación y base de datos" },
       equipos: [{ bienNacional: "27356", serial: "C16D8BA000474" }, { bienNacional: "27331", serial: "C16D8BA000463" }, { bienNacional: "31719", serial: "05726514" }, { bienNacional: "31611", serial: "221716347224" }]
       }, 
       {
@@ -983,7 +983,7 @@ export async function def() {
       equipos: [{ bienNacional: "29803", serial: "CNG14669669" }, { bienNacional: "29811", serial: "3CQ144C280" }, { bienNacional: "20222", serial: "B94540KGASX34E" }, { bienNacional: "14868", serial: "5-91451000532" }, { id:1492 }]
       },
       {
-      usuario: { nombre: "Tomas", apellido: "Díaz", rolId: 2, email:"supervisorSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Tomas", apellido: "Díaz", supervisorTipoId: 1 , rolId: 2, email:"supervisorSoporte@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "31893", serial: "M242023220014" }, { id:1190 }, { bienNacional: "27729", serial: "C16D8BA000478" }, { id:243 }, { bienNacional: "31605", serial: "221716347219" }, { bienNacional: "27316", serial: "A000679750" }, { bienNacional: "26230", serial: "KBC525K10340A" }, { bienNacional: "28013", serial: "JP400113070382" }]
       },
       {
@@ -1385,13 +1385,14 @@ export async function def() {
       equipos: [{ bienNacional: "26069", serial: "A000403884" }, { bienNacional: "30371", serial: "D72E6BA000529" }, { bienNacional: "30372", serial: "KBD917K11368A" }, { bienNacional: "25791", serial: "932843274823" }, { id:1711 }]
       },
     ];
+    
     // Crear Usuarios
     const createUsuarios = async () => {
       console.log("Iniciando creación de usuarios...");
-      
+
       for (const dataUsuario of dataUsuarios) {
         console.log(`Procesando usuario: ${dataUsuario.usuario.nombre}`);
-        
+
         // 1. Buscar dirección
         const direccion = await prismadb.direcciones.findFirst({
           where: { direccion: dataUsuario.usuario.direccionNombre },
@@ -1416,7 +1417,7 @@ export async function def() {
 
         // 3. HASHEAR CONTRASEÑA ANTES DE CREAR USUARIO
         let hashedPassword = dataUsuario.usuario.password;
-        
+
         // Solo hashear si la contraseña existe y no está ya hasheada
         if (dataUsuario.usuario.password && !dataUsuario.usuario.password.startsWith('$2a$')) {
           try {
@@ -1431,12 +1432,12 @@ export async function def() {
           console.log(`Contraseña ya hasheada para: ${dataUsuario.usuario.nombre}`);
         }
 
-        // 4. Crear usuario usando el operador spread para incluir tipoAnalistaId condicionalmente
+        // 4. Crear usuario usando el operador spread para incluir tipoAnalistaId y supervisorTipoId condicionalmente
         const usuario = await prismadb.usuario.create({
           data: {
             nombre: dataUsuario.usuario.nombre,
             apellido: dataUsuario.usuario.apellido,
-            email: dataUsuario.usuario.email, 
+            email: dataUsuario.usuario.email,
             password: hashedPassword,
             rolId: dataUsuario.usuario.rolId,
             direccionId: direccion.id,
@@ -1444,12 +1445,25 @@ export async function def() {
             // Agregar tipoAnalistaId solo si existe
             ...(dataUsuario.usuario.tipoAnalistaId !== undefined && dataUsuario.usuario.tipoAnalistaId !== null && {
               tipoAnalistaId: dataUsuario.usuario.tipoAnalistaId
+            }),
+            // Agregar supervisorTipoId solo si existe
+            ...(dataUsuario.usuario.supervisorTipoId !== undefined && dataUsuario.usuario.supervisorTipoId !== null && {
+              supervisorTipoId: dataUsuario.usuario.supervisorTipoId
             })
           }
         });
 
+        // Log informativo sobre los IDs asignados
+        const logs = [];
         if (dataUsuario.usuario.tipoAnalistaId) {
-          console.log(`Usuario creado con tipoAnalistaId ${dataUsuario.usuario.tipoAnalistaId}: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
+          logs.push(`tipoAnalistaId: ${dataUsuario.usuario.tipoAnalistaId}`);
+        }
+        if (dataUsuario.usuario.supervisorTipoId) {
+          logs.push(`supervisorTipoId: ${dataUsuario.usuario.supervisorTipoId}`);
+        }
+        
+        if (logs.length > 0) {
+          console.log(`Usuario creado con ${logs.join(' y ')}: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
         } else {
           console.log(`Usuario creado: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
         }
@@ -1457,9 +1471,9 @@ export async function def() {
         // 5. Asignar equipos (tu código existente)
         let equiposAsignados = 0;
         for (const equipo of dataUsuario.equipos) {
-          
+
           let result;
-          
+
           // LÓGICA DUAL: Puedes usar ID directo O bienNacional/serial
           if (equipo.id) {
             // Opción 1: Usar ID directo del equipo
@@ -1479,19 +1493,19 @@ export async function def() {
               bienNacional: equipo.bienNacional,
               serial: equipo.serial
             };
-            
+
             try {
               result = await prismadb.equipos.updateMany({
                 where: whereCondition,
                 data: { usuarioId: usuario.id }
               });
-            
+
               equiposAsignados += result.count;
-              
+
               if (result.count === 0) {
                 console.log(`Equipo no encontrado con bienNacional: ${equipo.bienNacional} y serial: ${equipo.serial}`);
               }
-              
+
             } catch (error) {
               console.log(`Error actualizando equipo:`, error);
             }
@@ -1506,7 +1520,7 @@ export async function def() {
     // EJECUTAR la función
     await createUsuarios();
     console.log("Script ejecutado exitosamente");
-    
+
   } catch (error) {
     console.error("Error en la ejecución del script:", error);
   }

@@ -11,7 +11,6 @@ const roleRoutes: Record<string, string[]> = {
   "/home/eventosExternos": ["admin", "supervisor", "solicitante"],
   "/home/estadisticas": ["admin", "supervisor"],
   "/home/perfil": ["admin", "supervisor", "solicitante", "analista"],
-  "/home/trabajos": ["analista"],
 };
 
 // Rutas públicas sin verificación

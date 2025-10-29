@@ -14,15 +14,11 @@ export async function GET() {
     const usuario = await prismadb.usuario.findUnique({
       where: { email: session.user.email },
       select: {
-        rolId: true,
-        rol: {
-          select: { rol: true }
-        },
-        supervisorTipoId: true,
-        supervisorTipo: {
+        direccionId: true,
+        direccion: {
           select: {
             id: true,
-            tipo: true
+            direccion: true
           }
         }
       }
@@ -33,10 +29,8 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      rolId: usuario.rolId,
-      rol: usuario.rol.rol,
-      supervisorTipoId: usuario.supervisorTipoId,
-      supervisorTipo: usuario.supervisorTipo
+      direccionId: usuario.direccionId,
+      direccion: usuario.direccion
     })
   } catch (error) {
     return NextResponse.json(

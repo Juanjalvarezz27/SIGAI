@@ -16,7 +16,6 @@ import {
   Calendar,
   BarChart3,
   User,
-  Warehouse,
   UserCheck,
   House
 } from "lucide-react"
@@ -51,12 +50,6 @@ export default function Navbar() {
       label: "Inicio",
       icon: House,
       roles: ["admin", "supervisor", "solicitante", "analista"]
-    },
-    {
-      path: "/home/trabajos",
-      label: "Trabajos",
-      icon: Warehouse,
-      roles: ["analista"]
     },
     {
       path: "/home/personal",

@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import Title from "@/components/Title";
 import Link from "next/link";
 import { 
-  Warehouse, 
   Users, 
   Package, 
   UserCheck, 
@@ -15,12 +14,6 @@ import {
 
 // Definir las rutas disponibles con iconos de Lucide (sin la ruta de inicio)
 const routes = [
-  {
-    path: "/home/trabajos",
-    label: "Trabajos",
-    icon: Warehouse,
-    roles: ["analista"]
-  },
   {
     path: "/home/personal",
     label: "Personal",

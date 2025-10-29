@@ -17,16 +17,21 @@ import {
   Clock,
   Shield,
   Calendar,
-  UserCheck
+  UserCheck,
+  Users,
+  RefreshCw
 } from "lucide-react"
 import { Ticket, Equipo } from "../../../types/ticket"
 import CerrarTicketModal from "./CerrarTicketModal"
+import ReasignarTicketModal from "./ReasignarTicketModal"
 
 interface TicketsListProps {
   tickets: Ticket[]
   loading?: boolean
   error?: string
   onTicketClosed?: () => void
+  onTicketReasigned?: () => void
+  puedeReasignar?: boolean
 }
 
 // Interface para la información del equipo
@@ -42,12 +47,22 @@ interface TicketExpandido {
   equipos: boolean;
   descripcion: boolean;
   cierre: boolean;
+  reasignaciones: boolean;
 }
 
-export default function TicketsList({ tickets, loading = false, error = '', onTicketClosed }: TicketsListProps) {
+export default function TicketsList({ 
+  tickets, 
+  loading = false, 
+  error = '', 
+  onTicketClosed, 
+  onTicketReasigned,
+  puedeReasignar = false 
+}: TicketsListProps) {
   const [ticketsExpandidos, setTicketsExpandidos] = useState<Record<number, TicketExpandido>>({})
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false)
+  const [selectedTicketReasignar, setSelectedTicketReasignar] = useState<Ticket | null>(null)
+  const [isReasignarModalOpen, setIsReasignarModalOpen] = useState(false)
 
   const toggleSeccion = (ticketId: number, seccion: keyof TicketExpandido) => {
     setTicketsExpandidos(prev => ({
@@ -71,6 +86,22 @@ export default function TicketsList({ tickets, loading = false, error = '', onTi
     setSelectedTicket(null)
     if (onTicketClosed) {
       onTicketClosed()
+    }
+  }
+
+  // Función para manejar reasignación
+  const handleReasignarTicket = (ticket: Ticket) => {
+    if (puedeReasignar) {
+      setSelectedTicketReasignar(ticket)
+      setIsReasignarModalOpen(true)
+    }
+  }
+
+  const handleTicketReasigned = () => {
+    setIsReasignarModalOpen(false)
+    setSelectedTicketReasignar(null)
+    if (onTicketReasigned) {
+      onTicketReasigned()
     }
   }
 
@@ -183,8 +214,12 @@ export default function TicketsList({ tickets, loading = false, error = '', onTi
             usuarioAfectado: false,
             equipos: false,
             descripcion: false,
-            cierre: false
+            cierre: false,
+            reasignaciones: false
           };
+
+          // Usar ticketReasignaciones si está disponible, de lo contrario usar reasignaciones
+          const reasignaciones = ticket.ticketReasignaciones || ticket.reasignaciones || [];
 
           return (
             <div
@@ -202,6 +237,12 @@ export default function TicketsList({ tickets, loading = false, error = '', onTi
                       <span className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         #{ticket.id}
                       </span>
+                      {/* Badge de reasignado */}
+                      {reasignaciones.length > 0 && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                          Reasignado
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">
                       {ticket.titulo}
@@ -217,21 +258,107 @@ export default function TicketsList({ tickets, loading = false, error = '', onTi
                   </div>
                 </div>
 
-                {/* Botón de cerrar ticket (solo para tickets abiertos) */}
+                {/* Botones de acción para tickets abiertos */}
                 {ticket.estadoId === 1 && (
-                  <div className="mb-4">
-                    <button
-                      onClick={() => handleCloseTicket(ticket)}
-                      className="w-full px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Cerrar Ticket
-                    </button>
+                  <div className="mb-4 space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCloseTicket(ticket)}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Cerrar Ticket
+                      </button>
+                      {puedeReasignar && (
+                        <button
+                          onClick={() => handleReasignarTicket(ticket)}
+                          className="flex-1 px-4 py-2 bg-[#001F3F] text-white text-sm font-medium rounded-lg hover:bg-blue-900 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          <Users className="w-4 h-4" />
+                          Reasignar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {/* Contenedor para las secciones desplegables con scroll si es necesario */}
                 <div className="flex-1 overflow-hidden">
+                  {/* Historial de reasignaciones desplegable */}
+                  {reasignaciones.length > 0 && (
+                    <div className="mb-4">
+                      <button
+                        onClick={() => toggleSeccion(ticket.id, 'reasignaciones')}
+                        className="flex items-center justify-between w-full p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <RefreshCw className="w-4 h-4 text-purple-600" />
+                          <span className="font-medium text-purple-900">
+                            Historial de Reasignaciones ({reasignaciones.length})
+                          </span>
+                        </div>
+                        {estaExpandido.reasignaciones ? (
+                          <ChevronUp className="w-4 h-4 text-purple-600 transition-transform duration-200" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-purple-600 transition-transform duration-200" />
+                        )}
+                      </button>
+
+                      {estaExpandido.reasignaciones && (
+                        <div className="mt-2 p-3 bg-white border border-purple-200 rounded-lg animate-slide-down">
+                          <div className="space-y-4">
+                            {reasignaciones.map((reasignacion, index) => (
+                              <div key={reasignacion.id} className="pb-4 border-b border-gray-100 last:border-b-0 last:pb-0">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                                  <div>
+                                    <div className="text-xs text-gray-500">De:</div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {reasignacion.analistaAnterior ? getNombreCompleto(reasignacion.analistaAnterior) : 'No especificado'}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500">A:</div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {reasignacion.analistaNuevo ? getNombreCompleto(reasignacion.analistaNuevo) : 'No especificado'}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {reasignacion.motivo && (
+                                  <div className="mb-2">
+                                    <div className="text-xs text-gray-500 mb-1">Motivo:</div>
+                                    <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
+                                      {reasignacion.motivo}
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                                  <div className="flex items-center gap-1">
+                                    <UserCheck className="w-3 h-3" />
+                                    <span>Por: {reasignacion.supervisor ? getNombreCompleto(reasignacion.supervisor) : 'No especificado'}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>
+                                      {new Date(reasignacion.fechaReasignacion).toLocaleDateString('es-ES', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Descripción desplegable */}
                   <div className="mb-4">
                     <button
@@ -557,6 +684,13 @@ export default function TicketsList({ tickets, loading = false, error = '', onTi
         onClose={() => setIsCloseModalOpen(false)}
         onTicketClosed={handleTicketClosed}
         ticket={selectedTicket}
+      />
+
+      <ReasignarTicketModal
+        isOpen={isReasignarModalOpen}
+        onClose={() => setIsReasignarModalOpen(false)}
+        onTicketReasigned={handleTicketReasigned}
+        ticket={selectedTicketReasignar}
       />
     </>
   )

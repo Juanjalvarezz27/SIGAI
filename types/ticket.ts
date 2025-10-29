@@ -4,6 +4,7 @@ export interface TicketEstado {
 }
 
 export interface TipoTicket {
+  id: number;
   tipo: string;
 }
 
@@ -52,6 +53,14 @@ export interface Equipo {
     procesador?: string | null;
   } | null;
 }
+export interface TicketsListProps {
+  tickets: Ticket[]
+  loading?: boolean
+  error?: string
+  onTicketClosed?: () => void
+  onTicketReasigned?: () => void
+  puedeReasignar?: boolean 
+}
 
 export interface TicketEquipo {
   id: number;
@@ -63,6 +72,7 @@ export interface AnalistaAsignado extends UsuarioBasico {
     tipo: string;
   };
 }
+
 export interface TicketCierre {
   id: number;
   ticketId: number;
@@ -76,6 +86,23 @@ export interface TicketCierre {
     nombre: string;
     apellido?: string;
   };
+}
+export interface TicketReasignacionHistorial {
+  id: number
+  analistaAnterior?: {
+    nombre: string
+    apellido?: string
+  }
+  analistaNuevo?: {
+    nombre: string
+    apellido?: string
+  }
+  supervisor?: {
+    nombre: string
+    apellido?: string
+  }
+  motivo?: string
+  fechaReasignacion: string
 }
 export interface Ticket {
   id: number;
@@ -92,6 +119,8 @@ export interface Ticket {
   ticketEquipos?: TicketEquipo[];
   ticketCierre?: TicketCierre;
   tiempoEjecucion?: string;
+  ticketReasignaciones?: TicketReasignacionHistorial[];
+  reasignaciones?: TicketReasignacionHistorial[];
 }
 
 export interface TicketFormData {
@@ -109,6 +138,7 @@ export interface PaginationInfo {
   hasNextPage: boolean
   hasPrevPage: boolean
 }
+
 export interface TicketCierreFormData {
   condicion: 'Finalizado' | 'Rechazado' | 'Cancelado'
   memoFinalizacion: string
