@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Monitor, Server, Code, Database, List } from "lucide-react"
+import { Monitor, Server, Code, List } from "lucide-react"
 
-export type TipoTicketFiltro = "todos" | "soporte" | "redes" | "desarrollo" | "sigesp"
+export type TipoTicketFiltro = "todos" | "soporte" | "redes" | "sistemas" | "sigesp"
 
 interface ToggleTicketsProps {
   onTipoChange: (tipo: TipoTicketFiltro) => void
@@ -30,15 +30,10 @@ export default function ToggleTickets({ onTipoChange, tipoActivo = "todos" }: To
       icono: Server,
     },
     { 
-      tipo: "desarrollo" as TipoTicketFiltro, 
-      label: "Desarrollo", 
+      tipo: "sistemas" as TipoTicketFiltro, 
+      label: "Sistemas", 
       icono: Code,
     },
-    { 
-      tipo: "sigesp" as TipoTicketFiltro, 
-      label: "Sigesp", 
-      icono: Database,
-    }
   ]
 
   const handleTipoChange = (tipo: TipoTicketFiltro) => {

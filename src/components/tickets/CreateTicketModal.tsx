@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { X, CheckCircle } from "lucide-react"
 import FormularioSoporteRedes from "./FormularioSoporteRedes"
 import { TicketFormData } from "../../../types/ticket"
+import SistemasFormulario from "./SistemasFormulario"
 
 interface CreateTicketModalProps {
   isOpen: boolean
@@ -94,6 +95,8 @@ export default function CreateTicketModal({
   const handleFormSoporteRedesChange = (data: {
     usuarioAfectadoId?: string
     equiposSeleccionados?: number[]
+    sistemaId?: string
+    fallaId?: string
   }) => {
     setFormData(prev => ({
       ...prev,
@@ -124,6 +127,21 @@ export default function CreateTicketModal({
 
       if (!formData.equiposSeleccionados || formData.equiposSeleccionados.length === 0) {
         nuevosErrores.push("Debe seleccionar al menos un equipo")
+      }
+    }
+
+    // Validaciones específicas para Sistemas
+    if (formData.tipoTicketId === "3") {
+      if (!formData.usuarioAfectadoId) {
+        nuevosErrores.push("Debe seleccionar un usuario afectado")
+      }
+
+      if (!formData.sistemaId) {
+        nuevosErrores.push("Debe seleccionar un sistema")
+      }
+
+      if (!formData.fallaId) {
+        nuevosErrores.push("Debe seleccionar un tipo de falla")
       }
     }
 
@@ -280,6 +298,16 @@ export default function CreateTicketModal({
             {/* Formulario específico para Soporte y Redes */}
             {requiereFormularioEspecial && (
               <FormularioSoporteRedes
+                formData={formData}
+                onFormDataChange={handleFormSoporteRedesChange}
+                isSubmitting={isSubmitting}
+                esSolicitante={esSolicitante}
+              />
+            )}
+
+            {/* Formulario específico para Sistemas */}
+            {formData.tipoTicketId === "3" && (
+              <SistemasFormulario
                 formData={formData}
                 onFormDataChange={handleFormSoporteRedesChange}
                 isSubmitting={isSubmitting}

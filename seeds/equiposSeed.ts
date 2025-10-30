@@ -60,6 +60,43 @@ export default async function seedEquipos(prisma: PrismaClient) {
       ],  skipDuplicates: true,
     });
 
+    // Crear los tipos de sistemas
+      await prisma.sistema.createMany({
+    data: [
+      { nombre: "Oficina Virtual" },
+      { nombre: "Campus Virtual" },
+      { nombre: "Sisvifar" },
+      { nombre: "Control de Estudio" },
+      { nombre: "Sistema de citas" },
+      { nombre: "Servicio Medico" },
+      { nombre: "Gestion Ambiental" },
+      { nombre: "Seguridad Industrial" },
+      { nombre: "Intranet" },
+      { nombre: "Pagina Web" },
+      { nombre: "Siverc" },
+      { nombre: "Sigesp" },
+      { nombre: "Eval-2" },
+      { nombre: "Zimbra" }
+    ],
+    skipDuplicates: true,
+  });
+
+    // Crear los tipos de fallas
+    await prisma.falla.createMany({
+  data: [
+    { nombre: "Crear nuevo usuario" },
+    { nombre: "Deshabilitar Usuario" },
+    { nombre: "Actualizar Usuario" },
+    { nombre: "Agregar nuevos modulos" },
+    { nombre: "Deshabilitar modulos anteriores" },
+    { nombre: "Agregar funcionalidades" },
+    { nombre: "Deshabilitar Funcionalidades" },
+    { nombre: "Falla de sistema" }
+  ],
+  skipDuplicates: true,
+});
+    
+
     // Crear estados de los equipos
     await prisma.estados.createMany({
       data: [
@@ -73,19 +110,17 @@ export default async function seedEquipos(prisma: PrismaClient) {
       data: [
         { tipo: "Soporte" },
         { tipo: "Redes y Servidores" },
-        { tipo: "Desarrollo" },
-        { tipo: "Sigesp" }
+        { tipo: "Sistemas" },
       ],
       skipDuplicates: true,
     });
 
-      // Nuevos tipos de supervisores
+    // Nuevos tipos de supervisores
     await prisma.supervisorTipo.createMany({
       data: [
         { tipo: "Soporte" },
         { tipo: "Redes y Servidores" },
-        { tipo: "Desarrollo" },
-        { tipo: "Sigesp" }
+        { tipo: "Sistemas" },
       ],
       skipDuplicates: true,
     });
@@ -94,7 +129,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
       data: [
         { tipo: "Soporte" },
         { tipo: "Redes y Servidores" },
-        { tipo: "Desarrollo" },
+        { tipo: "Sistemas" },
         { tipo: "Sigesp" }
       ],
       skipDuplicates: true,

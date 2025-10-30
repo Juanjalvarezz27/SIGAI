@@ -67,6 +67,7 @@ model Usuario {
   ticketCierre TicketCierre[]
 
   @@map("usuarios")
+  TicketSistema TicketSistema[]
 }
 model TipoAnalista {
   id    Int       @id @default(autoincrement())
@@ -141,6 +142,7 @@ model Ticket {
   reasignaciones TicketReasignacion[]
 
   @@map("tickets")
+  TicketSistema TicketSistema[]
 }
 
 model TipoTicket {
@@ -278,4 +280,37 @@ model Estados {
   id     Int       @id @default(autoincrement())
   nombre String
   equipos Equipos[]
+}
+
+model Sistema {
+  id      Int      @id @default(autoincrement())
+  nombre  String   @unique
+  estado  String   @default("Activo")
+  tickets TicketSistema[]
+
+  @@map("sistemas")
+}
+
+model Falla {
+  id     Int      @id @default(autoincrement())
+  nombre String   @unique
+  tickets TicketSistema[]
+
+  @@map("fallas")
+}
+
+model TicketSistema {
+  id              Int      @id @default(autoincrement())
+  ticketId        Int
+  sistemaId       Int
+  fallaId         Int
+  usuarioAfectadoId Int
+
+  ticket          Ticket   @relation(fields: [ticketId], references: [id])
+  sistema         Sistema  @relation(fields: [sistemaId], references: [id])
+  falla           Falla    @relation(fields: [fallaId], references: [id])
+  usuarioAfectado Usuario  @relation(fields: [usuarioAfectadoId], references: [id])
+
+  @@unique([ticketId])
+  @@map("ticket_sistemas")
 }

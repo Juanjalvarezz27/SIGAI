@@ -5,6 +5,7 @@ import { X, Calendar, User, FileText } from "lucide-react"
 import { TicketCierreFormData } from "../../../types/ticket-cierre"
 import { Ticket } from "../../../types/ticket"
 
+
 interface CerrarTicketModalProps {
   isOpen: boolean
   onClose: () => void

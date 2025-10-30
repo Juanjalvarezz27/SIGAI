@@ -129,6 +129,8 @@ export interface TicketFormData {
   tipoTicketId: string
   usuarioAfectadoId?: string
   equiposSeleccionados?: number[]
+  sistemaId?: string
+  fallaId?: string
 }
 
 export interface PaginationInfo {

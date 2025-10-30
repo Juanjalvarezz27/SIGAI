@@ -1,9 +1,20 @@
+// app/api/tickets/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
+
+interface CreateTicketData {
+  titulo: string;
+  descripcion: string;
+  tipoTicketId: string;
+  usuarioAfectadoId?: string;
+  equiposSeleccionados?: number[];
+  sistemaId?: string;
+  fallaId?: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,19 +24,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { titulo, descripcion, tipoTicketId, usuarioAfectadoId, equiposSeleccionados } = await request.json();
+    const { 
+      titulo, 
+      descripcion, 
+      tipoTicketId, 
+      usuarioAfectadoId, 
+      equiposSeleccionados,
+      sistemaId,
+      fallaId 
+    }: CreateTicketData = await request.json();
 
     // Validar campos requeridos
     if (!titulo || !descripcion || !tipoTicketId) {
-      return NextResponse.json({ 
-        error: 'Título, descripción y tipo de ticket son requeridos' 
+      return NextResponse.json({
+        error: 'Título, descripción y tipo de ticket son requeridos'
       }, { status: 400 });
     }
 
     // Buscar el usuario actual (quien crea el ticket)
     const usuarioActual = await prisma.usuario.findUnique({
-      where: { 
-        email: session.user.email 
+      where: {
+        email: session.user.email
       }
     });
 
@@ -37,8 +56,8 @@ export async function POST(request: NextRequest) {
     let usuarioAfectado = null;
     if (usuarioAfectadoId) {
       usuarioAfectado = await prisma.usuario.findUnique({
-        where: { 
-          id: parseInt(usuarioAfectadoId) 
+        where: {
+          id: parseInt(usuarioAfectadoId)
         },
         include: {
           direccion: {
@@ -49,16 +68,48 @@ export async function POST(request: NextRequest) {
           area: true
         }
       });
-      
+
       if (!usuarioAfectado) {
         return NextResponse.json({ error: 'Usuario afectado no encontrado' }, { status: 400 });
       }
     }
 
-    // Obtener analistas del tipo de ticket solicitado
+    // Validaciones específicas para tickets de sistemas
+    if (parseInt(tipoTicketId) === 3) {
+      if (!usuarioAfectadoId) {
+        return NextResponse.json({ 
+          error: 'Usuario afectado es requerido para tickets de sistemas' 
+        }, { status: 400 });
+      }
+      if (!sistemaId) {
+        return NextResponse.json({ 
+          error: 'Sistema es requerido para tickets de sistemas' 
+        }, { status: 400 });
+      }
+      if (!fallaId) {
+        return NextResponse.json({ 
+          error: 'Tipo de falla es requerido para tickets de sistemas' 
+        }, { status: 400 });
+      }
+    }
+
+    // Determinar el tipo de analista basado en el tipo de ticket y sistema seleccionado
+    let tipoAnalistaABuscar = parseInt(tipoTicketId);
+
+    // Lógica especial para tickets de sistemas
+    if (parseInt(tipoTicketId) === 3 && sistemaId) {
+      // Si es ticket de sistemas y el sistema es Sigesp (id 12), asignar a analista Sigesp (id 4)
+      if (parseInt(sistemaId) === 12) {
+        tipoAnalistaABuscar = 4; // Sigesp
+      } else {
+        tipoAnalistaABuscar = 3; // Sistemas general
+      }
+    }
+
+    // Obtener analistas del tipo de ticket determinado
     const analistas = await prisma.usuario.findMany({
       where: {
-        tipoAnalistaId: parseInt(tipoTicketId),
+        tipoAnalistaId: tipoAnalistaABuscar,
         estado: 'Activo'
       },
       include: {
@@ -72,8 +123,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (analistas.length === 0) {
-      return NextResponse.json({ 
-        error: 'No hay analistas disponibles para este tipo de ticket' 
+      return NextResponse.json({
+        error: 'No hay analistas disponibles para este tipo de ticket'
       }, { status: 400 });
     }
 
@@ -83,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     for (const analista of analistas) {
       const totalTickets = analista.ticketCerrado.length;
-      
+
       if (totalTickets < minTickets) {
         minTickets = totalTickets;
         analistaAsignado = analista;
@@ -101,7 +152,7 @@ export async function POST(request: NextRequest) {
       ];
     }
 
-    // Crear el ticket y las relaciones con equipos en una transacción
+    // Crear el ticket y las relaciones en una transacción
     const resultado = await prisma.$transaction(async (tx) => {
       // 1. Crear el ticket
       const ticket = await tx.ticket.create({
@@ -129,6 +180,18 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // 3. Crear relación con sistema y falla si es ticket de sistemas
+      if (parseInt(tipoTicketId) === 3 && sistemaId && fallaId && usuarioAfectado) {
+        await tx.ticketSistema.create({
+          data: {
+            ticketId: ticket.id,
+            sistemaId: parseInt(sistemaId),
+            fallaId: parseInt(fallaId),
+            usuarioAfectadoId: usuarioAfectado.id
+          }
+        });
+      }
+
       return ticket;
     });
 
@@ -136,22 +199,22 @@ export async function POST(request: NextRequest) {
     const ticketCompleto = await prisma.ticket.findUnique({
       where: { id: resultado.id },
       include: {
-        usuarioCreador: { 
-          select: { 
-            nombre: true, 
-            apellido: true 
-          } 
+        usuarioCreador: {
+          select: {
+            nombre: true,
+            apellido: true
+          }
         },
-        usuarioCerrador: { 
-          select: { 
-            nombre: true, 
+        usuarioCerrador: {
+          select: {
+            nombre: true,
             apellido: true,
-            tipoAnalista: { 
-              select: { 
-                tipo: true 
-              } 
+            tipoAnalista: {
+              select: {
+                tipo: true
+              }
             }
-          } 
+          }
         },
         usuarioAfectado: {
           select: {
@@ -163,23 +226,23 @@ export async function POST(request: NextRequest) {
             direccion: {
               select: {
                 direccion: true,
-                piso: { 
-                  select: { 
-                    piso: true 
-                  } 
+                piso: {
+                  select: {
+                    piso: true
+                  }
                 }
               }
             },
-            area: { 
-              select: { 
-                nombre: true 
-              } 
+            area: {
+              select: {
+                nombre: true
+              }
             }
           }
         },
-        tipoTicket: { 
+        tipoTicket: {
           select: {
-            id: true, 
+            id: true,
             tipo: true
           }
         },
@@ -206,6 +269,22 @@ export async function POST(request: NextRequest) {
               }
             }
           }
+        },
+        TicketSistema: {
+          include: {
+            sistema: {
+              select: {
+                id: true,
+                nombre: true
+              }
+            },
+            falla: {
+              select: {
+                id: true,
+                nombre: true
+              }
+            }
+          }
         }
       }
     });
@@ -213,8 +292,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(ticketCompleto, { status: 201 });
   } catch (error) {
     console.error('Error creating ticket:', error);
-    return NextResponse.json({ 
-      error: 'Error interno del servidor' 
+    return NextResponse.json({
+      error: 'Error interno del servidor'
     }, { status: 500 });
   }
 }
@@ -249,7 +328,7 @@ export async function GET(request: NextRequest) {
       case 1: // Admin - ve todos los tickets
         // No aplicar filtros
         break;
-      
+
       case 2: // Supervisor - solo tickets de su dirección Y de su tipo de supervisor
         if (usuarioActual.supervisorTipoId && usuarioActual.direccionId) {
           whereClause = {
@@ -283,7 +362,7 @@ export async function GET(request: NextRequest) {
           };
         }
         break;
-      
+
       case 3: // Solicitante - solo tickets creados por él O tickets donde el usuario afectado está en su misma dirección
         if (usuarioActual.direccionId) {
           whereClause = {
@@ -307,13 +386,13 @@ export async function GET(request: NextRequest) {
           };
         }
         break;
-      
+
       case 4: // Analista - solo tickets asignados a él
         whereClause = {
           usuarioCerradorId: usuarioActual.id
         };
         break;
-      
+
       default:
         // Por defecto, solo sus tickets creados
         whereClause = {
@@ -405,6 +484,22 @@ export async function GET(request: NextRequest) {
                     procesador: true
                   }
                 }
+              }
+            }
+          }
+        },
+        TicketSistema: {
+          include: {
+            sistema: {
+              select: {
+                id: true,
+                nombre: true
+              }
+            },
+            falla: {
+              select: {
+                id: true,
+                nombre: true
               }
             }
           }
