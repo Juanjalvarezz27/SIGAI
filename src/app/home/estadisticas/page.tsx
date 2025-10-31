@@ -7,6 +7,7 @@ import ToggleEstadisticas from "@/components/estadisticas/ToggleEstadisticas"
 import ExportButtons from "@/components/estadisticas/ExportButtons"
 import EstadisticasPersonal from "@/components/estadisticas/EstadisticasPersonal"
 import EstadisticasEquipos from "@/components/estadisticas/EstadisticasEquipos"
+import EstadisticasTickets from "@/components/estadisticas/EstadisticasTickets"
 
 type TipoEstadistica = "personal" | "equipos" | "tickets" | "eventos"
 
@@ -20,11 +21,7 @@ export default function EstadisticasPage() {
       case "equipos":
         return <EstadisticasEquipos />
       case "tickets":
-        return (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Estadísticas de Tickets</p>
-          </div>
-        )
+        return <EstadisticasTickets />
       case "eventos":
         return (
           <div className="text-center py-12">
