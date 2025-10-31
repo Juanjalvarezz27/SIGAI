@@ -1,4 +1,3 @@
-// app/tickets/page.tsx - Corregido
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,6 +16,8 @@ import PaginacionInferiorTickets from "../../../components/tickets/PaginacionInf
 import { PaginationInfo } from "../../../../types/ticket";
 import { CheckCircle } from "lucide-react";
 import { useUserRol } from '../../hooks/useUserRol';
+import AgregarSistemaButton from "../../../components/tickets/AgregarSistemaButton";
+import FiltroPeriodo from "../../../components/tickets/FiltroPeriodo";
 
 // Constantes para paginación
 const ITEMS_PER_PAGE = 10;
@@ -29,6 +30,13 @@ export default function Tickets() {
   const [tipoFiltro, setTipoFiltro] = useState<TipoTicketFiltro>("todos");
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoTicketFiltro>("activos");
   const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null);
+  const [filtroPeriodo, setFiltroPeriodo] = useState<{
+    fechaInicio: Date | null;
+    fechaFin: Date | null;
+  }>({
+    fechaInicio: null,
+    fechaFin: null
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -141,7 +149,22 @@ export default function Tickets() {
     }
   }, []);
 
-  // Filtrar tickets por tipo y estado
+  // Función para aplicar filtro de período
+  const aplicarFiltroPeriodo = useCallback((ticketsList: Ticket[], periodo: { fechaInicio: Date | null; fechaFin: Date | null }): Ticket[] => {
+    if (!periodo.fechaInicio || !periodo.fechaFin) return ticketsList;
+
+    return ticketsList.filter(ticket => {
+      const fechaCreacion = new Date(ticket.fecha_creacion);
+      return fechaCreacion >= periodo.fechaInicio! && fechaCreacion <= periodo.fechaFin!;
+    });
+  }, []);
+
+  // Función para manejar el cambio de filtro de período
+  const handleFiltroPeriodoChange = (fechaInicio: Date | null, fechaFin: Date | null) => {
+    setFiltroPeriodo({ fechaInicio, fechaFin });
+  };
+
+  // Filtrar tickets por tipo, estado, ubicación y período
   useEffect(() => {
     let ticketsFiltradosPorTipo: Ticket[] = [];
 
@@ -155,10 +178,8 @@ export default function Tickets() {
             return tipoTicket === "soporte";
           case "redes":
             return tipoTicket === "redes" || tipoTicket === "redes y servidores";
-          case "desarrollo":
-            return tipoTicket === "desarrollo";
-          case "sigesp":
-            return tipoTicket === "siges";
+          case "sistemas":
+            return tipoTicket === "sistemas";
           default:
             return true;
         }
@@ -170,8 +191,12 @@ export default function Tickets() {
 
     // Aplicar filtro de ubicación si existe y tiene permisos
     const ticketsConUbicacion = aplicarFiltroUbicacion(ticketsConEstado, filtroUbicacion);
-    setTicketsFiltrados(ticketsConUbicacion);
-  }, [tickets, tipoFiltro, estadoFiltro, filtroUbicacion, aplicarFiltroUbicacion, aplicarFiltroEstado]);
+
+    // Aplicar filtro de período
+    const ticketsConPeriodo = aplicarFiltroPeriodo(ticketsConUbicacion, filtroPeriodo);
+
+    setTicketsFiltrados(ticketsConPeriodo);
+  }, [tickets, tipoFiltro, estadoFiltro, filtroUbicacion, filtroPeriodo, aplicarFiltroUbicacion, aplicarFiltroEstado, aplicarFiltroPeriodo]);
 
   // Actualizar tickets mostrados cuando cambian los filtrados
   useEffect(() => {
@@ -249,12 +274,22 @@ export default function Tickets() {
           </div>
         )}
 
-        {/* Toggle de filtros justo debajo del título */}
-        <div className="flex justify-center mb-6">
-          <ToggleTickets
-            onTipoChange={handleTipoFiltroChange}
-            tipoActivo={tipoFiltro}
-          />
+        <div className='flex justify-center gap-3'>
+          {/* Toggle de filtros justo debajo del título */}
+          <div className="flex justify-center mb-6">
+            <ToggleTickets
+              onTipoChange={handleTipoFiltroChange}
+              tipoActivo={tipoFiltro}
+            />
+          </div>
+
+          {/* Filtro por período */}
+          <div className="mb-6 flex justify-end">
+            <FiltroPeriodo
+              onFiltroChange={handleFiltroPeriodoChange}
+              loading={isLoading}
+            />
+          </div>
         </div>
 
         {/* Barra de búsqueda */}
@@ -287,8 +322,11 @@ export default function Tickets() {
               </div>
             )}
 
-            {/* Botones a la derecha: Toggle estado y Nuevo ticket */}
+            {/* Botones a la derecha: Agregar Sistema, Nuevo ticket y Toggle estado */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+              {/* Botón Agregar Sistema - Solo se muestra cuando el filtro es "sistemas" */}
+              <AgregarSistemaButton tipoFiltro={tipoFiltro} />
+              
               {/* Botón Nuevo Ticket - Solo para Admin y Solicitante */}
               {puedeCrearTickets && (
                 <BotonNuevoTicket

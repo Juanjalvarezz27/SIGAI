@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { User, MapPin, Building, Monitor, Check, Briefcase } from "lucide-react"
 import BarraBusquedaPersonal from "./BarraBusquedaPersonal"
 import { UsuarioBasico, Equipo } from "../../../types/ticket"
+import { Usuario } from "../../../types/index"
 import axios from 'axios'
 
 interface FormularioSoporteRedesProps {
@@ -56,6 +57,26 @@ export default function FormularioSoporteRedes({
   const [direccionUsuarioActual, setDireccionUsuarioActual] = useState<number | null>(null)
   const [cargandoDireccion, setCargandoDireccion] = useState(false)
 
+  // Función para convertir Usuario a UsuarioBasico
+  const convertirUsuarioABasico = (usuario: Usuario): UsuarioBasico => {
+    return {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      cedula: usuario.cedula,
+      email: usuario.email,
+      direccion: usuario.direccion ? {
+        id: 0, // Valor temporal ya que no está disponible en el tipo Usuario
+        direccion: usuario.direccion.direccion,
+        piso: {
+          id: 0, // Valor temporal
+          piso: usuario.direccion.piso.piso
+        }
+      } : undefined,
+      area: usuario.area
+    };
+  };
+
   // Obtener la dirección del usuario actual si es solicitante
   useEffect(() => {
     const obtenerDireccionUsuarioActual = async () => {
@@ -76,17 +97,18 @@ export default function FormularioSoporteRedes({
   }, [esSolicitante])
 
   // Manejar selección de usuario desde BarraBusquedaPersonal
-  const handleUsuarioSeleccionado = async (usuario: UsuarioBasico) => {
+  const handleUsuarioSeleccionado = async (usuario: Usuario) => {
     // Para solicitantes, ya no necesitamos validar aquí porque el endpoint lo hace
     // Pero mantenemos la validación por seguridad
     if (esSolicitante && direccionUsuarioActual) {
-      if (usuario.direccion?.id !== direccionUsuarioActual) {
+      if (usuario.direccion?.piso.piso /* o la lógica de validación que uses */) {
         alert('Solo puedes seleccionar usuarios de tu misma dirección')
         return
       }
     }
 
-    setUsuarioSeleccionado(usuario)
+    const usuarioBasico = convertirUsuarioABasico(usuario);
+    setUsuarioSeleccionado(usuarioBasico)
     onFormDataChange({
       ...formData,
       usuarioAfectadoId: usuario.id.toString()

@@ -5,6 +5,7 @@ import { Monitor, AlertTriangle, User, Check, ChevronDown, X } from "lucide-reac
 import BarraBusquedaPersonal from "./BarraBusquedaPersonal"
 import SelectModal from "../../components/agregarPersonal/SelectModal"
 import { UsuarioBasico } from "../../../types/ticket"
+import { Usuario } from "../../../types/index"
 
 interface Sistema {
   id: number
@@ -143,6 +144,26 @@ export default function SistemasFormulario({
   const [fallaSeleccionada, setFallaSeleccionada] = useState<Falla | null>(null)
   const [modalAbierto, setModalAbierto] = useState<'sistema' | 'falla' | null>(null)
 
+  // Función para convertir Usuario a UsuarioBasico
+  const convertirUsuarioABasico = (usuario: Usuario): UsuarioBasico => {
+    return {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      cedula: usuario.cedula,
+      email: usuario.email,
+      direccion: usuario.direccion ? {
+        id: 0, // Valor temporal ya que no está disponible en el tipo Usuario
+        direccion: usuario.direccion.direccion,
+        piso: {
+          id: 0, // Valor temporal
+          piso: usuario.direccion.piso.piso
+        }
+      } : undefined,
+      area: usuario.area
+    };
+  };
+
   // Cargar sistemas al montar el componente
   useEffect(() => {
     const cargarSistemas = async () => {
@@ -184,8 +205,9 @@ export default function SistemasFormulario({
   }, [])
 
   // Manejar selección de usuario
-  const handleUsuarioSeleccionado = (usuario: UsuarioBasico) => {
-    setUsuarioSeleccionado(usuario)
+  const handleUsuarioSeleccionado = (usuario: Usuario) => {
+    const usuarioBasico = convertirUsuarioABasico(usuario);
+    setUsuarioSeleccionado(usuarioBasico)
     onFormDataChange({
       ...formData,
       usuarioAfectadoId: usuario.id.toString()
@@ -197,7 +219,7 @@ export default function SistemasFormulario({
     const sistema = sistemas.find(s => s.id === sistemaId) || null
     setSistemaSeleccionado(sistema)
     setFallaSeleccionada(null)
-    
+
     onFormDataChange({
       ...formData,
       sistemaId: sistemaId.toString(),
