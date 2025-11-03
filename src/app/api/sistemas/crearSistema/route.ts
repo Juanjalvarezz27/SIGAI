@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth"
 
 const prisma = new PrismaClient()
 
-// GET - Obtener todos los sistemas
+// GET - Obtener todos los sistemas (sin filtrar por estado)
 export async function GET(request: NextRequest) {
   try {
     const sistemas = await prisma.sistema.findMany({
@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
       { error: 'Error interno del servidor' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
@@ -36,15 +38,15 @@ export async function POST(request: NextRequest) {
     // Verificar que el usuario sea admin O supervisor de sistemas (supervisorTipoId 3)
     const usuario = await prisma.usuario.findUnique({
       where: { email: session.user.email },
-      include: { 
+      include: {
         rol: true,
         supervisorTipo: true
       }
     })
 
-    if (!usuario || 
-        !(usuario.rolId === 1 || // Admin
-          (usuario.rolId === 2 && usuario.supervisorTipoId === 3)) // Supervisor de Sistemas
+    if (!usuario ||
+      !(usuario.rolId === 1 || // Admin
+        (usuario.rolId === 2 && usuario.supervisorTipoId === 3)) // Supervisor de Sistemas
     ) {
       return NextResponse.json({ error: 'No tienes permisos para esta acción' }, { status: 403 })
     }
@@ -85,5 +87,7 @@ export async function POST(request: NextRequest) {
       { error: 'Error interno del servidor' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
