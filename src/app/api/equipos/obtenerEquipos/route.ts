@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
     const limit = 100
     const tipoEquipoIds = searchParams.getAll('tipoEquipoIds') // Para múltiples tipos
     const statusId = searchParams.get('statusId')
+    const marcaId = searchParams.get('marcaId')
+    const modeloId = searchParams.get('modeloId')
 
     const skip = (page - 1) * limit
 
@@ -15,6 +17,10 @@ export async function GET(request: NextRequest) {
     const where: {
       tipoEquipoId?: number | { in: number[] }
       statusId?: number
+      modelo?: {
+        marcaId?: number
+      }
+      modeloId?: number
     } = {}
 
     // Manejar múltiples tipos de equipo
@@ -25,8 +31,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Filtro por status
     if (statusId && statusId !== 'todos') {
       where.statusId = parseInt(statusId)
+    }
+
+    // Filtro por marca (a través del modelo)
+    if (marcaId) {
+      where.modelo = {
+        marcaId: parseInt(marcaId)
+      }
+    }
+
+    // Filtro por modelo
+    if (modeloId) {
+      where.modeloId = parseInt(modeloId)
     }
 
     // Obtener equipos con relaciones

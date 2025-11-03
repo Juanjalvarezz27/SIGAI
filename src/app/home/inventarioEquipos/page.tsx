@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar"
 import Title from "@/components/Title"
 import FiltroTipoEquipo from "@/components/equipos/FiltroTipoEquipo"
 import FiltroStatusToggle from "@/components/equipos/FiltroStatusToggle"
+import FiltroMarca from "@/components/equipos/FiltroMarca"
+import FiltroModelo from "@/components/equipos/FiltroModelo"
 import BarraBusquedaEquipos from "@/components/equipos/BarraBusquedaEquipos"
 import ListaEquipos from "@/components/equipos/ListaEquipos"
 import VistaDetalleEquipo from "@/components/equipos/VistaDetalleEquipo"
@@ -24,6 +26,8 @@ export default function InventarioEquipos() {
   const [error, setError] = useState<string>('')
   const [tiposFiltro, setTiposFiltro] = useState<string[]>([])
   const [statusFiltro, setStatusFiltro] = useState<string>('todos')
+  const [marcaFiltro, setMarcaFiltro] = useState<string>('')
+  const [modeloFiltro, setModeloFiltro] = useState<string>('')
   const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
   const [modalNuevoEquipoAbierto, setModalNuevoEquipoAbierto] = useState(false)
   const [miRol, setMiRol] = useState({ rolId: 0, rol: '', loading: true })
@@ -33,9 +37,9 @@ export default function InventarioEquipos() {
     const obtenerMiRol = async () => {
       try {
         const response = await axios.get('/api/auth/usuarioRol')
-        setMiRol({ 
-          ...response.data, 
-          loading: false 
+        setMiRol({
+          ...response.data,
+          loading: false
         })
       } catch (error) {
         console.error('Error obteniendo rol:', error)
@@ -46,7 +50,7 @@ export default function InventarioEquipos() {
     obtenerMiRol()
   }, [])
 
-  const cargarEquipos = useCallback(async (page: number, tipos: string[], status: string) => {
+  const cargarEquipos = useCallback(async (page: number, tipos: string[], status: string, marca: string, modelo: string) => {
     try {
       setLoading(true)
       setError('')
@@ -68,6 +72,15 @@ export default function InventarioEquipos() {
         params.append('statusId', status)
       }
 
+      // Agregar filtros de marca y modelo
+      if (marca) {
+        params.append('marcaId', marca)
+      }
+
+      if (modelo) {
+        params.append('modeloId', modelo)
+      }
+
       const response = await axios.get(`/api/equipos/obtenerEquipos?${params.toString()}`)
 
       if (response.status === 200) {
@@ -84,8 +97,8 @@ export default function InventarioEquipos() {
   }, [])
 
   useEffect(() => {
-    cargarEquipos(currentPage, tiposFiltro, statusFiltro)
-  }, [currentPage, tiposFiltro, statusFiltro, cargarEquipos])
+    cargarEquipos(currentPage, tiposFiltro, statusFiltro, marcaFiltro, modeloFiltro)
+  }, [currentPage, tiposFiltro, statusFiltro, marcaFiltro, modeloFiltro, cargarEquipos])
 
   const handleTiposChange = (nuevosTipos: string[]) => {
     setTiposFiltro(nuevosTipos)
@@ -94,6 +107,17 @@ export default function InventarioEquipos() {
 
   const handleStatusChange = (nuevoStatus: string) => {
     setStatusFiltro(nuevoStatus)
+    setCurrentPage(1)
+  }
+
+  const handleMarcaChange = (nuevaMarca: string) => {
+    setMarcaFiltro(nuevaMarca)
+    setModeloFiltro('') // Resetear modelo cuando cambia la marca
+    setCurrentPage(1)
+  }
+
+  const handleModeloChange = (nuevoModelo: string) => {
+    setModeloFiltro(nuevoModelo)
     setCurrentPage(1)
   }
 
@@ -115,7 +139,7 @@ export default function InventarioEquipos() {
 
   const handleEquipoCreado = () => {
     // Recargar la lista de equipos
-    cargarEquipos(currentPage, tiposFiltro, statusFiltro)
+    cargarEquipos(currentPage, tiposFiltro, statusFiltro, marcaFiltro, modeloFiltro)
   }
 
   // Determinar si el usuario puede crear equipos (admin = 1, supervisor = 2)
@@ -139,12 +163,24 @@ export default function InventarioEquipos() {
         {/* Vista de lista de equipos */}
         {modo === 'lista' && (
           <>
+          <div className="flex justify-center mx-auto gap-4">
             {/* Toggle de Status */}
             <FiltroStatusToggle
               statusSeleccionado={statusFiltro}
               onStatusChange={handleStatusChange}
               loading={loading}
             />
+
+            {/* Botón Nuevo Equipo */}
+              <div className="mt-2">
+                {puedeCrearEquipos && (
+                  <BotonNuevoEquipo
+                    onClick={() => setModalNuevoEquipoAbierto(true)}
+                    loading={loading}
+                  />
+                )}
+              </div>
+            </div>
 
             {/* Barra de búsqueda */}
             <div className="mb-6">
@@ -177,23 +213,35 @@ export default function InventarioEquipos() {
               loading={loading}
             />
 
-            {/* Filtro de Tipos de Equipo y Botón Nuevo */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex-1">
+            {/* Filtros */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              {/* Filtro de Tipos de Equipo */}
+              <div className="md:col-span-2">
                 <FiltroTipoEquipo
                   tiposSeleccionados={tiposFiltro}
                   onTiposChange={handleTiposChange}
                   loading={loading}
                 />
               </div>
-              
-              {/* Solo mostrar botón si tiene permisos */}
-              {puedeCrearEquipos && (
-                <BotonNuevoEquipo
-                  onClick={() => setModalNuevoEquipoAbierto(true)}
+
+              {/* Filtro de Marca */}
+              <div>
+                <FiltroMarca
+                  marcaSeleccionada={marcaFiltro}
+                  onMarcaChange={handleMarcaChange}
                   loading={loading}
                 />
-              )}
+              </div>
+
+              {/* Filtro de Modelo */}
+              <div>
+                <FiltroModelo
+                  marcaSeleccionada={marcaFiltro}
+                  modeloSeleccionado={modeloFiltro}
+                  onModeloChange={handleModeloChange}
+                  loading={loading}
+                />
+              </div>
             </div>
 
             <ListaEquipos
