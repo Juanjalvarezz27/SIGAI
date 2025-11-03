@@ -103,8 +103,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Obtener todos los tickets con sus relaciones
+    // Obtener parámetros de filtro de período
+    const { searchParams } = new URL(request.url)
+    const fechaInicioParam = searchParams.get('fechaInicio')
+    const fechaFinParam = searchParams.get('fechaFin')
+
+    // Construir filtro de fecha
+    const fechaFilter: {
+      fecha_creacion?: {
+        gte: Date
+        lte: Date
+      }
+    } = {}
+    
+    if (fechaInicioParam && fechaFinParam) {
+      const fechaInicio = new Date(fechaInicioParam)
+      const fechaFin = new Date(fechaFinParam)
+      
+      // Ajustar fechaFin para incluir todo el día
+      fechaFin.setHours(23, 59, 59, 999)
+      
+      fechaFilter.fecha_creacion = {
+        gte: fechaInicio,
+        lte: fechaFin
+      }
+    }
+
+    // Obtener tickets con filtros aplicados
     const tickets = await prisma.ticket.findMany({
+      where: Object.keys(fechaFilter).length > 0 ? fechaFilter : undefined,
       include: {
         estado: true,
         tipoTicket: true,
@@ -174,7 +201,7 @@ export async function GET(request: NextRequest) {
       return {
         tipo: tipo.tipo,
         cantidad,
-        porcentaje: totalTickets > 0 ? (cantidad / totalTickets) * 100 : 0
+        porcentaje: totalTickets > 0 ? Number(((cantidad / totalTickets) * 100).toFixed(2)) : 0
       }
     })
 
@@ -247,7 +274,7 @@ export async function GET(request: NextRequest) {
         tipo: analista.tipoAnalista?.tipo || 'Sin tipo'
       }
     }).filter(a => a.cantidad > 0)
-    .sort((a, b) => b.cantidad - a.cantidad)
+      .sort((a, b) => b.cantidad - a.cantidad)
 
     // Por sistema
     const sistemas = await prisma.sistema.findMany()
@@ -259,7 +286,7 @@ export async function GET(request: NextRequest) {
       return {
         sistema: sistema.nombre,
         cantidad,
-        porcentaje: totalTicketsSistemas > 0 ? (cantidad / totalTicketsSistemas) * 100 : 0
+        porcentaje: totalTicketsSistemas > 0 ? Number(((cantidad / totalTicketsSistemas) * 100).toFixed(2)) : 0
       }
     }).filter(s => s.cantidad > 0)
 
@@ -272,7 +299,7 @@ export async function GET(request: NextRequest) {
       return {
         falla: falla.nombre,
         cantidad,
-        porcentaje: totalTicketsSistemas > 0 ? (cantidad / totalTicketsSistemas) * 100 : 0
+        porcentaje: totalTicketsSistemas > 0 ? Number(((cantidad / totalTicketsSistemas) * 100).toFixed(2)) : 0
       }
     }).filter(f => f.cantidad > 0)
 
@@ -285,7 +312,7 @@ export async function GET(request: NextRequest) {
       return {
         piso: piso.piso,
         cantidad,
-        porcentaje: totalTickets > 0 ? (cantidad / totalTickets) * 100 : 0
+        porcentaje: totalTickets > 0 ? Number(((cantidad / totalTickets) * 100).toFixed(2)) : 0
       }
     }).filter(p => p.cantidad > 0)
 
@@ -298,7 +325,7 @@ export async function GET(request: NextRequest) {
       return {
         area: area.nombre,
         cantidad,
-        porcentaje: totalTickets > 0 ? (cantidad / totalTickets) * 100 : 0
+        porcentaje: totalTickets > 0 ? Number(((cantidad / totalTickets) * 100).toFixed(2)) : 0
       }
     }).filter(a => a.cantidad > 0)
 
@@ -319,30 +346,39 @@ export async function GET(request: NextRequest) {
       return {
         condicion,
         cantidad,
-        porcentaje: ticketsConCierre.length > 0 ? (cantidad / ticketsConCierre.length) * 100 : 0
+        porcentaje: ticketsConCierre.length > 0 ? Number(((cantidad / ticketsConCierre.length) * 100).toFixed(2)) : 0
       }
     })
 
-    // Tendencias
+    // Tendencias (estas se calculan sin filtro de período para mantener consistencia)
     const ahora = new Date()
     const hace30Dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000)
     const hace7Dias = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000)
     const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
 
-    const ticketsUltimos30Dias = tickets.filter(t =>
+    // Para las tendencias, obtenemos tickets sin filtro de período
+    const ticketsTendencias = await prisma.ticket.findMany({
+      where: {
+        fecha_creacion: {
+          gte: hace30Dias
+        }
+      }
+    })
+
+    const ticketsUltimos30Dias = ticketsTendencias.filter(t =>
       new Date(t.fecha_creacion) >= hace30Dias
     ).length
 
-    const ticketsUltimos7Dias = tickets.filter(t =>
+    const ticketsUltimos7Dias = ticketsTendencias.filter(t =>
       new Date(t.fecha_creacion) >= hace7Dias
     ).length
 
-    const ticketsHoy = tickets.filter(t =>
+    const ticketsHoy = ticketsTendencias.filter(t =>
       new Date(t.fecha_creacion) >= inicioHoy
     ).length
 
     // Equipos más problemáticos
-    const equiposMap = new Map()
+    const equiposMap = new Map<string, number>()
     tickets.forEach(ticket => {
       ticket.ticketEquipos?.forEach(te => {
         const key = `${te.equipo.tipoEquipo.nombre} - ${te.equipo.modelo.marca.nombre} ${te.equipo.modelo.nombre}`
@@ -363,14 +399,19 @@ export async function GET(request: NextRequest) {
       .slice(0, 10)
 
     // Usuarios más afectados
-    const usuariosMap = new Map()
+    const usuariosMap = new Map<string, { cantidad: number; area: string }>()
     tickets.forEach(ticket => {
       if (ticket.usuarioAfectado) {
         const key = `${ticket.usuarioAfectado.nombre} ${ticket.usuarioAfectado.apellido || ''}`
-        usuariosMap.set(key, {
-          cantidad: (usuariosMap.get(key)?.cantidad || 0) + 1,
-          area: ticket.usuarioAfectado.area?.nombre || 'Sin área'
-        })
+        const usuarioData = usuariosMap.get(key)
+        if (usuarioData) {
+          usuarioData.cantidad += 1
+        } else {
+          usuariosMap.set(key, {
+            cantidad: 1,
+            area: ticket.usuarioAfectado.area?.nombre || 'Sin área'
+          })
+        }
       }
     })
 
@@ -416,5 +457,7 @@ export async function GET(request: NextRequest) {
       { error: 'Error interno del servidor' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

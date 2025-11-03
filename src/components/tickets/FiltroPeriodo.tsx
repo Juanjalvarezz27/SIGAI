@@ -56,7 +56,7 @@ export default function FiltroPeriodo({ onFiltroChange, loading = false }: Filtr
     setFechaInicio(fechasTemporales.fechaInicioTemp)
     setFechaFin(fechasTemporales.fechaFinTemp)
     setFiltroActivo(true)
-    
+
     // Aplicar el filtro
     onFiltroChange(inicio, fin)
     cerrarModal()
@@ -77,16 +77,6 @@ export default function FiltroPeriodo({ onFiltroChange, loading = false }: Filtr
     if (!fecha) return ""
     const [year, month, day] = fecha.split('-')
     return `${day}/${month}/${year}`
-  }
-
-  const formatearFechaParaInput = (fecha: string) => {
-    if (!fecha) return ""
-    // Si la fecha ya está en formato YYYY-MM-DD, devolverla tal cual
-    if (fecha.includes('-')) return fecha
-    
-    // Si está en formato DD/MM/YYYY, convertir a YYYY-MM-DD
-    const [day, month, year] = fecha.split('/')
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
 
   return (
@@ -156,7 +146,7 @@ export default function FiltroPeriodo({ onFiltroChange, loading = false }: Filtr
                   </label>
                   <input
                     type="date"
-                    value={formatearFechaParaInput(fechasTemporales.fechaInicioTemp)}
+                    value={fechasTemporales.fechaInicioTemp}
                     onChange={(e) => setFechasTemporales(prev => ({
                       ...prev,
                       fechaInicioTemp: e.target.value
@@ -173,7 +163,7 @@ export default function FiltroPeriodo({ onFiltroChange, loading = false }: Filtr
                   </label>
                   <input
                     type="date"
-                    value={formatearFechaParaInput(fechasTemporales.fechaFinTemp)}
+                    value={fechasTemporales.fechaFinTemp}
                     onChange={(e) => setFechasTemporales(prev => ({
                       ...prev,
                       fechaFinTemp: e.target.value
@@ -209,7 +199,7 @@ export default function FiltroPeriodo({ onFiltroChange, loading = false }: Filtr
               >
                 Limpiar Filtro
               </button>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={cancelarFiltro}

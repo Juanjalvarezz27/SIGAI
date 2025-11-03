@@ -8,7 +8,6 @@ import {
   Users,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   PieChart,
   BarChart3,
   Calendar,
@@ -20,9 +19,9 @@ import {
   RefreshCw,
   Target,
   Wrench,
-  AlertCircle,
   BarChart
 } from "lucide-react"
+import FiltroPeriodo from "../tickets/FiltroPeriodo"
 
 interface EstadisticasTickets {
   totalTickets: number
@@ -93,48 +92,84 @@ export default function EstadisticasTickets() {
   const [estadisticas, setEstadisticas] = useState<EstadisticasTickets | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [fechaInicio, setFechaInicio] = useState<Date | null>(null)
+  const [fechaFin, setFechaFin] = useState<Date | null>(null)
+
+  const cargarEstadisticas = async (fechaInicioFiltro: Date | null = null, fechaFinFiltro: Date | null = null) => {
+    try {
+      setLoading(true)
+      
+      // Construir query parameters para el filtro
+      const params = new URLSearchParams()
+      if (fechaInicioFiltro) {
+        params.append('fechaInicio', fechaInicioFiltro.toISOString())
+      }
+      if (fechaFinFiltro) {
+        params.append('fechaFin', fechaFinFiltro.toISOString())
+      }
+
+      const url = `/api/estadisticas/tickets${params.toString() ? `?${params.toString()}` : ''}`
+      
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error('Error al cargar estadísticas')
+      }
+
+      const data = await response.json()
+      setEstadisticas(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const cargarEstadisticas = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/estadisticas/tickets')
-
-        if (!response.ok) {
-          throw new Error('Error al cargar estadísticas')
-        }
-
-        const data = await response.json()
-        setEstadisticas(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     cargarEstadisticas()
   }, [])
 
-  if (loading) {
+  const handleFiltroChange = (fechaInicioFiltro: Date | null, fechaFinFiltro: Date | null) => {
+    setFechaInicio(fechaInicioFiltro)
+    setFechaFin(fechaFinFiltro)
+    cargarEstadisticas(fechaInicioFiltro, fechaFinFiltro)
+  }
+
+  if (loading && !estadisticas) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-gray-100 rounded-2xl p-6 animate-pulse">
-            <div className="h-6 bg-gray-300 rounded mb-4"></div>
-            <div className="h-8 bg-gray-300 rounded"></div>
-          </div>
-        ))}
+      <div className="space-y-6">
+        <div className="flex justify-end">
+          <FiltroPeriodo onFiltroChange={handleFiltroChange} loading={loading} />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-gray-100 rounded-2xl p-6 animate-pulse">
+              <div className="h-6 bg-gray-300 rounded mb-4"></div>
+              <div className="h-8 bg-gray-300 rounded"></div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error || !estadisticas) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-red-800 font-medium">Error al cargar estadísticas</p>
-        <p className="text-red-600 text-sm mt-2">{error}</p>
+      <div className="space-y-6">
+        <div className="flex justify-end">
+          <FiltroPeriodo onFiltroChange={handleFiltroChange} loading={loading} />
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-800 font-medium">Error al cargar estadísticas</p>
+          <p className="text-red-600 text-sm mt-2">{error}</p>
+          <button
+            onClick={() => cargarEstadisticas(fechaInicio, fechaFin)}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
       </div>
     )
   }
@@ -171,6 +206,18 @@ export default function EstadisticasTickets() {
 
   return (
     <div className="space-y-8">
+      {/* Header con filtro */}
+      <div className="flex justify-between items-center">
+        <div>
+          {fechaInicio && fechaFin && (
+            <p className="text-sm text-gray-600 mt-1">
+              Mostrando datos del período: {fechaInicio.toLocaleDateString()} - {fechaFin.toLocaleDateString()}
+            </p>
+          )}
+        </div>
+        <FiltroPeriodo onFiltroChange={handleFiltroChange} loading={loading} />
+      </div>
+
       {/* Grid Principal - Métricas Clave */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Total de Tickets */}
