@@ -121,6 +121,18 @@ export interface Ticket {
   tiempoEjecucion?: string;
   ticketReasignaciones?: TicketReasignacionHistorial[];
   reasignaciones?: TicketReasignacionHistorial[];
+  TicketSistema?: TicketSistema[];
+}
+
+export interface TicketSistema {
+  id: number;
+  sistema?: {
+    nombre: string;
+  };
+  falla?: {
+    nombre: string;
+  };
+  descripcion?: string;
 }
 
 export interface TicketFormData {

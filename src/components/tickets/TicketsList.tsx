@@ -19,11 +19,13 @@ import {
   Calendar,
   UserCheck,
   Users,
-  RefreshCw
+  RefreshCw,
+  Download
 } from "lucide-react"
 import { Ticket, Equipo } from "../../../types/ticket"
 import CerrarTicketModal from "./CerrarTicketModal"
 import ReasignarTicketModal from "./ReasignarTicketModal"
+import ExportarPDFModal from "./ExportarPDFModal"
 
 interface TicketsListProps {
   tickets: Ticket[]
@@ -63,6 +65,8 @@ export default function TicketsList({
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false)
   const [selectedTicketReasignar, setSelectedTicketReasignar] = useState<Ticket | null>(null)
   const [isReasignarModalOpen, setIsReasignarModalOpen] = useState(false)
+  const [selectedTicketExportar, setSelectedTicketExportar] = useState<Ticket | null>(null)
+  const [isExportarModalOpen, setIsExportarModalOpen] = useState(false)
 
   const toggleSeccion = (ticketId: number, seccion: keyof TicketExpandido) => {
     setTicketsExpandidos(prev => ({
@@ -103,6 +107,12 @@ export default function TicketsList({
     if (onTicketReasigned) {
       onTicketReasigned()
     }
+  }
+
+  // Función para manejar exportación a PDF
+  const handleExportarPDF = (ticket: Ticket) => {
+    setSelectedTicketExportar(ticket)
+    setIsExportarModalOpen(true)
   }
 
   const getEstadoColor = (estado: string) => {
@@ -258,29 +268,43 @@ export default function TicketsList({
                   </div>
                 </div>
 
-                {/* Botones de acción para tickets abiertos */}
-                {ticket.estadoId === 1 && (
-                  <div className="mb-4 space-y-2">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleCloseTicket(ticket)}
-                        className="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Cerrar Ticket
-                      </button>
-                      {puedeReasignar && (
+                {/* Botones de acción */}
+                <div className="mb-4">
+                  <div className="flex gap-2">
+
+                    {/* Botones para tickets abiertos */}
+                    {ticket.estadoId === 1 && (
+                      <>
                         <button
-                          onClick={() => handleReasignarTicket(ticket)}
-                          className="flex-1 px-4 py-2 bg-[#001F3F] text-white text-sm font-medium rounded-lg hover:bg-blue-900 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                          onClick={() => handleCloseTicket(ticket)}
+                          className="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                         >
-                          <Users className="w-4 h-4" />
-                          Reasignar
+                          <CheckCircle className="w-4 h-4" />
+                          Cerrar
                         </button>
-                      )}
-                    </div>
+                        
+                        {puedeReasignar && (
+                          <button
+                            onClick={() => handleReasignarTicket(ticket)}
+                            className="flex-1 px-4 py-2 bg-[#001F3F] text-white text-sm font-medium rounded-lg hover:bg-blue-900 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                          >
+                            <Users className="w-4 h-4" />
+                            Reasignar
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Botón de exportar PDF para todos los tickets */}
+                    <button
+                      onClick={() => handleExportarPDF(ticket)}
+                      className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      PDF
+                    </button>
                   </div>
-                )}
+                </div>
 
                 {/* Contenedor para las secciones desplegables con scroll si es necesario */}
                 <div className="flex-1 overflow-hidden">
@@ -691,6 +715,12 @@ export default function TicketsList({
         onClose={() => setIsReasignarModalOpen(false)}
         onTicketReasigned={handleTicketReasigned}
         ticket={selectedTicketReasignar}
+      />
+
+      <ExportarPDFModal
+        isOpen={isExportarModalOpen}
+        onClose={() => setIsExportarModalOpen(false)}
+        ticket={selectedTicketExportar}
       />
     </>
   )
