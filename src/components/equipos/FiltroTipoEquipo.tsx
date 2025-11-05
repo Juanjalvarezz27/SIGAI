@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Cpu, Filter, X, Check } from "lucide-react"
+import { Cpu, Filter, X } from "lucide-react"
 import axios from "axios"
 import { TipoEquipo } from "../../../types/equipos"
 

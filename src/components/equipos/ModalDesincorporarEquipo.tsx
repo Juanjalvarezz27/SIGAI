@@ -75,7 +75,7 @@ export default function ModalDesincorporarEquipo({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/[0.5] transition-opacity"
@@ -84,7 +84,7 @@ export default function ModalDesincorporarEquipo({
 
       {/* Modal */}
       <div
-        className="relative bg-white rounded-lg shadow-xl w-7/12 mx-4 transform transition-all"
+        className="relative bg-white rounded-lg shadow-xl w-7/12 mx-4 transform transition-all animate-fade-in-up"
         onKeyDown={handleKeyPress}
       >
         {/* Header */}
@@ -95,7 +95,7 @@ export default function ModalDesincorporarEquipo({
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+            className="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -104,11 +104,15 @@ export default function ModalDesincorporarEquipo({
         {/* Body */}
         <div className="p-6">
           <p className="text-gray-700 mb-4">
-            Estás a punto de Desincorporar el equipo <span className="font-semibold">{equipoNombre}</span>.
-            Esta acción cambiará su status a <span className="font-semibold text-red-600">Desincorporados</span>.
+            Estás a punto de desincorporar el equipo <span className="font-semibold">{equipoNombre}</span>.
+            Esta acción cambiará su status a <span className="font-semibold text-red-600">Desincorporados</span> 
+             y su estado a <span className="font-semibold text-yellow-600">Sin uso</span>.
           </p>
 
           <div className="mb-4">
+            <label htmlFor="motivo" className="block text-sm font-medium text-gray-700 mb-2">
+              Motivo de desincorporación *
+            </label>
             <textarea
               id="motivo"
               value={motivo}
@@ -118,7 +122,7 @@ export default function ModalDesincorporarEquipo({
               }}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent resize-none"
-              placeholder="Describe el motivo por el cual se Desincorporar el equipo..."
+              placeholder="Describe el motivo por el cual se desincorpora el equipo..."
               disabled={loading}
               autoFocus
             />
@@ -138,9 +142,13 @@ export default function ModalDesincorporarEquipo({
                 minute: '2-digit'
               })}
               <br />
-              • Desincorporar por: Usuario Actual
+              • Desincorporado por: Usuario Actual
               <br />
               • Nuevo Status: Desincorporados
+              <br />
+              • Nuevo Estado: Sin uso
+              <br />
+              • Estado anterior: Se guardará automáticamente para futuras incorporaciones
             </p>
           </div>
         </div>
@@ -165,7 +173,7 @@ export default function ModalDesincorporarEquipo({
                 Desincorporando...
               </>
             ) : (
-              'Confirmar Desincorporacion'
+              'Confirmar Desincorporación'
             )}
           </button>
         </div>

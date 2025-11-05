@@ -23,17 +23,46 @@ interface EquipoPayload {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const equipoId = parseInt(params.id)
-    
+    // 1. CORREGIR: Await params antes de usarlos
+    const { id } = await params
+    const equipoId = parseInt(id)
+
     if (isNaN(equipoId)) {
       return NextResponse.json({ error: 'ID de equipo inválido' }, { status: 400 })
     }
 
-    const body = await request.json()
-    
+    // 2. CORREGIR: Verificar que el body no esté vacío antes de parsear
+    const contentType = request.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Content-Type debe ser application/json' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar que hay contenido en el body
+    const contentLength = request.headers.get('content-length')
+    if (contentLength === '0') {
+      return NextResponse.json(
+        { error: 'El cuerpo de la solicitud no puede estar vacío' },
+        { status: 400 }
+      )
+    }
+
+    let body;
+    try {
+      body = await request.json()
+    } catch (jsonError) {
+      console.error('Error parseando JSON:', jsonError)
+      return NextResponse.json(
+        { error: 'JSON inválido en el cuerpo de la solicitud' },
+        { status: 400 }
+      )
+    }
+
     const {
       bienNacional,
       serial,
@@ -45,6 +74,14 @@ export async function PUT(
       estadoId,
       especificaciones
     }: EquipoPayload = body
+
+    // Verificar campos requeridos
+    if (!bienNacional?.trim() || !serial?.trim() || !tipoEquipoId || !modelo?.trim() || !marca?.trim()) {
+      return NextResponse.json(
+        { error: 'Campos requeridos: bienNacional, serial, tipoEquipoId, modelo, marca' },
+        { status: 400 }
+      )
+    }
 
     // Verificar si el equipo existe
     const equipoExistente = await prismadb.equipos.findUnique({
@@ -60,7 +97,7 @@ export async function PUT(
 
     // Buscar o crear marca
     let marcaExistente = await prismadb.marca.findFirst({
-      where: { 
+      where: {
         nombre: {
           equals: marca,
           mode: 'insensitive'
@@ -177,7 +214,7 @@ export async function PUT(
 
   } catch (error: unknown) {
     console.error('Error actualizando equipo:', error)
-    
+
     // Manejar errores específicos de Prisma
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const prismaError = error as { code: string }
@@ -188,7 +225,7 @@ export async function PUT(
         )
       }
     }
-    
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

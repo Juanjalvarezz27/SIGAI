@@ -51,6 +51,14 @@ interface HistorialDesincorporacion {
     id: number;
     estado: string;
   };
+  estadoAnterior?: {
+    id: number;
+    nombre: string;
+  } | null;
+  estadoNuevo?: {
+    id: number;
+    nombre: string;
+  } | null;
   equipo: {
     id: number;
     bienNacional?: string;
@@ -290,7 +298,7 @@ export default function VistaDetalleEquipo({
     <>
       {/* Mensaje de éxito global */}
       {successMessage && (
-        <div className="fixed top-4 right-4 z-50 p-4 bg-green-50 border border-green-200 rounded-lg shadow-lg max-w-sm">
+        <div className="fixed top-4 right-4 z-50 p-4 bg-green-50 border border-green-200 rounded-lg shadow-lg max-w-sm animate-fade-in">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-10 h-10 text-green-600 flex-shrink-0" />
             <div>
@@ -303,7 +311,7 @@ export default function VistaDetalleEquipo({
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-6 animate-fade-in">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <div>
@@ -311,7 +319,7 @@ export default function VistaDetalleEquipo({
               <button
                 onClick={onVolver}
                 disabled={loading}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -432,6 +440,34 @@ export default function VistaDetalleEquipo({
                 </div>
               </div>
 
+              {/* Estado - Mostrar el Estado (En uso/Sin uso) */}
+              {equipo.estado ? (
+                <div className="flex items-center gap-3">
+                  <Circle
+                    size={20}
+                    className={`${
+                      equipo.estado.id === 1
+                        ? "text-green-500 fill-green-500" // En uso - Verde
+                        : equipo.estado.id === 2
+                        ? "text-yellow-500 fill-yellow-500" // Sin uso - Amarillo
+                        : "text-gray-500 fill-gray-500" // Otros estados - Gris
+                    }`}
+                  />
+                  <div>
+                    <p className="text-sm text-gray-600">Estado</p>
+                    <p className="font-medium">{equipo.estado.nombre}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Circle size={20} className="text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-600">Estado</p>
+                    <p className="font-medium text-gray-400">No asignado</p>
+                  </div>
+                </div>
+              )}
+
               {/* Status - Mostrar el Status (Operativos/Inoperativos/Desincorporados) */}
               {equipo.status ? (
                 <div className="flex items-center gap-3">
@@ -447,7 +483,7 @@ export default function VistaDetalleEquipo({
                   />
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
-                    <p className="font-medium">{equipo.status.estado}</p>{" "}
+                    <p className="font-medium">{equipo.status.estado}</p>
                   </div>
                 </div>
               ) : (
@@ -459,6 +495,7 @@ export default function VistaDetalleEquipo({
                   </div>
                 </div>
               )}
+
               {equipo.observaciones && (
                 <div className="flex items-start gap-3">
                   <FileText size={20} className="text-blue-600 mt-1" />
@@ -620,12 +657,13 @@ export default function VistaDetalleEquipo({
             </div>
           ) : historialReasignaciones.length > 0 ? (
             <div className="space-y-4">
-              {historialReasignaciones.map((reasignacion) => (
+              {historialReasignaciones.map((reasignacion, index) => (
                 <div
                   key={reasignacion.id}
-                  className="bg-white border border-blue-100 rounded-lg p-4 w-11/12 mx-auto"
+                  className="bg-white border border-blue-100 rounded-lg p-4 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                     <div className="flex items-center gap-3">
                       <Calendar size={16} className="text-blue-600" />
                       <div>
@@ -634,7 +672,7 @@ export default function VistaDetalleEquipo({
                       </div>
                     </div>
 
-                    <div className="flex justify-end gap-3">
+                    <div className="flex items-center gap-3">
                       <UserIcon size={16} className="text-blue-600" />
                       <div>
                         <p className="text-sm text-gray-600">Reasignado por</p>
@@ -662,7 +700,7 @@ export default function VistaDetalleEquipo({
                       </div>
                     </div>
 
-                    <div className="flex justify-end gap-3">
+                    <div className="flex items-center gap-3">
                       <User size={16} className="text-green-500" />
                       <div>
                         <p className="text-sm text-gray-600">Usuario Nuevo</p>
@@ -711,10 +749,11 @@ export default function VistaDetalleEquipo({
               </div>
             ) : historialDesincorporacion.length > 0 ? (
               <div className="space-y-4">
-                {historialDesincorporacion.map((registro) => (
+                {historialDesincorporacion.map((registro, index) => (
                   <div
                     key={registro.id}
-                    className="bg-white border border-red-100 rounded-lg p-4"
+                    className="bg-white border border-red-100 rounded-lg p-4 animate-fade-in-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                       <div className="flex items-center gap-3">
@@ -754,6 +793,29 @@ export default function VistaDetalleEquipo({
                       </div>
                     </div>
 
+                    {/* Nueva sección para mostrar los estados */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        <Circle size={16} className="text-blue-500 fill-blue-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Estado Anterior</p>
+                          <p className="font-medium">
+                            {registro.estadoAnterior?.nombre || 'No especificado'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Circle size={16} className="text-green-500 fill-green-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Estado Nuevo</p>
+                          <p className="font-medium">
+                            {registro.estadoNuevo?.nombre || 'Sin uso'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="mt-3 pt-3 border-t border-red-100">
                       <p className="text-sm text-gray-600 mb-2">Motivo de Desincorporación</p>
                       <p className="text-gray-800 bg-red-50 p-3 rounded-md border border-red-100">
@@ -785,10 +847,11 @@ export default function VistaDetalleEquipo({
             ) : equiposUsuario.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
                 {eliminarEquiposDuplicados(equiposUsuario).map(
-                  (equipoUsuario) => (
+                  (equipoUsuario, index) => (
                     <div
                       key={equipoUsuario.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4"
+                      className="bg-white border border-gray-200 rounded-lg p-4 animate-fade-in-up"
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <Monitor size={20} className="text-[#F29F6D]" />
@@ -848,7 +911,7 @@ export default function VistaDetalleEquipo({
                             />
                             <span className="text-gray-600 font-semibold">
                               Status: {equipoUsuario.status.estado}
-                            </span>{" "}
+                            </span>
                           </div>
                         )}
                       </div>

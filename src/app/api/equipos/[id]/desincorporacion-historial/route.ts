@@ -1,25 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prismadb from '../../../../../lib/prismadb';
+import { NextRequest, NextResponse } from 'next/server'
+import prismadb from '@/lib/prismadb'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const equipoId = parseInt(params.id);
+    const { id } = await params
+    const equipoId = parseInt(id)
 
     if (isNaN(equipoId)) {
       return NextResponse.json(
         { error: 'ID de equipo inválido' },
         { status: 400 }
-      );
+      )
     }
 
-    // Obtener el historial de desincorporación del equipo
     const historial = await prismadb.desincorporacionHistorialEquipos.findMany({
-      where: {
-        equipoId: equipoId
-      },
+      where: { equipoId },
       include: {
         deshabilitadoPor: {
           select: {
@@ -39,6 +37,18 @@ export async function GET(
           select: {
             id: true,
             estado: true
+          }
+        },
+        estadoAnterior: {
+          select: {
+            id: true,
+            nombre: true
+          }
+        },
+        estadoNuevo: {
+          select: {
+            id: true,
+            nombre: true
           }
         },
         equipo: {
@@ -67,14 +77,15 @@ export async function GET(
       orderBy: {
         fechaDeshabilitacion: 'desc'
       }
-    });
+    })
 
-    return NextResponse.json({ historial });
-  } catch (error) {
-    console.error('Error obteniendo historial de desincorporación:', error);
+    return NextResponse.json({ historial }, { status: 200 })
+
+  } catch (error: unknown) {
+    console.error('Error obteniendo historial de desincorporación:', error)
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
-    );
+    )
   }
 }

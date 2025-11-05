@@ -238,11 +238,15 @@ model DesincorporacionHistorialEquipos {
   deshabilitadoPorId    Int
   statusAnteriorId      Int
   statusNuevoId         Int
+  estadoNuevoId         Int?  
+  estadoAnteriorId      Int?
 
   equipo                Equipos   @relation(fields: [equipoId], references: [id])
   deshabilitadoPor      Usuario   @relation("DeshabilitacionesEquiposRealizadas", fields: [deshabilitadoPorId], references: [id])
   statusAnterior        Status    @relation("StatusAnterior", fields: [statusAnteriorId], references: [id])
   statusNuevo           Status    @relation("StatusNuevo", fields: [statusNuevoId], references: [id])
+  estadoAnterior Estados? @relation("EstadoAnterior", fields: [estadoAnteriorId], references: [id]) 
+  estadoNuevo Estados? @relation("EstadoNuevo", fields: [estadoNuevoId], references: [id])
 
   @@map("deshabilitacion_historial_equipos")
 }
@@ -283,6 +287,9 @@ model Estados {
   id     Int       @id @default(autoincrement())
   nombre String
   equipos Equipos[]
+
+  deshabilitacionesAnteriores DesincorporacionHistorialEquipos[] @relation("EstadoAnterior")
+  deshabilitacionesNuevas DesincorporacionHistorialEquipos[] @relation("EstadoNuevo") 
 }
 
 model Sistema {
