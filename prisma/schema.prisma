@@ -63,6 +63,10 @@ model Usuario {
   reasignacionesNueva    TicketReasignacion[] @relation("ReasignacionNueva")
   reasignacionesSupervisor TicketReasignacion[] @relation("ReasignacionSupervisor")
 
+  reasignacionesEquipoAnterior ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoAnterior")
+  reasignacionesEquipoNueva ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoNueva")
+  reasignacionesEquipoRealizadas ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoRealizada")
+
   ticketAfectado Ticket[] @relation("TicketAfectado")
   ticketCierre TicketCierre[]
 
@@ -93,7 +97,6 @@ model TicketReasignacion {
   motivo String?
   fechaReasignacion DateTime @default(now())
 
-  // Relaciones
   ticket Ticket @relation(fields: [ticketId], references: [id])
   analistaAnterior Usuario @relation("ReasignacionAnterior", fields: [analistaAnteriorId], references: [id])
   analistaNuevo Usuario @relation("ReasignacionNueva", fields: [analistaNuevoId], references: [id])
@@ -216,7 +219,6 @@ model Equipos {
   usuarioId         Int?
   especificacionesId Int?
   
-  // Relaciones
   especificaciones  EspecificacionesAdicionales?   @relation(fields: [especificacionesId], references: [id])
   estado            Estados?                       @relation(fields: [estadoId], references: [id])
   modelo            Modelo                         @relation(fields: [modeloId], references: [id])
@@ -225,6 +227,7 @@ model Equipos {
   usuario           Usuario?                       @relation(fields: [usuarioId], references: [id])
   ticketEquipos     TicketEquipo[]
   deshabilitacionesHistorial DesincorporacionHistorialEquipos[]
+  reasignacionesHistorial ReasignacionHistorialEquipos[]
 }
 
 model DesincorporacionHistorialEquipos {
@@ -313,4 +316,20 @@ model TicketSistema {
 
   @@unique([ticketId])
   @@map("ticket_sistemas")
+}
+model ReasignacionHistorialEquipos {
+  id Int @id @default(autoincrement())
+  equipoId Int
+  usuarioAnteriorId Int?
+  usuarioNuevoId Int?
+  motivo String?
+  reasignadoPorId Int
+  fechaReasignacion DateTime @default(now())
+
+  equipo Equipos @relation(fields: [equipoId], references: [id])
+  usuarioAnterior Usuario? @relation("ReasignacionEquipoAnterior", fields: [usuarioAnteriorId], references: [id])
+  usuarioNuevo Usuario? @relation("ReasignacionEquipoNueva", fields: [usuarioNuevoId], references: [id])
+  reasignadoPor Usuario @relation("ReasignacionEquipoRealizada", fields: [reasignadoPorId], references: [id])
+
+  @@map("reasignacion_historial_equipos")
 }

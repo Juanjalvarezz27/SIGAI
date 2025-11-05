@@ -25,6 +25,35 @@ export interface Equipo {
   } | null
 }
 
+export interface ReasignacionHistorialEquipo {
+  id: number
+  equipoId: number
+  usuarioAnteriorId: number | null
+  usuarioNuevoId: number | null
+  motivo: string | null
+  reasignadoPorId: number
+  fechaReasignacion: string
+  usuarioAnterior?: {
+    id: number
+    nombre: string
+    apellido: string | null
+    email: string | null
+    cedula: string | null
+  } | null
+  usuarioNuevo?: {
+    id: number
+    nombre: string
+    apellido: string | null
+    email: string | null
+    cedula: string | null
+  } | null
+  reasignadoPor: {
+    id: number
+    nombre: string
+    apellido: string | null
+    email: string | null
+  }
+}
 export interface Usuario {
   id: number
   nombre: string

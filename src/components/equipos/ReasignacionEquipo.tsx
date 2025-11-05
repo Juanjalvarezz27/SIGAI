@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Building, MapPin, Briefcase, CheckCircle } from "lucide-react"
+import { User, Building, MapPin, Briefcase, CheckCircle, FileText } from "lucide-react"
 import axios from "axios"
 import BarraBusquedaPersonalizado from "../personal/BarraBusquedaPersonalizado"
 import { Usuario } from "../../../types/personal"
@@ -25,6 +25,7 @@ export default function ReasignacionEquipo({
   disabled = false
 }: ReasignacionEquipoProps) {
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null)
+  const [motivo, setMotivo] = useState("")
   const [loading, setLoading] = useState(false)
   const [mensajeExito, setMensajeExito] = useState("")
   const [error, setError] = useState("")
@@ -45,11 +46,13 @@ export default function ReasignacionEquipo({
       setError("")
 
       const response = await axios.put(`/api/equipos/${equipoId}/reasignar`, {
-        usuarioId: usuarioSeleccionado.id
+        usuarioId: usuarioSeleccionado.id,
+        motivo: motivo.trim() || null
       })
 
       if (response.status === 200) {
         setMensajeExito(`Equipo reasignado exitosamente a ${usuarioSeleccionado.nombre} ${usuarioSeleccionado.apellido}`)
+        setMotivo("")
         
         // Notificar al componente padre después de 3 segundos
         setTimeout(() => {
@@ -70,6 +73,7 @@ export default function ReasignacionEquipo({
 
   const handleLimpiarSeleccion = () => {
     setUsuarioSeleccionado(null)
+    setMotivo("")
     setError("")
   }
 
@@ -130,7 +134,7 @@ export default function ReasignacionEquipo({
           />
         </div>
       ) : (
-        /* Usuario Seleccionado */
+        /* Usuario Seleccionado y Formulario de Reasignación */
         <div className="space-y-3">
           <div className="p-3 bg-green-50 border border-green-200 rounded-md">
             <div className="flex items-center justify-between">
@@ -146,7 +150,7 @@ export default function ReasignacionEquipo({
                 <p className="text-xs text-green-500 capitalize">
                   Rol: {usuarioSeleccionado.rol.rol.toLowerCase()}
                 </p>
-                
+
                 {/* Información de ubicación */}
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   <div className="flex items-center gap-1 text-green-600">
@@ -183,6 +187,22 @@ export default function ReasignacionEquipo({
                 ✕
               </button>
             </div>
+          </div>
+
+          {/* Campo de motivo */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <FileText size={16} />
+              Motivo de reasignación (opcional)
+            </label>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ingrese el motivo de la reasignación..."
+              className="w-full p-2 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+              disabled={disabled || loading}
+            />
           </div>
 
           {/* Botón de reasignación */}

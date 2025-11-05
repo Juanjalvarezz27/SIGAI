@@ -67,6 +67,36 @@ interface HistorialDesincorporacion {
   };
 }
 
+interface ReasignacionHistorial {
+  id: number;
+  equipoId: number;
+  usuarioAnteriorId: number | null;
+  usuarioNuevoId: number | null;
+  motivo: string | null;
+  reasignadoPorId: number;
+  fechaReasignacion: string;
+  usuarioAnterior?: {
+    id: number;
+    nombre: string;
+    apellido: string | null;
+    email: string | null;
+    cedula: string | null;
+  } | null;
+  usuarioNuevo?: {
+    id: number;
+    nombre: string;
+    apellido: string | null;
+    email: string | null;
+    cedula: string | null;
+  } | null;
+  reasignadoPor: {
+    id: number;
+    nombre: string;
+    apellido: string | null;
+    email: string | null;
+  };
+}
+
 // Función helper para eliminar equipos duplicados
 const eliminarEquiposDuplicados = (equipos: Equipo[]): Equipo[] => {
   const crearClaveUnica = (equipo: Equipo) => {
@@ -100,6 +130,8 @@ export default function VistaDetalleEquipo({
   const [successMessage, setSuccessMessage] = useState("");
   const [historialDesincorporacion, setHistorialDesincorporacion] = useState<HistorialDesincorporacion[]>([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  const [historialReasignaciones, setHistorialReasignaciones] = useState<ReasignacionHistorial[]>([]);
+  const [cargandoHistorialReasignaciones, setCargandoHistorialReasignaciones] = useState(false);
 
   // Verificar si el equipo está desincorporado (Status Desincorporados)
   const estaDesincorporado = equipo.status?.id === 3;
@@ -158,6 +190,28 @@ export default function VistaDetalleEquipo({
     cargarHistorialDesincorporacion();
   }, [equipo.id, estaDesincorporado]);
 
+  // Cargar historial de reasignaciones
+  useEffect(() => {
+    const cargarHistorialReasignaciones = async () => {
+      try {
+        setCargandoHistorialReasignaciones(true);
+        const response = await axios.get(
+          `/api/equipos/${equipo.id}/reasignacion-historial`
+        );
+        if (response.status === 200) {
+          setHistorialReasignaciones(response.data.historial || []);
+        }
+      } catch (error) {
+        console.error("Error cargando historial de reasignaciones:", error);
+        setHistorialReasignaciones([]);
+      } finally {
+        setCargandoHistorialReasignaciones(false);
+      }
+    };
+
+    cargarHistorialReasignaciones();
+  }, [equipo.id]);
+
   // Efecto para limpiar el mensaje de éxito después de 5 segundos
   useEffect(() => {
     if (successMessage) {
@@ -177,7 +231,7 @@ export default function VistaDetalleEquipo({
   const handleDesincorporarEquipo = async (motivo: string) => {
     try {
       setLoadingDesincorporar(true);
-      
+
       const response = await axios.post(`/api/equipos/${equipo.id}/desincorporar`, {
         motivo
       });
@@ -202,7 +256,7 @@ export default function VistaDetalleEquipo({
   const handleHabilitarEquipo = async () => {
     try {
       setLoadingDesincorporar(true);
-      
+
       const response = await axios.post(`/api/equipos/${equipo.id}/incorporar`);
 
       if (response.status === 200) {
@@ -294,14 +348,14 @@ export default function VistaDetalleEquipo({
           </div>
 
           <div className="flex gap-3">
-            <BotonEditarEquipo 
+            <BotonEditarEquipo
               onClick={() => setModalEditarAbierto(true)}
               loading={loading}
             />
-            
-            {/* Botón de desincorporar/habilitar */} 
+
+            {/* Botón de desincorporar/habilitar */}
             {!estaDesincorporado ? (
-              <BotonDesincorporarEquipo 
+              <BotonDesincorporarEquipo
                 onClick={() => setModalDesincorporarAbierto(true)}
                 loading={loading || loadingDesincorporar}
               />
@@ -550,6 +604,96 @@ export default function VistaDetalleEquipo({
                 Este equipo no tiene usuario asignado
               </p>
             </div>
+          )}
+        </div>
+
+        {/* Historial de Reasignaciones */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+            <RefreshCw size={20} className="text-blue-600" />
+            Historial de Reasignaciones
+          </h3>
+
+          {cargandoHistorialReasignaciones ? (
+            <div className="flex justify-center py-4">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : historialReasignaciones.length > 0 ? (
+            <div className="space-y-4">
+              {historialReasignaciones.map((reasignacion) => (
+                <div
+                  key={reasignacion.id}
+                  className="bg-white border border-blue-100 rounded-lg p-4 w-11/12 mx-auto"
+                >
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <Calendar size={16} className="text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Fecha de Reasignación</p>
+                        <p className="font-medium">{formatearFecha(reasignacion.fechaReasignacion)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                      <UserIcon size={16} className="text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Reasignado por</p>
+                        <p className="font-medium">
+                          {reasignacion.reasignadoPor.nombre} {reasignacion.reasignadoPor.apellido}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div className="flex items-center gap-3">
+                      <User size={16} className="text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Usuario Anterior</p>
+                        <p className="font-medium">
+                          {reasignacion.usuarioAnterior 
+                            ? `${reasignacion.usuarioAnterior.nombre} ${reasignacion.usuarioAnterior.apellido}`
+                            : 'Sin usuario asignado'
+                          }
+                        </p>
+                        {reasignacion.usuarioAnterior && (
+                          <p className="text-xs text-gray-500">{reasignacion.usuarioAnterior.email}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                      <User size={16} className="text-green-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Usuario Nuevo</p>
+                        <p className="font-medium">
+                          {reasignacion.usuarioNuevo 
+                            ? `${reasignacion.usuarioNuevo.nombre} ${reasignacion.usuarioNuevo.apellido}`
+                            : 'Sin usuario asignado'
+                          }
+                        </p>
+                        {reasignacion.usuarioNuevo && (
+                          <p className="text-xs text-gray-500">{reasignacion.usuarioNuevo.email}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {reasignacion.motivo && (
+                    <div className="mt-3 pt-3 border-t border-blue-100">
+                      <p className="text-sm text-gray-600 mb-2">Motivo de Reasignación</p>
+                      <p className="text-gray-800 bg-blue-50 p-3 rounded-md border border-blue-100">
+                        {reasignacion.motivo}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-center py-4">
+              No se encontró historial de reasignaciones para este equipo.
+            </p>
           )}
         </div>
 
