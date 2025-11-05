@@ -8,12 +8,15 @@ datasource db {
 }
 
 model Direcciones {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   direccion String
   pisoId    Int
   areas     Area[]
-  piso      Piso      @relation(fields: [pisoId], references: [id])
+  piso      Piso     @relation(fields: [pisoId], references: [id])
   usuarios  Usuario[]
+  eventosExternos EventoExterno[]
+
+  @@map("direcciones")
 }
 
 model Area {
@@ -22,159 +25,168 @@ model Area {
   direccionId Int
   direccion   Direcciones @relation(fields: [direccionId], references: [id])
   usuarios    Usuario[]
+
+  @@map("areas")
 }
 
 model Piso {
   id          Int           @id @default(autoincrement())
   piso        String
   direcciones Direcciones[]
+  eventosExternos EventoExterno[]
+
+  @@map("pisos")
 }
 
 model Usuario {
-  id Int @id @default(autoincrement())
-  cedula String?
-  nombre String
-  apellido String?
-  email String? @unique
-  rolId Int
-  direccionId Int
-  areaId Int?
-  password String?
-  estado String @default("Activo")
-  tipoAnalistaId Int?
-  supervisorTipoId Int? 
+  id               Int          @id @default(autoincrement())
+  cedula           String?
+  nombre           String
+  apellido         String?
+  email            String?      @unique
+  rolId            Int
+  direccionId      Int
+  areaId           Int?
+  password         String?
+  estado           String       @default("Activo")
+  tipoAnalistaId   Int?
+  supervisorTipoId Int?
 
-  equipos Equipos[]
-  ticketCerrado Ticket[] @relation("TicketCerrado")
-  ticketCreado Ticket[] @relation("TicketCreado")
-  ticketAnalistaEquipo TicketEquipo[] @relation("EquiposAnalista")
-  ticketAnalista TicketEvento[] @relation("EventosAnalista")
-  area Area? @relation(fields: [areaId], references: [id])
-  direccion Direcciones @relation(fields: [direccionId], references: [id])
-  rol Rol @relation(fields: [rolId], references: [id])
-  tipoAnalista TipoAnalista? @relation(fields: [tipoAnalistaId], references: [id])
-  supervisorTipo SupervisorTipo? @relation(fields: [supervisorTipoId], references: [id]) // Nueva relación
-
-  deshabilitacionesRealizadas DeshabilitacionHistorial[] @relation("DeshabilitacionesRealizadas")
-  deshabilitacionesRecibidas DeshabilitacionHistorial[] @relation("DeshabilitacionesRecibidas")
+  equipos                          Equipos[]
+  ticketCerrado                    Ticket[]                       @relation("TicketCerrado")
+  ticketCreado                     Ticket[]                       @relation("TicketCreado")
+  ticketAnalistaEquipo             TicketEquipo[]                 @relation("EquiposAnalista")
+  ticketAnalista                   TicketEvento[]                 @relation("EventosAnalista")
+  area                             Area?                          @relation(fields: [areaId], references: [id])
+  direccion                        Direcciones                    @relation(fields: [direccionId], references: [id])
+  rol                              Rol                            @relation(fields: [rolId], references: [id])
+  tipoAnalista                     TipoAnalista?                  @relation(fields: [tipoAnalistaId], references: [id])
+  supervisorTipo                   SupervisorTipo?                @relation(fields: [supervisorTipoId], references: [id])
+  deshabilitacionesRealizadas      DeshabilitacionHistorial[]     @relation("DeshabilitacionesRealizadas")
+  deshabilitacionesRecibidas       DeshabilitacionHistorial[]     @relation("DeshabilitacionesRecibidas")
   deshabilitacionesEquiposRealizadas DesincorporacionHistorialEquipos[] @relation("DeshabilitacionesEquiposRealizadas")
-  
-  reasignacionesAnterior TicketReasignacion[] @relation("ReasignacionAnterior")
-  reasignacionesNueva    TicketReasignacion[] @relation("ReasignacionNueva")
-  reasignacionesSupervisor TicketReasignacion[] @relation("ReasignacionSupervisor")
-
-  reasignacionesEquipoAnterior ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoAnterior")
-  reasignacionesEquipoNueva ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoNueva")
-  reasignacionesEquipoRealizadas ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoRealizada")
-
-  ticketAfectado Ticket[] @relation("TicketAfectado")
-  ticketCierre TicketCierre[]
+  reasignacionesAnterior           TicketReasignacion[]           @relation("ReasignacionAnterior")
+  reasignacionesNueva              TicketReasignacion[]           @relation("ReasignacionNueva")
+  reasignacionesSupervisor         TicketReasignacion[]           @relation("ReasignacionSupervisor")
+  reasignacionesEquipoAnterior     ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoAnterior")
+  reasignacionesEquipoNueva        ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoNueva")
+  reasignacionesEquipoRealizadas   ReasignacionHistorialEquipos[] @relation("ReasignacionEquipoRealizada")
+  ticketAfectado                   Ticket[]                       @relation("TicketAfectado")
+  ticketCierre                     TicketCierre[]
+  TicketSistema                    TicketSistema[]
+  eventosSolicitados               EventoExterno[]                @relation("EventosSolicitados")
+  eventosAsignados                 EventoExterno[]                @relation("EventosAsignados")
 
   @@map("usuarios")
-  TicketSistema TicketSistema[]
 }
+
 model TipoAnalista {
   id    Int       @id @default(autoincrement())
   tipo  String
   usuarios Usuario[]
-  
+
   @@map("tipo_analista")
 }
+
 model SupervisorTipo {
-  id Int @id @default(autoincrement())
-  tipo String
+  id    Int       @id @default(autoincrement())
+  tipo  String
   usuarios Usuario[]
 
   @@map("supervisor_tipo")
 }
 
 model TicketReasignacion {
-  id Int @id @default(autoincrement())
-  ticketId Int
+  id                 Int      @id @default(autoincrement())
+  ticketId           Int
   analistaAnteriorId Int
-  analistaNuevoId Int
-  supervisorId Int
-  motivo String?
-  fechaReasignacion DateTime @default(now())
+  analistaNuevoId    Int
+  supervisorId       Int
+  motivo             String?
+  fechaReasignacion  DateTime @default(now())
 
-  ticket Ticket @relation(fields: [ticketId], references: [id])
+  ticket           Ticket  @relation(fields: [ticketId], references: [id])
   analistaAnterior Usuario @relation("ReasignacionAnterior", fields: [analistaAnteriorId], references: [id])
-  analistaNuevo Usuario @relation("ReasignacionNueva", fields: [analistaNuevoId], references: [id])
-  supervisor Usuario @relation("ReasignacionSupervisor", fields: [supervisorId], references: [id])
+  analistaNuevo    Usuario @relation("ReasignacionNueva", fields: [analistaNuevoId], references: [id])
+  supervisor       Usuario @relation("ReasignacionSupervisor", fields: [supervisorId], references: [id])
 
   @@map("ticket_reasignacion")
 }
 
 model DeshabilitacionHistorial {
-  id                    Int       @id @default(autoincrement())
+  id                    Int      @id @default(autoincrement())
   usuarioId             Int
   motivo                String
-  fechaDeshabilitacion  DateTime  @default(now())
+  fechaDeshabilitacion  DateTime @default(now())
   deshabilitadoPorId    Int
-  usuario               Usuario   @relation("DeshabilitacionesRecibidas", fields: [usuarioId], references: [id])
-  deshabilitadoPor      Usuario   @relation("DeshabilitacionesRealizadas", fields: [deshabilitadoPorId], references: [id])
+
+  usuario           Usuario @relation("DeshabilitacionesRecibidas", fields: [usuarioId], references: [id])
+  deshabilitadoPor  Usuario @relation("DeshabilitacionesRealizadas", fields: [deshabilitadoPorId], references: [id])
 
   @@map("deshabilitacion_historial")
 }
 
 model Rol {
-  id      Int       @id @default(autoincrement())
-  rol     String
+  id    Int       @id @default(autoincrement())
+  rol   String
   usuarios Usuario[]
+
+  @@map("roles")
 }
+
 model Ticket {
-  id Int @id @default(autoincrement())
-  titulo String
-  descripcion String
+  id               Int       @id @default(autoincrement())
+  titulo           String
+  descripcion      String
   usuarioCreadorId Int
   usuarioCerradorId Int?
   usuarioAfectadoId Int?
-  estadoId Int
-  tipoTicketId Int
-  fecha_creacion DateTime @default(now())
-  fecha_cierre DateTime?
+  estadoId         Int
+  tipoTicketId     Int
+  fecha_creacion   DateTime  @default(now())
+  fecha_cierre     DateTime?
 
-  estado TicketEstado @relation(fields: [estadoId], references: [id])
-  tipoTicket TipoTicket @relation(fields: [tipoTicketId], references: [id])
-  usuarioCerrador Usuario? @relation("TicketCerrado", fields: [usuarioCerradorId], references: [id])
-  usuarioCreador Usuario @relation("TicketCreado", fields: [usuarioCreadorId], references: [id])
-  usuarioAfectado Usuario? @relation("TicketAfectado", fields: [usuarioAfectadoId], references: [id])
-  ticketEquipos TicketEquipo[]
-  ticketEvento TicketEvento?
-  ticketCierre TicketCierre? 
-  reasignaciones TicketReasignacion[]
+  estado           TicketEstado   @relation(fields: [estadoId], references: [id])
+  tipoTicket       TipoTicket     @relation(fields: [tipoTicketId], references: [id])
+  usuarioCerrador  Usuario?       @relation("TicketCerrado", fields: [usuarioCerradorId], references: [id])
+  usuarioCreador   Usuario        @relation("TicketCreado", fields: [usuarioCreadorId], references: [id])
+  usuarioAfectado  Usuario?       @relation("TicketAfectado", fields: [usuarioAfectadoId], references: [id])
+  ticketEquipos    TicketEquipo[]
+  ticketEvento     TicketEvento?
+  ticketCierre     TicketCierre?
+  reasignaciones   TicketReasignacion[]
+  TicketSistema    TicketSistema[]
 
   @@map("tickets")
-  TicketSistema TicketSistema[]
 }
 
 model TipoTicket {
-  id    Int      @id @default(autoincrement())
-  tipo  String
+  id     Int     @id @default(autoincrement())
+  tipo   String
   tickets Ticket[]
-  
+
   @@map("tipo_ticket")
 }
 
 model TicketEstado {
-  id      Int      @id @default(autoincrement())
-  estado  String
-  ticket  Ticket[]
-  
+  id     Int     @id @default(autoincrement())
+  estado String
+  ticket Ticket[]
+
   @@map("ticket_estado")
 }
 
 model TicketCierre {
-  id Int @id @default(autoincrement())
-  ticketId Int @unique
-  usuarioCerradorId Int
-  fechaCierre DateTime @default(now())
-  condicion String 
-  memoFinalizacion String?
-  observaciones String?
+  id                  Int      @id @default(autoincrement())
+  ticketId            Int      @unique
+  usuarioCerradorId   Int
+  fechaCierre         DateTime @default(now())
+  condicion           String
+  memoFinalizacion    String?
+  observaciones       String?
   tiempoEjecucionMinutos Int?
-  
-  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  ticket          Ticket  @relation(fields: [ticketId], references: [id])
   usuarioCerrador Usuario @relation(fields: [usuarioCerradorId], references: [id])
 
   @@map("ticket_cierre")
@@ -187,28 +199,37 @@ model TicketEvento {
   ubicacion    String
   tipo_evento  String
   analistaId   Int
-  analista     Usuario  @relation("EventosAnalista", fields: [analistaId], references: [id])
-  ticket       Ticket   @relation(fields: [ticketId], references: [id])
+
+  analista Usuario @relation("EventosAnalista", fields: [analistaId], references: [id])
+  ticket   Ticket  @relation(fields: [ticketId], references: [id])
+
+  @@map("ticket_evento")
 }
 
 model TicketEquipo {
-  id         Int      @id @default(autoincrement())
-  ticketId   Int
-  equipoId   Int
+  id        Int @id @default(autoincrement())
+  ticketId  Int
+  equipoId  Int
   analistaId Int
-  analista   Usuario  @relation("EquiposAnalista", fields: [analistaId], references: [id])
-  equipo     Equipos  @relation(fields: [equipoId], references: [id])
-  ticket     Ticket   @relation(fields: [ticketId], references: [id])
+
+  analista Usuario @relation("EquiposAnalista", fields: [analistaId], references: [id])
+  equipo   Equipos @relation(fields: [equipoId], references: [id])
+  ticket   Ticket  @relation(fields: [ticketId], references: [id])
+
+  @@map("ticket_equipo")
 }
 
 model TipoEquipo {
-  id     Int       @id @default(autoincrement())
-  nombre String    @unique
+  id      Int       @id @default(autoincrement())
+  nombre  String    @unique
   equipos Equipos[]
+  equiposEvento EquipoEvento[]
+
+  @@map("tipo_equipo")
 }
 
 model Equipos {
-  id                Int                            @id @default(autoincrement())
+  id                Int          @id @default(autoincrement())
   bienNacional      String?
   serial            String?
   observaciones     String?
@@ -218,125 +239,170 @@ model Equipos {
   estadoId          Int?
   usuarioId         Int?
   especificacionesId Int?
-  
-  especificaciones  EspecificacionesAdicionales?   @relation(fields: [especificacionesId], references: [id])
-  estado            Estados?                       @relation(fields: [estadoId], references: [id])
-  modelo            Modelo                         @relation(fields: [modeloId], references: [id])
-  status            Status?                        @relation(fields: [statusId], references: [id])
-  tipoEquipo        TipoEquipo                     @relation(fields: [tipoEquipoId], references: [id])
-  usuario           Usuario?                       @relation(fields: [usuarioId], references: [id])
+
+  especificaciones  EspecificacionesAdicionales? @relation(fields: [especificacionesId], references: [id])
+  estado            Estados?                     @relation(fields: [estadoId], references: [id])
+  modelo            Modelo                       @relation(fields: [modeloId], references: [id])
+  status            Status?                      @relation(fields: [statusId], references: [id])
+  tipoEquipo        TipoEquipo                   @relation(fields: [tipoEquipoId], references: [id])
+  usuario           Usuario?                     @relation(fields: [usuarioId], references: [id])
   ticketEquipos     TicketEquipo[]
   deshabilitacionesHistorial DesincorporacionHistorialEquipos[]
   reasignacionesHistorial ReasignacionHistorialEquipos[]
+
+  @@map("equipos")
 }
 
 model DesincorporacionHistorialEquipos {
-  id                    Int       @id @default(autoincrement())
-  equipoId              Int
-  motivo                String
-  fechaDeshabilitacion  DateTime  @default(now())
-  deshabilitadoPorId    Int
-  statusAnteriorId      Int
-  statusNuevoId         Int
-  estadoNuevoId         Int?  
-  estadoAnteriorId      Int?
+  id                Int      @id @default(autoincrement())
+  equipoId          Int
+  motivo            String
+  fechaDeshabilitacion DateTime @default(now())
+  deshabilitadoPorId Int
+  statusAnteriorId  Int
+  statusNuevoId     Int
+  estadoNuevoId     Int?
+  estadoAnteriorId  Int?
 
-  equipo                Equipos   @relation(fields: [equipoId], references: [id])
-  deshabilitadoPor      Usuario   @relation("DeshabilitacionesEquiposRealizadas", fields: [deshabilitadoPorId], references: [id])
-  statusAnterior        Status    @relation("StatusAnterior", fields: [statusAnteriorId], references: [id])
-  statusNuevo           Status    @relation("StatusNuevo", fields: [statusNuevoId], references: [id])
-  estadoAnterior Estados? @relation("EstadoAnterior", fields: [estadoAnteriorId], references: [id]) 
-  estadoNuevo Estados? @relation("EstadoNuevo", fields: [estadoNuevoId], references: [id])
+  equipo            Equipos  @relation(fields: [equipoId], references: [id])
+  deshabilitadoPor  Usuario  @relation("DeshabilitacionesEquiposRealizadas", fields: [deshabilitadoPorId], references: [id])
+  statusAnterior    Status   @relation("StatusAnterior", fields: [statusAnteriorId], references: [id])
+  statusNuevo       Status   @relation("StatusNuevo", fields: [statusNuevoId], references: [id])
+  estadoAnterior    Estados? @relation("EstadoAnterior", fields: [estadoAnteriorId], references: [id])
+  estadoNuevo       Estados? @relation("EstadoNuevo", fields: [estadoNuevoId], references: [id])
 
   @@map("deshabilitacion_historial_equipos")
 }
 
 model EspecificacionesAdicionales {
-  id             Int       @id @default(autoincrement())
-  memoriaRam     String?
-  modulosRam     String?
-  capacidadDisco String?
-  tipoDisco      String?
-  procesador     String?
-  equipos        Equipos[]
+  id              Int      @id @default(autoincrement())
+  memoriaRam      String?
+  modulosRam      String?
+  capacidadDisco  String?
+  tipoDisco       String?
+  procesador      String?
+  equipos         Equipos[]
+
+  @@map("especificaciones_adicionales")
 }
 
 model Marca {
-  id      Int      @id @default(autoincrement())
-  nombre  String   @unique
+  id      Int     @id @default(autoincrement())
+  nombre  String  @unique
   modelos Modelo[]
+
+  @@map("marcas")
 }
 
 model Modelo {
-  id      Int       @id @default(autoincrement())
-  nombre  String    @unique
+  id      Int      @id @default(autoincrement())
+  nombre  String   @unique
   marcaId Int
   equipos Equipos[]
-  marca   Marca     @relation(fields: [marcaId], references: [id])
+  marca   Marca    @relation(fields: [marcaId], references: [id])
+
+  @@map("modelos")
 }
 
 model Status {
-  id                        Int                               @id @default(autoincrement())
+  id                        Int                             @id @default(autoincrement())
   estado                    String
   equipos                   Equipos[]
   deshabilitacionesAnteriores DesincorporacionHistorialEquipos[] @relation("StatusAnterior")
   deshabilitacionesNuevas   DesincorporacionHistorialEquipos[] @relation("StatusNuevo")
+
+  @@map("status")
 }
 
 model Estados {
-  id     Int       @id @default(autoincrement())
-  nombre String
-  equipos Equipos[]
-
+  id                        Int                             @id @default(autoincrement())
+  nombre                    String
+  equipos                   Equipos[]
   deshabilitacionesAnteriores DesincorporacionHistorialEquipos[] @relation("EstadoAnterior")
-  deshabilitacionesNuevas DesincorporacionHistorialEquipos[] @relation("EstadoNuevo") 
+  deshabilitacionesNuevas   DesincorporacionHistorialEquipos[] @relation("EstadoNuevo")
+
+  @@map("estados")
 }
 
 model Sistema {
-  id      Int      @id @default(autoincrement())
-  nombre  String   @unique
-  estado  String   @default("Activo")
+  id      Int            @id @default(autoincrement())
+  nombre  String         @unique
+  estado  String         @default("Activo")
   tickets TicketSistema[]
 
   @@map("sistemas")
 }
 
 model Falla {
-  id     Int      @id @default(autoincrement())
-  nombre String   @unique
+  id      Int            @id @default(autoincrement())
+  nombre  String         @unique
   tickets TicketSistema[]
 
   @@map("fallas")
 }
 
 model TicketSistema {
-  id              Int      @id @default(autoincrement())
-  ticketId        Int
-  sistemaId       Int
-  fallaId         Int
+  id                Int @id @default(autoincrement())
+  ticketId          Int
+  sistemaId         Int
+  fallaId           Int
   usuarioAfectadoId Int
 
-  ticket          Ticket   @relation(fields: [ticketId], references: [id])
-  sistema         Sistema  @relation(fields: [sistemaId], references: [id])
-  falla           Falla    @relation(fields: [fallaId], references: [id])
-  usuarioAfectado Usuario  @relation(fields: [usuarioAfectadoId], references: [id])
+  ticket          Ticket @relation(fields: [ticketId], references: [id])
+  sistema         Sistema @relation(fields: [sistemaId], references: [id])
+  falla           Falla @relation(fields: [fallaId], references: [id])
+  usuarioAfectado Usuario @relation(fields: [usuarioAfectadoId], references: [id])
 
   @@unique([ticketId])
   @@map("ticket_sistemas")
 }
+
 model ReasignacionHistorialEquipos {
-  id Int @id @default(autoincrement())
-  equipoId Int
+  id              Int      @id @default(autoincrement())
+  equipoId        Int
   usuarioAnteriorId Int?
-  usuarioNuevoId Int?
-  motivo String?
+  usuarioNuevoId    Int?
+  motivo          String?
   reasignadoPorId Int
   fechaReasignacion DateTime @default(now())
 
-  equipo Equipos @relation(fields: [equipoId], references: [id])
+  equipo        Equipos @relation(fields: [equipoId], references: [id])
   usuarioAnterior Usuario? @relation("ReasignacionEquipoAnterior", fields: [usuarioAnteriorId], references: [id])
-  usuarioNuevo Usuario? @relation("ReasignacionEquipoNueva", fields: [usuarioNuevoId], references: [id])
+  usuarioNuevo    Usuario? @relation("ReasignacionEquipoNueva", fields: [usuarioNuevoId], references: [id])
   reasignadoPor Usuario @relation("ReasignacionEquipoRealizada", fields: [reasignadoPorId], references: [id])
 
   @@map("reasignacion_historial_equipos")
+}
+model EventoExterno {
+  id                  Int      @id @default(autoincrement())
+  nombre              String
+  descripcion         String?
+  fechaInicial        DateTime
+  fechaFinal          DateTime
+  estado              String   @default("En proceso")
+  usuarioSolicitanteId Int
+  usuarioAsignadoId   Int
+  direccionId         Int
+  pisoId              Int
+  fechaCreacion       DateTime @default(now())
+  
+  usuarioSolicitante  Usuario     @relation("EventosSolicitados", fields: [usuarioSolicitanteId], references: [id])
+  usuarioAsignado     Usuario     @relation("EventosAsignados", fields: [usuarioAsignadoId], references: [id])
+  direccion           Direcciones @relation(fields: [direccionId], references: [id])
+  piso                Piso        @relation(fields: [pisoId], references: [id])
+  equiposEvento       EquipoEvento[]
+  
+  @@map("eventos_externos")
+}
+
+model EquipoEvento {
+  id           Int       @id @default(autoincrement())
+  eventoId     Int
+  tipoEquipoId Int
+  cantidad     Int
+  
+  evento     EventoExterno @relation(fields: [eventoId], references: [id])
+  tipoEquipo TipoEquipo    @relation(fields: [tipoEquipoId], references: [id])
+  
+  @@map("equipos_evento")
 }
