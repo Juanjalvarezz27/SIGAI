@@ -6,8 +6,13 @@ import { EventoExterno } from '../../../types/eventos';
 import ModalAceptarEvento from './ModalAceptarEvento';
 import ModalRechazarEvento from './ModalRechazarEvento';
 
-export default function ListaEventosExternos() {
+interface ListaEventosExternosProps {
+  filtro?: string;
+}
+
+export default function ListaEventosExternos({ filtro = 'todos' }: ListaEventosExternosProps) {
   const [eventos, setEventos] = useState<EventoExterno[]>([]);
+  const [eventosFiltrados, setEventosFiltrados] = useState<EventoExterno[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [descripcionAbierta, setDescripcionAbierta] = useState<{[key: number]: boolean}>({});
@@ -19,6 +24,15 @@ export default function ListaEventosExternos() {
   useEffect(() => {
     fetchEventos();
   }, []);
+
+  useEffect(() => {
+    if (filtro === 'todos') {
+      setEventosFiltrados(eventos);
+    } else {
+      const filtrados = eventos.filter(evento => evento.estado === filtro);
+      setEventosFiltrados(filtrados);
+    }
+  }, [eventos, filtro]);
 
   const fetchEventos = async (): Promise<void> => {
     try {
@@ -80,6 +94,30 @@ export default function ListaEventosExternos() {
     } catch (error) {
       console.error('Error actualizando estado:', error);
       alert('Error al actualizar el estado. Por favor, intente nuevamente.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const volverAEnProceso = async (eventoId: number): Promise<void> => {
+    setUpdatingId(eventoId);
+    try {
+      const response = await fetch(`/api/eventos-externos/${eventoId}/reset-estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        await fetchEventos();
+      } else {
+        const errorData: { error?: string } = await response.json();
+        alert(`Error: ${errorData.error || 'No se pudo volver a En proceso'}`);
+      }
+    } catch (error) {
+      console.error('Error volviendo a En proceso:', error);
+      alert('Error al volver a En proceso. Por favor, intente nuevamente.');
     } finally {
       setUpdatingId(null);
     }
@@ -151,15 +189,27 @@ export default function ListaEventosExternos() {
     );
   }
 
-  if (eventos.length === 0) {
+  if (eventosFiltrados.length === 0) {
+    const mensajes = {
+      'todos': 'No hay eventos externos',
+      'En proceso': 'No hay eventos en proceso',
+      'Aceptado': 'No hay eventos aceptados',
+      'Rechazado': 'No hay eventos rechazados'
+    };
+
     return (
       <div className="text-center py-12 animate-fade-in">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Cpu className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay eventos externos</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          {mensajes[filtro as keyof typeof mensajes] || 'No hay eventos'}
+        </h3>
         <p className="text-gray-500">
-          No se han creado eventos externos aún.
+          {filtro === 'todos' 
+            ? 'No se han creado eventos externos aún.'
+            : `No se encontraron eventos con estado "${filtro}".`
+          }
         </p>
       </div>
     );
@@ -168,7 +218,7 @@ export default function ListaEventosExternos() {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
-        {eventos.map((evento: EventoExterno) => (
+        {eventosFiltrados.map((evento: EventoExterno) => (
           <div key={evento.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 animate-fade-in-up">
             {/* Header con título y estado */}
             <div className="flex items-start justify-between mb-4">
@@ -190,17 +240,17 @@ export default function ListaEventosExternos() {
                   <div>
                     <p className="text-sm font-bold text-gray-700">Solicitante</p>
                     <p className="text-sm text-gray-600">
-                      {evento.usuarioSolicitante.nombre} {evento.usuarioSolicitante.apellido}
+                      {evento.usuarioSolicitante.nombre} {evento.usuarioSolicitante.apellido || ''}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <User size={16} className="text-gray-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-bold text-gray-700">Asignado a</p>
                     <p className="text-sm text-gray-600">
-                      {evento.usuarioAsignado.nombre} {evento.usuarioAsignado.apellido}
+                      {evento.usuarioAsignado.nombre} {evento.usuarioAsignado.apellido || ''}
                     </p>
                   </div>
                 </div>
@@ -217,7 +267,7 @@ export default function ListaEventosExternos() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <Calendar size={16} className="text-gray-400 mt-0.5 shrink-0" />
                   <div>
@@ -276,8 +326,8 @@ export default function ListaEventosExternos() {
                   <div className="mt-2 animate-slide-down">
                     <div className="grid grid-cols-2 gap-2">
                       {evento.equiposEvento.map((equipo, index: number) => (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex items-center justify-between transition-colors duration-300 hover:bg-green-100"
                         >
                           <span className="text-sm font-medium text-green-700 truncate">
@@ -322,7 +372,7 @@ export default function ListaEventosExternos() {
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-2">
                       <span>
-                        Por: {evento.estadoDetalle.usuario.nombre} {evento.estadoDetalle.usuario.apellido}
+                        Por: {evento.estadoDetalle.usuario.nombre} {evento.estadoDetalle.usuario.apellido || ''}
                       </span>
                       <span>
                         {formatFechaCompleta(evento.estadoDetalle.fecha)}
@@ -355,7 +405,7 @@ export default function ListaEventosExternos() {
               )}
               {(evento.estado === 'Aceptado' || evento.estado === 'Rechazado') && (
                 <button
-                  onClick={() => cambiarEstado(evento.id, 'En proceso')}
+                  onClick={() => volverAEnProceso(evento.id)}
                   disabled={updatingId === evento.id}
                   className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
                 >
