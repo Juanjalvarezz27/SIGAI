@@ -9,6 +9,19 @@ export interface TipoEquipo {
   nombre: string;
 }
 
+export interface EventoExternoEstado {
+  id: number;
+  eventoId: number;
+  estado: string;
+  motivo: string | null;
+  usuarioId: number;
+  fecha: string;
+  usuario: {
+    nombre: string;
+    apellido: string | null;
+  };
+}
+
 export interface EventoExterno {
   id: number;
   nombre: string;
@@ -44,6 +57,7 @@ export interface EventoExterno {
       nombre: string;
     };
   }[];
+  estadoDetalle?: EventoExternoEstado;
 }
 
 export interface CreateEventoData {
@@ -56,6 +70,11 @@ export interface CreateEventoData {
 
 export interface UpdateEventoData {
   estado: string;
+}
+
+export interface CambioEstadoData {
+  estado: string;
+  motivo?: string;
 }
 
 export interface UsuarioCompleto {

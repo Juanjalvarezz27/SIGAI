@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Cpu, CheckCircle } from 'lucide-react';
 import SeleccionEquipos from './SeleccionEquipos';
@@ -27,6 +27,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
   const [usuarioInfo, setUsuarioInfo] = useState<UsuarioCompleto | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string>('');
   
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
@@ -34,6 +35,8 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
     fechaInicial: '',
     fechaFinal: ''
   });
+
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Obtener información completa del usuario
   useEffect(() => {
@@ -61,15 +64,24 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
     }
   }, [isOpen, session]);
 
-  // Efecto para el mensaje de éxito
+  // Efecto para el mensaje de éxito y scroll automático
   useEffect(() => {
-    if (showSuccess) {
+    if (showSuccess && modalRef.current) {
+      // Hacer scroll al principio del modal
+      modalRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      
       const timer = setTimeout(() => {
         setShowSuccess(false);
+        setSuccessMessage('');
+        onClose();
+        onEventCreated();
+        // Reset form
+        setFormData({ nombre: '', descripcion: '', fechaInicial: '', fechaFinal: '' });
+        setEquiposSeleccionados([]);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [showSuccess]);
+  }, [showSuccess, onClose, onEventCreated]);
 
   // Función para obtener la fecha mínima (hoy)
   const getMinDate = (): string => {
@@ -151,14 +163,9 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
       });
 
       if (response.ok) {
+        const eventoCreado = await response.json();
+        setSuccessMessage(`Evento "${eventoCreado.nombre}" creado exitosamente`);
         setShowSuccess(true);
-        setTimeout(() => {
-          onEventCreated();
-          onClose();
-          // Reset form
-          setFormData({ nombre: '', descripcion: '', fechaInicial: '', fechaFinal: '' });
-          setEquiposSeleccionados([]);
-        }, 1000);
       } else {
         const errorData: { error?: string } = await response.json();
         alert(`Error: ${errorData.error || 'No se pudo crear el evento'}`);
@@ -180,6 +187,8 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
   const handleClose = (): void => {
     setFormData({ nombre: '', descripcion: '', fechaInicial: '', fechaFinal: '' });
     setEquiposSeleccionados([]);
+    setShowSuccess(false);
+    setSuccessMessage('');
     onClose();
   };
 
@@ -193,16 +202,20 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
   return (
     <>
       <div className="fixed inset-0 bg-black/[0.5] flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div 
+          ref={modalRef}
+          className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        >
           <h2 className="text-xl font-bold mb-4">Nuevo Evento Externo</h2>
           
           {/* Mensaje de éxito */}
           {showSuccess && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 animate-in fade-in duration-300">
-              <CheckCircle className="text-green-600" size={20} />
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 animate-fade-in">
+              <CheckCircle className="text-green-600" size={30} />
               <div>
-                <p className="text-green-800 font-medium">¡Evento solicitado con éxito!</p>
-                <p className="text-green-600 text-sm">El evento ha sido creado y está en proceso de revisión.</p>
+                <p className="text-green-800 font-medium">¡Evento creado exitosamente!</p>
+                <p className="text-green-600 text-sm">{successMessage}</p>
+                <p className="text-green-500 text-xs mt-1">El modal se cerrará automáticamente...</p>
               </div>
             </div>
           )}
@@ -251,7 +264,8 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                     <p className="mt-1 text-xs text-gray-500">
                       Área: {usuarioInfo.area}
                     </p>
-                  </>
+                  </
+>
                 ) : (
                   <p className="mt-1 text-sm text-red-500">Error cargando ubicación</p>
                 )}
@@ -270,6 +284,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                 onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el nombre del evento"
+                disabled={showSuccess}
               />
             </div>
 
@@ -285,6 +300,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                   min={getMinDate()}
                   onChange={(e) => handleFechaChange('fechaInicial', e.target.value)}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={showSuccess}
                 />
                 <p className="text-xs text-gray-500 mt-1">No puede ser anterior a la fecha actual</p>
               </div>
@@ -299,6 +315,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                   min={formData.fechaInicial || getMinDate()}
                   onChange={(e) => handleFechaChange('fechaFinal', e.target.value)}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={showSuccess}
                 />
                 <p className="text-xs text-gray-500 mt-1">Debe ser posterior o igual a la fecha inicial</p>
               </div>
@@ -314,6 +331,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                 rows={3}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Descripción detallada del evento..."
+                disabled={showSuccess}
               />
             </div>
 
@@ -331,7 +349,8 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
               <button
                 type="button"
                 onClick={() => setShowModalEquipos(true)}
-                className="w-full border-2 border-dashed border-gray-300 rounded-md px-3 py-4 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center"
+                disabled={showSuccess}
+                className="w-full border-2 border-dashed border-gray-300 rounded-md px-3 py-4 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Cpu size={16} className="mr-2" />
                 <span>Seleccionar Equipos</span>
@@ -360,16 +379,25 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                 type="button"
                 onClick={handleClose}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 transition-colors cursor-pointer"
               >
-                Cancelar
+                {showSuccess ? 'Cerrar' : 'Cancelar'}
               </button>
               <button
                 type="submit"
-                disabled={isLoading || isLoadingUser || !usuarioInfo}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={isLoading || isLoadingUser || !usuarioInfo || showSuccess}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
-                {isLoading ? 'Creando...' : 'Crear Evento'}
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                    Creando...
+                  </>
+                ) : showSuccess ? (
+                  '¡Creado!'
+                ) : (
+                  'Crear Evento'
+                )}
               </button>
             </div>
           </form>

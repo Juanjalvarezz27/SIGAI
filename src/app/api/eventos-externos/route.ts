@@ -26,6 +26,13 @@ export async function GET() {
               select: { nombre: true }
             }
           }
+        },
+        estadoDetalle: {
+          include: {
+            usuario: {
+              select: { nombre: true, apellido: true }
+            }
+          }
         }
       },
       orderBy: {

@@ -76,6 +76,7 @@ model Usuario {
   TicketSistema                    TicketSistema[]
   eventosSolicitados               EventoExterno[]                @relation("EventosSolicitados")
   eventosAsignados                 EventoExterno[]                @relation("EventosAsignados")
+  cambiosEstadoEvento              EventoExternoEstado[]
 
   @@map("usuarios")
 }
@@ -374,23 +375,24 @@ model ReasignacionHistorialEquipos {
   @@map("reasignacion_historial_equipos")
 }
 model EventoExterno {
-  id                  Int      @id @default(autoincrement())
-  nombre              String
-  descripcion         String?
-  fechaInicial        DateTime
-  fechaFinal          DateTime
-  estado              String   @default("En proceso")
+  id Int @id @default(autoincrement())
+  nombre String
+  descripcion String?
+  fechaInicial DateTime
+  fechaFinal DateTime
+  estado String @default("En proceso")
   usuarioSolicitanteId Int
-  usuarioAsignadoId   Int
-  direccionId         Int
-  pisoId              Int
-  fechaCreacion       DateTime @default(now())
+  usuarioAsignadoId Int
+  direccionId Int
+  pisoId Int
+  fechaCreacion DateTime @default(now())
   
-  usuarioSolicitante  Usuario     @relation("EventosSolicitados", fields: [usuarioSolicitanteId], references: [id])
-  usuarioAsignado     Usuario     @relation("EventosAsignados", fields: [usuarioAsignadoId], references: [id])
-  direccion           Direcciones @relation(fields: [direccionId], references: [id])
-  piso                Piso        @relation(fields: [pisoId], references: [id])
-  equiposEvento       EquipoEvento[]
+  usuarioSolicitante Usuario @relation("EventosSolicitados", fields: [usuarioSolicitanteId], references: [id])
+  usuarioAsignado Usuario @relation("EventosAsignados", fields: [usuarioAsignadoId], references: [id])
+  direccion Direcciones @relation(fields: [direccionId], references: [id])
+  piso Piso @relation(fields: [pisoId], references: [id])
+  equiposEvento EquipoEvento[]
+  estadoDetalle EventoExternoEstado? 
   
   @@map("eventos_externos")
 }
@@ -405,4 +407,18 @@ model EquipoEvento {
   tipoEquipo TipoEquipo    @relation(fields: [tipoEquipoId], references: [id])
   
   @@map("equipos_evento")
+}
+
+model EventoExternoEstado {
+  id Int @id @default(autoincrement())
+  eventoId Int @unique
+  estado String
+  motivo String?
+  usuarioId Int
+  fecha DateTime @default(now())
+  
+  evento EventoExterno @relation(fields: [eventoId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  
+  @@map("evento_externo_estado")
 }
