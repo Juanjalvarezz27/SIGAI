@@ -8,9 +8,13 @@ import ModalRechazarEvento from './ModalRechazarEvento';
 
 interface ListaEventosExternosProps {
   filtro?: string;
+  eventoSeleccionado?: number; // ID del evento seleccionado por búsqueda
 }
 
-export default function ListaEventosExternos({ filtro = 'todos' }: ListaEventosExternosProps) {
+export default function ListaEventosExternos({ 
+  filtro = 'todos', 
+  eventoSeleccionado 
+}: ListaEventosExternosProps) {
   const [eventos, setEventos] = useState<EventoExterno[]>([]);
   const [eventosFiltrados, setEventosFiltrados] = useState<EventoExterno[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -219,7 +223,14 @@ export default function ListaEventosExternos({ filtro = 'todos' }: ListaEventosE
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
         {eventosFiltrados.map((evento: EventoExterno) => (
-          <div key={evento.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 animate-fade-in-up">
+          <div 
+            key={evento.id} 
+            className={`bg-white rounded-xl shadow-sm border-2 p-6 hover:shadow-md transition-all duration-300 animate-fade-in-up ${
+              eventoSeleccionado === evento.id 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200'
+            }`}
+          >
             {/* Header con título y estado */}
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 pr-4">
