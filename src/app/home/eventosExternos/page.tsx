@@ -8,6 +8,7 @@ import ListaEventosExternos from "@/components/eventos/ListaEventosExternos";
 import FiltroEventosExternos from "@/components/eventos/FiltroEventosExternos";
 import BarraBusquedaEventos from "@/components/eventos/BarraBusquedaEventos";
 import FiltroUbicacion, { FiltroUbicacionTipo } from "../../../components/personal/FiltroUbicacion";
+import FiltroPeriodo from "@/components/tickets/FiltroPeriodo";
 import PaginacionSuperiorEventos from "@/components/eventos/PaginacionSuperiorEventos";
 import PaginacionInferiorEventos from "@/components/eventos/PaginacionInferiorEventos";
 import { EventoExterno, PaginationInfo } from '../../../../types/eventos';
@@ -17,6 +18,10 @@ export default function EventosExternos() {
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const [filtroSeleccionado, setFiltroSeleccionado] = useState<string>('todos');
   const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null);
+  const [filtroPeriodo, setFiltroPeriodo] = useState<{ fechaInicio: Date | null; fechaFin: Date | null }>({
+    fechaInicio: null,
+    fechaFin: null
+  });
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EventoExterno | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -53,6 +58,12 @@ export default function EventosExternos() {
         }
       }
 
+      // Agregar filtros de período si existen
+      if (filtroPeriodo.fechaInicio && filtroPeriodo.fechaFin) {
+        params.append('fechaInicio', filtroPeriodo.fechaInicio.toISOString());
+        params.append('fechaFin', filtroPeriodo.fechaFin.toISOString());
+      }
+
       const response = await fetch(`/api/eventos-externos?${params}`);
       if (response.ok) {
         const data = await response.json();
@@ -69,7 +80,7 @@ export default function EventosExternos() {
 
   useEffect(() => {
     fetchEventos();
-  }, [currentPage, filtroSeleccionado, filtroUbicacion]);
+  }, [currentPage, filtroSeleccionado, filtroUbicacion, filtroPeriodo]);
 
   const handleEventCreated = (): void => {
     setRefreshKey(prev => prev + 1);
@@ -85,6 +96,12 @@ export default function EventosExternos() {
 
   const handleFiltroUbicacionChange = (filtro: FiltroUbicacionTipo): void => {
     setFiltroUbicacion(filtro);
+    setEventoSeleccionado(null);
+    setCurrentPage(1);
+  };
+
+  const handleFiltroPeriodoChange = (fechaInicio: Date | null, fechaFin: Date | null): void => {
+    setFiltroPeriodo({ fechaInicio, fechaFin });
     setEventoSeleccionado(null);
     setCurrentPage(1);
   };
@@ -114,6 +131,10 @@ export default function EventosExternos() {
 
   const limpiarFiltroUbicacion = (): void => {
     setFiltroUbicacion(null);
+  };
+
+  const limpiarFiltroPeriodo = (): void => {
+    setFiltroPeriodo({ fechaInicio: null, fechaFin: null });
   };
 
   return (
@@ -173,6 +194,7 @@ export default function EventosExternos() {
               </div>
             </div>
           )}
+
         </div>
 
         {/* Paginación Superior */}
@@ -184,23 +206,34 @@ export default function EventosExternos() {
           filtro={filtroSeleccionado}
         />
 
-        {/* Filtros de ubicación */}
-        <div className="mb-6">
-              <FiltroUbicacion
-                onFiltroChange={handleFiltroUbicacionChange}
-                loading={isLoading}
-              />
+        {/* Filtros de ubicación y período */}
+        <div className="flex gap-6 mb-6">
+          {/* Filtro de ubicación */}
+              <div>
+                <FiltroUbicacion
+                  onFiltroChange={handleFiltroUbicacionChange}
+                  loading={isLoading}
+                />
+              </div>
+
+          {/* Filtro de período */}
+          <div>
+                <FiltroPeriodo
+                  onFiltroChange={handleFiltroPeriodoChange}
+                  loading={isLoading}
+                />
+              </div>
         </div>
 
         {/* Lista de eventos con ref para scroll */}
         <div ref={listaRef}>
           <ListaEventosExternos 
-            key={`${refreshKey}-${filtroSeleccionado}-${JSON.stringify(filtroUbicacion)}-${currentPage}`} 
+            key={`${refreshKey}-${filtroSeleccionado}-${JSON.stringify(filtroUbicacion)}-${JSON.stringify(filtroPeriodo)}-${currentPage}`} 
             filtro={filtroSeleccionado}
             filtroUbicacion={filtroUbicacion}
+            filtroPeriodo={filtroPeriodo}
             eventoSeleccionado={eventoSeleccionado?.id}
             currentPage={currentPage}
-            onPageChange={handlePageChange}
             isLoading={isLoading}
           />
         </div>

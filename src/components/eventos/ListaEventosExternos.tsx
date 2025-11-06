@@ -10,15 +10,16 @@ import ModalRechazarEvento from './ModalRechazarEvento';
 interface ListaEventosExternosProps {
   filtro?: string;
   filtroUbicacion?: FiltroUbicacionTipo;
+  filtroPeriodo?: { fechaInicio: Date | null; fechaFin: Date | null };
   eventoSeleccionado?: number;
   currentPage?: number;
-  onPageChange?: (page: number) => void;
   isLoading?: boolean;
 }
 
 export default function ListaEventosExternos({ 
   filtro = 'todos', 
   filtroUbicacion = null,
+  filtroPeriodo = { fechaInicio: null, fechaFin: null },
   eventoSeleccionado,
   currentPage = 1,
   isLoading = false
@@ -33,7 +34,7 @@ export default function ListaEventosExternos({
 
   useEffect(() => {
     fetchEventos();
-  }, [currentPage, filtro, filtroUbicacion]);
+  }, [currentPage, filtro, filtroUbicacion, filtroPeriodo]);
 
   const fetchEventos = async (): Promise<void> => {
     try {
@@ -61,6 +62,12 @@ export default function ListaEventosExternos({
             });
             break;
         }
+      }
+
+      // Agregar filtros de período si existen
+      if (filtroPeriodo.fechaInicio && filtroPeriodo.fechaFin) {
+        params.append('fechaInicio', filtroPeriodo.fechaInicio.toISOString());
+        params.append('fechaFin', filtroPeriodo.fechaFin.toISOString());
       }
 
       const response = await fetch(`/api/eventos-externos?${params}`);
@@ -416,19 +423,19 @@ export default function ListaEventosExternos({
             )}
 
             {/* Botones de acción */}
-            <div className="flex flex-wrap justify-end gap-2 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap justify-center gap-2 pt-4 border-t border-gray-200">
               {evento.estado === 'En proceso' && (
                 <>
                   <button
                     onClick={() => setModalAceptarAbierto(evento.id)}
-                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-md font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
                   >
                     <CheckCircle size={14} />
                     Aceptar
                   </button>
                   <button
                     onClick={() => setModalRechazarAbierto(evento.id)}
-                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-md font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
                   >
                     <XCircle size={14} />
                     Rechazar
