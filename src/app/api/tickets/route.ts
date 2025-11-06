@@ -1,4 +1,3 @@
-// app/api/tickets/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { getServerSession } from "next-auth";
