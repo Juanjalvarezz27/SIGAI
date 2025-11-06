@@ -1,37 +1,97 @@
 'use client';
 
-import { useState, useRef} from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import Title from "@/components/Title";
 import ModalNuevoEvento from "@/components/eventos/ModalNuevoEvento";
 import ListaEventosExternos from "@/components/eventos/ListaEventosExternos";
 import FiltroEventosExternos from "@/components/eventos/FiltroEventosExternos";
 import BarraBusquedaEventos from "@/components/eventos/BarraBusquedaEventos";
-import { EventoExterno } from '../../../../types/eventos';
+import FiltroUbicacion, { FiltroUbicacionTipo } from "../../../components/personal/FiltroUbicacion";
+import PaginacionSuperiorEventos from "@/components/eventos/PaginacionSuperiorEventos";
+import PaginacionInferiorEventos from "@/components/eventos/PaginacionInferiorEventos";
+import { EventoExterno, PaginationInfo } from '../../../../types/eventos';
 
 export default function EventosExternos() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const [filtroSeleccionado, setFiltroSeleccionado] = useState<string>('todos');
+  const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EventoExterno | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const listaRef = useRef<HTMLDivElement>(null);
+
+  // Función para cargar eventos
+  const fetchEventos = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '10'
+      });
+
+      if (filtroSeleccionado !== 'todos') {
+        params.append('estado', filtroSeleccionado);
+      }
+
+      // Agregar filtros de ubicación si existen
+      if (filtroUbicacion) {
+        switch (filtroUbicacion.tipo) {
+          case 'piso':
+            params.append('pisoId', filtroUbicacion.valor.toString());
+            break;
+          case 'direccion':
+            params.append('direccionId', filtroUbicacion.valor.toString());
+            break;
+          case 'multi-piso':
+            filtroUbicacion.valores.forEach(id => {
+              params.append('pisoIds', id.toString());
+            });
+            break;
+        }
+      }
+
+      const response = await fetch(`/api/eventos-externos?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPagination(data.pagination || null);
+      } else {
+        console.error('Error fetching eventos');
+      }
+    } catch (error) {
+      console.error('Error fetching eventos:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEventos();
+  }, [currentPage, filtroSeleccionado, filtroUbicacion]);
 
   const handleEventCreated = (): void => {
     setRefreshKey(prev => prev + 1);
     setEventoSeleccionado(null);
-    setCurrentPage(1); // Volver a la primera página al crear nuevo evento
+    setCurrentPage(1);
   };
 
   const handleFiltroChange = (filtro: string): void => {
     setFiltroSeleccionado(filtro);
     setEventoSeleccionado(null);
-    setCurrentPage(1); // Resetear a página 1 al cambiar filtro
+    setCurrentPage(1);
+  };
+
+  const handleFiltroUbicacionChange = (filtro: FiltroUbicacionTipo): void => {
+    setFiltroUbicacion(filtro);
+    setEventoSeleccionado(null);
+    setCurrentPage(1);
   };
 
   const handleEventoSeleccionado = (evento: EventoExterno): void => {
     setEventoSeleccionado(evento);
-    setCurrentPage(1); // Ir a página 1 al seleccionar búsqueda
+    setCurrentPage(1);
     
     setTimeout(() => {
       if (listaRef.current) {
@@ -45,10 +105,15 @@ export default function EventosExternos() {
 
   const handlePageChange = (page: number): void => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const limpiarBusqueda = (): void => {
     setEventoSeleccionado(null);
+  };
+
+  const limpiarFiltroUbicacion = (): void => {
+    setFiltroUbicacion(null);
   };
 
   return (
@@ -59,8 +124,8 @@ export default function EventosExternos() {
       <div className="container mx-auto px-4 py-8">
         {/* Header con filtros y búsqueda */}
         <div className="mb-8">
-          {/* Primera fila: Filtro toggle y botón nuevo evento */}
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+          {/* Filtro toggle y botón nuevo evento */}
+          <div className="flex flex-col lg:flex-row justify-center items-center gap-4 mb-6">
             <div className="w-full lg:w-auto">
               <FiltroEventosExternos
                 filtroSeleccionado={filtroSeleccionado}
@@ -70,14 +135,14 @@ export default function EventosExternos() {
             
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-[#001f3f] text-white px-6 py-3 rounded-lg hover:bg-blue-900 transition-colors font-medium flex items-center gap-2 shadow-sm whitespace-nowrap w-full lg:w-auto justify-center"
+              className="bg-[#001f3f] text-white px-6 py-3 rounded-lg hover:bg-blue-900 transition-colors -mt-9 font-medium flex items-center gap-2 shadow-sm whitespace-nowrap w-full lg:w-auto justify-center"
             >
               <span>+</span>
               <span>Nuevo Evento</span>
             </button>
           </div>
 
-          {/* Segunda fila: Barra de búsqueda completa */}
+          {/* Barra de búsqueda completa */}
           <div className="w-full">
             <BarraBusquedaEventos
               onEventoSeleccionado={handleEventoSeleccionado}
@@ -87,36 +152,66 @@ export default function EventosExternos() {
           </div>
         </div>
 
-        {/* Indicador de búsqueda activa */}
-        {eventoSeleccionado && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <p className="text-sm text-blue-700">
-                Resultado de búsqueda: <strong>{eventoSeleccionado.nombre}</strong>
-                <span className="ml-2 text-blue-600">
-                  • {eventoSeleccionado.usuarioSolicitante.nombre} {eventoSeleccionado.usuarioSolicitante.apellido || ''}
-                </span>
-              </p>
-              <button
-                onClick={limpiarBusqueda}
-                className="text-blue-500 hover:text-blue-700 underline text-sm whitespace-nowrap"
-              >
-                Mostrar todos los eventos
-              </button>
+        {/* Indicadores de filtros activos */}
+        <div className="space-y-3 mb-6">
+          {/* Indicador de búsqueda activa */}
+          {eventoSeleccionado && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <p className="text-sm text-blue-700">
+                  Resultado de búsqueda: <strong>{eventoSeleccionado.nombre}</strong>
+                  <span className="ml-2 text-blue-600">
+                    • {eventoSeleccionado.usuarioSolicitante.nombre} {eventoSeleccionado.usuarioSolicitante.apellido || ''}
+                  </span>
+                </p>
+                <button
+                  onClick={limpiarBusqueda}
+                  className="text-blue-500 hover:text-blue-700 underline text-sm whitespace-nowrap"
+                >
+                  Mostrar todos los eventos
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Paginación Superior */}
+        <PaginacionSuperiorEventos
+          pagination={pagination}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          loading={isLoading}
+          filtro={filtroSeleccionado}
+        />
+
+        {/* Filtros de ubicación */}
+        <div className="mb-6">
+              <FiltroUbicacion
+                onFiltroChange={handleFiltroUbicacionChange}
+                loading={isLoading}
+              />
+        </div>
 
         {/* Lista de eventos con ref para scroll */}
         <div ref={listaRef}>
           <ListaEventosExternos 
-            key={`${refreshKey}-${filtroSeleccionado}`} 
+            key={`${refreshKey}-${filtroSeleccionado}-${JSON.stringify(filtroUbicacion)}-${currentPage}`} 
             filtro={filtroSeleccionado}
+            filtroUbicacion={filtroUbicacion}
             eventoSeleccionado={eventoSeleccionado?.id}
             currentPage={currentPage}
             onPageChange={handlePageChange}
+            isLoading={isLoading}
           />
         </div>
+
+        {/* Paginación Inferior */}
+        <PaginacionInferiorEventos
+          pagination={pagination}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          loading={isLoading}
+        />
 
         <ModalNuevoEvento
           isOpen={isModalOpen}

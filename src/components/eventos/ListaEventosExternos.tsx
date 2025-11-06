@@ -2,28 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { Cpu, User, MapPin, Calendar, Clock, CheckCircle, XCircle, RotateCcw, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
-import { EventoExterno, PaginationInfo } from '../../../types/eventos';
+import { EventoExterno } from '../../../types/eventos';
+import { FiltroUbicacionTipo } from '@/components/personal/FiltroUbicacion';
 import ModalAceptarEvento from './ModalAceptarEvento';
 import ModalRechazarEvento from './ModalRechazarEvento';
-import PaginacionSuperiorEventos from './PaginacionSuperiorEventos';
-import PaginacionInferiorEventos from './PaginacionInferiorEventos';
 
 interface ListaEventosExternosProps {
   filtro?: string;
+  filtroUbicacion?: FiltroUbicacionTipo;
   eventoSeleccionado?: number;
   currentPage?: number;
   onPageChange?: (page: number) => void;
+  isLoading?: boolean;
 }
 
 export default function ListaEventosExternos({ 
   filtro = 'todos', 
+  filtroUbicacion = null,
   eventoSeleccionado,
   currentPage = 1,
-  onPageChange = () => {}
+  isLoading = false
 }: ListaEventosExternosProps) {
   const [eventos, setEventos] = useState<EventoExterno[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [descripcionAbierta, setDescripcionAbierta] = useState<{[key: number]: boolean}>({});
   const [equiposAbiertos, setEquiposAbiertos] = useState<{[key: number]: boolean}>({});
@@ -33,11 +33,10 @@ export default function ListaEventosExternos({
 
   useEffect(() => {
     fetchEventos();
-  }, [currentPage, filtro]);
+  }, [currentPage, filtro, filtroUbicacion]);
 
   const fetchEventos = async (): Promise<void> => {
     try {
-      setIsLoading(true);
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10'
@@ -47,25 +46,33 @@ export default function ListaEventosExternos({
         params.append('estado', filtro);
       }
 
+      // Agregar filtros de ubicación si existen
+      if (filtroUbicacion) {
+        switch (filtroUbicacion.tipo) {
+          case 'piso':
+            params.append('pisoId', filtroUbicacion.valor.toString());
+            break;
+          case 'direccion':
+            params.append('direccionId', filtroUbicacion.valor.toString());
+            break;
+          case 'multi-piso':
+            filtroUbicacion.valores.forEach(id => {
+              params.append('pisoIds', id.toString());
+            });
+            break;
+        }
+      }
+
       const response = await fetch(`/api/eventos-externos?${params}`);
       if (response.ok) {
         const data = await response.json();
         setEventos(data.eventos || []);
-        setPagination(data.pagination || null);
       } else {
         console.error('Error fetching eventos');
       }
     } catch (error) {
       console.error('Error fetching eventos:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const handlePageChange = (page: number) => {
-    onPageChange(page);
-    // Scroll to top when page changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleDescripcion = (eventoId: number): void => {
@@ -235,16 +242,6 @@ export default function ListaEventosExternos({
 
   return (
     <>
-      {/* Paginación Superior */}
-      <PaginacionSuperiorEventos
-        pagination={pagination}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        loading={isLoading}
-        filtro={filtro}
-      />
-
-      {/* Lista de Eventos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
         {eventos.map((evento: EventoExterno) => (
           <div 
@@ -461,14 +458,6 @@ export default function ListaEventosExternos({
           </div>
         ))}
       </div>
-
-      {/* Paginación Inferior */}
-      <PaginacionInferiorEventos
-        pagination={pagination}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        loading={isLoading}
-      />
 
       {/* Modales */}
       {modalAceptarAbierto && (

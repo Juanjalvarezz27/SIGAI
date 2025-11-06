@@ -6,6 +6,8 @@ import { CreateEventoData, EquipoSeleccionado } from '../../../../types/eventos'
 
 interface WhereClause {
   estado?: string;
+  pisoId?: number | { in: number[] };
+  direccionId?: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -14,6 +16,9 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const estado = searchParams.get('estado');
+    const pisoId = searchParams.get('pisoId');
+    const direccionId = searchParams.get('direccionId');
+    const pisoIds = searchParams.getAll('pisoIds');
     
     const skip = (page - 1) * limit;
 
@@ -22,6 +27,23 @@ export async function GET(request: NextRequest) {
     
     if (estado && estado !== 'todos') {
       where.estado = estado;
+    }
+
+    // Filtro por piso individual
+    if (pisoId) {
+      where.pisoId = parseInt(pisoId);
+    }
+
+    // Filtro por dirección
+    if (direccionId) {
+      where.direccionId = parseInt(direccionId);
+    }
+
+    // Filtro por múltiples pisos
+    if (pisoIds.length > 0) {
+      where.pisoId = {
+        in: pisoIds.map(id => parseInt(id))
+      };
     }
 
     const [eventos, totalCount] = await Promise.all([
@@ -99,9 +121,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json({ 
-        error: 'No autorizado' 
-      }, { status: 401 });
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const body: CreateEventoData = await request.json();
@@ -114,28 +134,20 @@ export async function POST(request: NextRequest) {
     ahora.setHours(0, 0, 0, 0); // Solo comparar fecha, no hora
 
     if (fechaInicialDate < ahora) {
-      return NextResponse.json({ 
-        error: 'La fecha inicial no puede ser anterior a la fecha actual' 
-      }, { status: 400 });
+      return NextResponse.json({ error: 'La fecha inicial no puede ser anterior a la fecha actual' }, { status: 400 });
     }
 
     if (fechaFinalDate < ahora) {
-      return NextResponse.json({ 
-        error: 'La fecha final no puede ser anterior a la fecha actual' 
-      }, { status: 400 });
+      return NextResponse.json({ error: 'La fecha final no puede ser anterior a la fecha actual' }, { status: 400 });
     }
 
     if (fechaInicialDate > fechaFinalDate) {
-      return NextResponse.json({ 
-        error: 'La fecha final debe ser posterior o igual a la fecha inicial' 
-      }, { status: 400 });
+      return NextResponse.json({ error: 'La fecha final debe ser posterior o igual a la fecha inicial' }, { status: 400 });
     }
 
     // Obtener el usuario en sesión con todos los datos
     const usuarioSesion = await prisma.usuario.findFirst({
-      where: { 
-        email: session.user.email 
-      },
+      where: { email: session.user.email },
       include: { 
         direccion: {
           include: {
@@ -146,9 +158,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!usuarioSesion) {
-      return NextResponse.json({ 
-        error: 'Usuario no encontrado' 
-      }, { status: 404 });
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
     // Buscar el usuario asignado (rolId 2 y supervisorTipoId 1)
@@ -160,16 +170,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!usuarioAsignado) {
-      return NextResponse.json({ 
-        error: 'No se encontró un usuario asignado válido' 
-      }, { status: 404 });
+      return NextResponse.json({ error: 'No se encontró un usuario asignado válido' }, { status: 404 });
     }
 
     // Validar que haya al menos un equipo seleccionado
     if (!equipos || equipos.length === 0) {
-      return NextResponse.json({ 
-        error: 'Debe seleccionar al menos un equipo' 
-      }, { status: 400 });
+      return NextResponse.json({ error: 'Debe seleccionar al menos un equipo' }, { status: 400 });
     }
 
     // Crear el evento externo
@@ -224,8 +230,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(evento);
   } catch (error) {
     console.error('Error creando evento:', error);
-    return NextResponse.json({ 
-      error: 'Error interno del servidor' 
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
