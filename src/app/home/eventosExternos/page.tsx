@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef} from 'react';
 import Navbar from "@/components/Navbar";
 import Title from "@/components/Title";
 import ModalNuevoEvento from "@/components/eventos/ModalNuevoEvento";
@@ -14,22 +14,25 @@ export default function EventosExternos() {
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const [filtroSeleccionado, setFiltroSeleccionado] = useState<string>('todos');
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EventoExterno | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const listaRef = useRef<HTMLDivElement>(null);
 
   const handleEventCreated = (): void => {
-    setRefreshKey(prev => prev + 1); // Forzar recarga de la lista
-    setEventoSeleccionado(null); // Limpiar selección al crear nuevo evento
+    setRefreshKey(prev => prev + 1);
+    setEventoSeleccionado(null);
+    setCurrentPage(1); // Volver a la primera página al crear nuevo evento
   };
 
   const handleFiltroChange = (filtro: string): void => {
     setFiltroSeleccionado(filtro);
-    setEventoSeleccionado(null); // Limpiar selección al cambiar filtro
+    setEventoSeleccionado(null);
+    setCurrentPage(1); // Resetear a página 1 al cambiar filtro
   };
 
   const handleEventoSeleccionado = (evento: EventoExterno): void => {
     setEventoSeleccionado(evento);
+    setCurrentPage(1); // Ir a página 1 al seleccionar búsqueda
     
-    // Hacer scroll a la lista después de un breve delay para permitir el renderizado
     setTimeout(() => {
       if (listaRef.current) {
         listaRef.current.scrollIntoView({ 
@@ -38,6 +41,10 @@ export default function EventosExternos() {
         });
       }
     }, 100);
+  };
+
+  const handlePageChange = (page: number): void => {
+    setCurrentPage(page);
   };
 
   const limpiarBusqueda = (): void => {
@@ -52,8 +59,8 @@ export default function EventosExternos() {
       <div className="container mx-auto px-4 py-8">
         {/* Header con filtros y búsqueda */}
         <div className="mb-8">
-          {/* Filtro toggle y botón nuevo evento */}
-          <div className="flex flex-col lg:flex-row justify-center items-center gap-4">
+          {/* Primera fila: Filtro toggle y botón nuevo evento */}
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
             <div className="w-full lg:w-auto">
               <FiltroEventosExternos
                 filtroSeleccionado={filtroSeleccionado}
@@ -63,14 +70,14 @@ export default function EventosExternos() {
             
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-[#001f3f] text-white px-6 py-3 rounded-lg hover:bg-blue-900 transition-colors font-medium flex items-center gap-2 shadow-sm whitespace-nowrap -mt-9 w-full lg:w-auto justify-center"
+              className="bg-[#001f3f] text-white px-6 py-3 rounded-lg hover:bg-blue-900 transition-colors font-medium flex items-center gap-2 shadow-sm whitespace-nowrap w-full lg:w-auto justify-center"
             >
               <span>+</span>
               <span>Nuevo Evento</span>
             </button>
           </div>
 
-          {/* Barra de búsqueda completa */}
+          {/* Segunda fila: Barra de búsqueda completa */}
           <div className="w-full">
             <BarraBusquedaEventos
               onEventoSeleccionado={handleEventoSeleccionado}
@@ -103,9 +110,11 @@ export default function EventosExternos() {
         {/* Lista de eventos con ref para scroll */}
         <div ref={listaRef}>
           <ListaEventosExternos 
-            key={refreshKey} 
+            key={`${refreshKey}-${filtroSeleccionado}`} 
             filtro={filtroSeleccionado}
             eventoSeleccionado={eventoSeleccionado?.id}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
           />
         </div>
 

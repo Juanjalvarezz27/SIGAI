@@ -87,3 +87,15 @@ export interface UsuarioCompleto {
   piso: string;
   area: string;
 }
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface EventosPaginados {
+  eventos: EventoExterno[];
+  pagination: PaginationInfo;
+}

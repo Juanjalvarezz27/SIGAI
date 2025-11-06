@@ -2,21 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { Cpu, User, MapPin, Calendar, Clock, CheckCircle, XCircle, RotateCcw, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
-import { EventoExterno } from '../../../types/eventos';
+import { EventoExterno, PaginationInfo } from '../../../types/eventos';
 import ModalAceptarEvento from './ModalAceptarEvento';
 import ModalRechazarEvento from './ModalRechazarEvento';
+import PaginacionSuperiorEventos from './PaginacionSuperiorEventos';
+import PaginacionInferiorEventos from './PaginacionInferiorEventos';
 
 interface ListaEventosExternosProps {
   filtro?: string;
-  eventoSeleccionado?: number; // ID del evento seleccionado por búsqueda
+  eventoSeleccionado?: number;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export default function ListaEventosExternos({ 
   filtro = 'todos', 
-  eventoSeleccionado 
+  eventoSeleccionado,
+  currentPage = 1,
+  onPageChange = () => {}
 }: ListaEventosExternosProps) {
   const [eventos, setEventos] = useState<EventoExterno[]>([]);
-  const [eventosFiltrados, setEventosFiltrados] = useState<EventoExterno[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [descripcionAbierta, setDescripcionAbierta] = useState<{[key: number]: boolean}>({});
@@ -27,23 +33,25 @@ export default function ListaEventosExternos({
 
   useEffect(() => {
     fetchEventos();
-  }, []);
-
-  useEffect(() => {
-    if (filtro === 'todos') {
-      setEventosFiltrados(eventos);
-    } else {
-      const filtrados = eventos.filter(evento => evento.estado === filtro);
-      setEventosFiltrados(filtrados);
-    }
-  }, [eventos, filtro]);
+  }, [currentPage, filtro]);
 
   const fetchEventos = async (): Promise<void> => {
     try {
-      const response = await fetch('/api/eventos-externos');
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '10'
+      });
+
+      if (filtro !== 'todos') {
+        params.append('estado', filtro);
+      }
+
+      const response = await fetch(`/api/eventos-externos?${params}`);
       if (response.ok) {
-        const data: EventoExterno[] = await response.json();
-        setEventos(data);
+        const data = await response.json();
+        setEventos(data.eventos || []);
+        setPagination(data.pagination || null);
       } else {
         console.error('Error fetching eventos');
       }
@@ -52,6 +60,12 @@ export default function ListaEventosExternos({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    onPageChange(page);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleDescripcion = (eventoId: number): void => {
@@ -193,7 +207,7 @@ export default function ListaEventosExternos({
     );
   }
 
-  if (eventosFiltrados.length === 0) {
+  if (eventos.length === 0) {
     const mensajes = {
       'todos': 'No hay eventos externos',
       'En proceso': 'No hay eventos en proceso',
@@ -221,8 +235,18 @@ export default function ListaEventosExternos({
 
   return (
     <>
+      {/* Paginación Superior */}
+      <PaginacionSuperiorEventos
+        pagination={pagination}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        loading={isLoading}
+        filtro={filtro}
+      />
+
+      {/* Lista de Eventos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
-        {eventosFiltrados.map((evento: EventoExterno) => (
+        {eventos.map((evento: EventoExterno) => (
           <div 
             key={evento.id} 
             className={`bg-white rounded-xl shadow-sm border-2 p-6 hover:shadow-md transition-all duration-300 animate-fade-in-up ${
@@ -437,6 +461,14 @@ export default function ListaEventosExternos({
           </div>
         ))}
       </div>
+
+      {/* Paginación Inferior */}
+      <PaginacionInferiorEventos
+        pagination={pagination}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        loading={isLoading}
+      />
 
       {/* Modales */}
       {modalAceptarAbierto && (
