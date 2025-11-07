@@ -33,6 +33,26 @@ export async function POST(
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
+    // Verificar que el evento existe y obtener su dirección
+    const eventoExistente = await prisma.eventoExterno.findUnique({
+      where: { id: parseInt(id) },
+      select: { 
+        id: true,
+        direccionId: true 
+      }
+    });
+
+    if (!eventoExistente) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 });
+    }
+
+    // Si el usuario es solicitante (rolId 3), verificar que el evento sea de su dirección
+    if (usuario.rolId === 3 && eventoExistente.direccionId !== usuario.direccionId) {
+      return NextResponse.json({ 
+        error: 'No tienes permisos para modificar este evento' 
+      }, { status: 403 });
+    }
+
     // Actualizar el estado del evento y crear el registro de estado
     const resultado = await prisma.$transaction(async (tx) => {
       // Actualizar el estado del evento
@@ -81,7 +101,7 @@ export async function POST(
       return eventoActualizado;
     });
 
-    // Obtener el evento con el detalle del estado
+    // Obtener el evento completo con el detalle del estado actualizado
     const eventoCompleto = await prisma.eventoExterno.findUnique({
       where: { id: parseInt(id) },
       include: {

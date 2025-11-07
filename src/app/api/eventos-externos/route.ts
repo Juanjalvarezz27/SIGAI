@@ -4,14 +4,13 @@ import prisma from '@/lib/prismadb';
 import { authOptions } from '@/lib/auth';
 import { CreateEventoData, EquipoSeleccionado } from '../../../../types/eventos';
 
-interface WhereClause {
-  estado?: string;
-  pisoId?: number | { in: number[] };
-  direccionId?: number;
-}
-
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -19,12 +18,36 @@ export async function GET(request: NextRequest) {
     const pisoId = searchParams.get('pisoId');
     const direccionId = searchParams.get('direccionId');
     const pisoIds = searchParams.getAll('pisoIds');
-    
+
     const skip = (page - 1) * limit;
 
-    // Construir el where clause de manera type-safe
-    const where: WhereClause = {};
-    
+    // Obtener información del usuario en sesión
+    const usuarioSesion = await prisma.usuario.findFirst({
+      where: { email: session.user.email },
+      select: {
+        id: true,
+        rolId: true,
+        direccionId: true
+      }
+    });
+
+    if (!usuarioSesion) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    // Construir el where clause
+    const where: {
+      estado?: string;
+      pisoId?: number | { in: number[] };
+      direccionId?: number;
+    } = {};
+
+    // Si el usuario es solicitante (rolId 3), filtrar por su dirección
+    if (usuarioSesion.rolId === 3) {
+      where.direccionId = usuarioSesion.direccionId;
+    }
+
+    // Aplicar filtros adicionales
     if (estado && estado !== 'todos') {
       where.estado = estado;
     }
@@ -34,16 +57,17 @@ export async function GET(request: NextRequest) {
       where.pisoId = parseInt(pisoId);
     }
 
-    // Filtro por dirección
-    if (direccionId) {
+    // Filtro por dirección (solo aplicable para usuarios que no son solicitantes)
+    if (direccionId && usuarioSesion.rolId !== 3) {
       where.direccionId = parseInt(direccionId);
     }
 
     // Filtro por múltiples pisos
     if (pisoIds.length > 0) {
-      where.pisoId = {
-        in: pisoIds.map(id => parseInt(id))
-      };
+      const pisoIdsNumeros = pisoIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+      if (pisoIdsNumeros.length > 0) {
+        where.pisoId = { in: pisoIdsNumeros };
+      }
     }
 
     const [eventos, totalCount] = await Promise.all([
@@ -51,15 +75,20 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           usuarioSolicitante: {
-            select: { 
-              nombre: true, 
-              apellido: true 
+            select: {
+              nombre: true,
+              apellido: true,
+              direccion: {
+                select: {
+                  direccion: true
+                }
+              }
             }
           },
           usuarioAsignado: {
-            select: { 
-              nombre: true, 
-              apellido: true 
+            select: {
+              nombre: true,
+              apellido: true
             }
           },
           direccion: {
@@ -71,8 +100,8 @@ export async function GET(request: NextRequest) {
           equiposEvento: {
             include: {
               tipoEquipo: {
-                select: { 
-                  nombre: true 
+                select: {
+                  nombre: true
                 }
               }
             }
@@ -80,9 +109,9 @@ export async function GET(request: NextRequest) {
           estadoDetalle: {
             include: {
               usuario: {
-                select: { 
-                  nombre: true, 
-                  apellido: true 
+                select: {
+                  nombre: true,
+                  apellido: true
                 }
               }
             }
@@ -107,12 +136,13 @@ export async function GET(request: NextRequest) {
         totalCount,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1,
-      }
+      },
+      userRole: usuarioSesion.rolId
     });
   } catch (error) {
     console.error('Error fetching eventos:', error);
-    return NextResponse.json({ 
-      error: 'Error interno del servidor' 
+    return NextResponse.json({
+      error: 'Error interno del servidor'
     }, { status: 500 });
   }
 }
@@ -131,7 +161,7 @@ export async function POST(request: NextRequest) {
     const fechaInicialDate = new Date(fechaInicial);
     const fechaFinalDate = new Date(fechaFinal);
     const ahora = new Date();
-    ahora.setHours(0, 0, 0, 0); // Solo comparar fecha, no hora
+    ahora.setHours(0, 0, 0, 0);
 
     if (fechaInicialDate < ahora) {
       return NextResponse.json({ error: 'La fecha inicial no puede ser anterior a la fecha actual' }, { status: 400 });
@@ -148,7 +178,7 @@ export async function POST(request: NextRequest) {
     // Obtener el usuario en sesión con todos los datos
     const usuarioSesion = await prisma.usuario.findFirst({
       where: { email: session.user.email },
-      include: { 
+      include: {
         direccion: {
           include: {
             piso: true
@@ -198,15 +228,15 @@ export async function POST(request: NextRequest) {
       },
       include: {
         usuarioSolicitante: {
-          select: { 
-            nombre: true, 
-            apellido: true 
+          select: {
+            nombre: true,
+            apellido: true
           }
         },
         usuarioAsignado: {
-          select: { 
-            nombre: true, 
-            apellido: true 
+          select: {
+            nombre: true,
+            apellido: true
           }
         },
         direccion: {
@@ -218,8 +248,8 @@ export async function POST(request: NextRequest) {
         equiposEvento: {
           include: {
             tipoEquipo: {
-              select: { 
-                nombre: true 
+              select: {
+                nombre: true
               }
             }
           }

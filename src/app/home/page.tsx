@@ -69,7 +69,7 @@ const routes: Route[] = [
     path: "/home/eventosExternos",
     label: "Eventos Externos",
     icon: Calendar,
-    roles: ["admin", "supervisor"], // Ahora incluye admin
+    roles: ["admin", "supervisor", "solicitante"], // Ahora incluye admin y solicitante
     supervisorTipoId: 1, // Requiere supervisorTipoId = 1 para supervisores
   },
   {
@@ -136,6 +136,7 @@ function puedeVerRuta(
   }
 
   const userRole = usuarioCompleto.rol.rol;
+  const userRolId = usuarioCompleto.rolId;
 
   // Verificar si el rol del usuario está en los roles permitidos
   if (!route.roles.includes(userRole)) {
@@ -144,10 +145,11 @@ function puedeVerRuta(
 
   // Verificación especial para eventos externos
   if (route.path === "/home/eventosExternos") {
-    // Permitir si es admin O si es supervisor con supervisorTipoId: 1
+    // Permitir si es admin O si es solicitante (rolId: 3) O si es supervisor con supervisorTipoId: 1
     if (
       userRole === "admin" ||
-      (usuarioCompleto.rolId === 2 && usuarioCompleto.supervisorTipoId === 1)
+      userRolId === 3 ||
+      (userRolId === 2 && usuarioCompleto.supervisorTipoId === 1)
     ) {
       return true;
     }

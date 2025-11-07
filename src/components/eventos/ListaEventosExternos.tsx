@@ -31,6 +31,7 @@ export default function ListaEventosExternos({
   const [motivoAbierto, setMotivoAbierto] = useState<{[key: number]: boolean}>({});
   const [modalAceptarAbierto, setModalAceptarAbierto] = useState<number | null>(null);
   const [modalRechazarAbierto, setModalRechazarAbierto] = useState<number | null>(null);
+  const [userRole, setUserRole] = useState<number | null>(null);
 
   useEffect(() => {
     fetchEventos();
@@ -74,6 +75,7 @@ export default function ListaEventosExternos({
       if (response.ok) {
         const data = await response.json();
         setEventos(data.eventos || []);
+        setUserRole(data.userRole || null);
       } else {
         console.error('Error fetching eventos');
       }
@@ -210,6 +212,11 @@ export default function ListaEventosExternos({
     }
   };
 
+  // Función para determinar si mostrar botones de acción
+  const mostrarBotonesAccion = (): boolean => {
+    return userRole !== 3; // No mostrar si es solicitante (rolId 3)
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-8 animate-fade-in">
@@ -223,10 +230,10 @@ export default function ListaEventosExternos({
 
   if (eventos.length === 0) {
     const mensajes = {
-      'todos': 'No hay eventos externos',
-      'En proceso': 'No hay eventos en proceso',
-      'Aceptado': 'No hay eventos aceptados',
-      'Rechazado': 'No hay eventos rechazados'
+      'todos': userRole === 3 ? 'No hay eventos en tu dirección' : 'No hay eventos externos',
+      'En proceso': userRole === 3 ? 'No hay eventos en proceso en tu dirección' : 'No hay eventos en proceso',
+      'Aceptado': userRole === 3 ? 'No hay eventos aceptados en tu dirección' : 'No hay eventos aceptados',
+      'Rechazado': userRole === 3 ? 'No hay eventos rechazados en tu dirección' : 'No hay eventos rechazados'
     };
 
     return (
@@ -239,7 +246,9 @@ export default function ListaEventosExternos({
         </h3>
         <p className="text-gray-500">
           {filtro === 'todos' 
-            ? 'No se han creado eventos externos aún.'
+            ? (userRole === 3 
+                ? 'No se han creado eventos externos en tu dirección.' 
+                : 'No se han creado eventos externos aún.')
             : `No se encontraron eventos con estado "${filtro}".`
           }
         </p>
@@ -422,67 +431,73 @@ export default function ListaEventosExternos({
               </div>
             )}
 
-            {/* Botones de acción */}
-            <div className="flex flex-wrap justify-center gap-2 pt-4 border-t border-gray-200">
-              {evento.estado === 'En proceso' && (
-                <>
+            {/* Botones de acción - Solo mostrar si NO es solicitante (rolId 3) */}
+            {mostrarBotonesAccion() && (
+              <div className="flex flex-wrap justify-center gap-2 pt-4 border-t border-gray-200">
+                {evento.estado === 'En proceso' && (
+                  <>
+                    <button
+                      onClick={() => setModalAceptarAbierto(evento.id)}
+                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-md font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
+                    >
+                      <CheckCircle size={14} />
+                      Aceptar
+                    </button>
+                    <button
+                      onClick={() => setModalRechazarAbierto(evento.id)}
+                      className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-md font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
+                    >
+                      <XCircle size={14} />
+                      Rechazar
+                    </button>
+                  </>
+                )}
+                {(evento.estado === 'Aceptado' || evento.estado === 'Rechazado') && (
                   <button
-                    onClick={() => setModalAceptarAbierto(evento.id)}
-                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-md font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
+                    onClick={() => volverAEnProceso(evento.id)}
+                    disabled={updatingId === evento.id}
+                    className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
                   >
-                    <CheckCircle size={14} />
-                    Aceptar
+                    {updatingId === evento.id ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw size={14} />
+                        Volver a En proceso
+                      </>
+                    )}
                   </button>
-                  <button
-                    onClick={() => setModalRechazarAbierto(evento.id)}
-                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-md font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
-                  >
-                    <XCircle size={14} />
-                    Rechazar
-                  </button>
-                </>
-              )}
-              {(evento.estado === 'Aceptado' || evento.estado === 'Rechazado') && (
-                <button
-                  onClick={() => volverAEnProceso(evento.id)}
-                  disabled={updatingId === evento.id}
-                  className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all duration-300 cursor-pointer flex items-center gap-2"
-                >
-                  {updatingId === evento.id ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <RotateCcw size={14} />
-                      Volver a En proceso
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Modales */}
-      {modalAceptarAbierto && (
-        <ModalAceptarEvento
-          isOpen={!!modalAceptarAbierto}
-          onClose={() => setModalAceptarAbierto(null)}
-          onAceptar={(motivo) => cambiarEstado(modalAceptarAbierto, 'Aceptado', motivo)}
-          isLoading={updatingId === modalAceptarAbierto}
-        />
-      )}
+      {/* Modales - Solo mostrar si NO es solicitante */}
+      {mostrarBotonesAccion() && (
+        <>
+          {modalAceptarAbierto && (
+            <ModalAceptarEvento
+              isOpen={!!modalAceptarAbierto}
+              onClose={() => setModalAceptarAbierto(null)}
+              onAceptar={(motivo) => cambiarEstado(modalAceptarAbierto, 'Aceptado', motivo)}
+              isLoading={updatingId === modalAceptarAbierto}
+            />
+          )}
 
-      {modalRechazarAbierto && (
-        <ModalRechazarEvento
-          isOpen={!!modalRechazarAbierto}
-          onClose={() => setModalRechazarAbierto(null)}
-          onRechazar={(motivo) => cambiarEstado(modalRechazarAbierto, 'Rechazado', motivo)}
-          isLoading={updatingId === modalRechazarAbierto}
-        />
+          {modalRechazarAbierto && (
+            <ModalRechazarEvento
+              isOpen={!!modalRechazarAbierto}
+              onClose={() => setModalRechazarAbierto(null)}
+              onRechazar={(motivo) => cambiarEstado(modalRechazarAbierto, 'Rechazado', motivo)}
+              isLoading={updatingId === modalRechazarAbierto}
+            />
+          )}
+        </>
       )}
     </>
   );

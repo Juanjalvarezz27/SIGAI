@@ -1,3 +1,4 @@
+//navbar
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
@@ -111,7 +112,7 @@ export default function Navbar() {
       path: "/home/eventosExternos",
       label: "Eventos Externos",
       icon: Calendar,
-      roles: ["admin", "supervisor"], // Ahora incluye admin
+      roles: ["admin", "supervisor", "solicitante"], // Ahora incluye admin y solicitante
       supervisorTipoId: 1, // Solo para supervisores con supervisorTipoId = 1
     },
     {
@@ -136,6 +137,7 @@ export default function Navbar() {
   // Función para verificar si un usuario puede ver una ruta específica
   const puedeVerRuta = (route: NavButton): boolean => {
     const userRole = session?.user?.rol || "";
+    const userRolId = usuarioInfo?.rolId;
 
     // Verificar si el rol del usuario está en los roles permitidos
     if (!route.roles.includes(userRole)) {
@@ -144,10 +146,11 @@ export default function Navbar() {
 
     // Verificación especial para eventos externos
     if (route.path === "/home/eventosExternos") {
-      // Permitir si es admin O si es supervisor con supervisorTipoId: 1
+      // Permitir si es admin O si es solicitante (rolId: 3) O si es supervisor con supervisorTipoId: 1
       if (
         userRole === "admin" ||
-        (usuarioInfo?.rolId === 2 && usuarioInfo?.supervisorTipoId === 1)
+        userRolId === 3 ||
+        (userRolId === 2 && usuarioInfo?.supervisorTipoId === 1)
       ) {
         return true;
       }
