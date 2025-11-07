@@ -1,4 +1,3 @@
-//navbar
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
@@ -18,6 +17,7 @@ import {
   User,
   UserCheck,
   House,
+  Bell,
 } from "lucide-react";
 
 import Logo from "@/assets/logo.png";
@@ -41,6 +41,214 @@ interface UsuarioInfo {
     id: number;
     tipo: string;
   } | null;
+}
+
+// Interface para las notificaciones
+interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  relatedId?: number;
+  createdAt: string;
+}
+
+// Componente de Campana de Notificaciones - VERSIÓN CORREGIDA
+function NotificationBell() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Cargar notificaciones
+  const loadNotifications = async () => {
+    if (status !== "authenticated" || !session?.user?.email) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/notifications');
+      
+      if (!response.ok) {
+        throw new Error('Error al cargar notificaciones');
+      }
+      
+      const data = await response.json();
+      
+      if (data.notifications) {
+        setNotifications(data.notifications);
+        setUnreadCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar notificaciones al montar el componente solo si está autenticado
+  useEffect(() => {
+    if (status === "authenticated") {
+      loadNotifications();
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [status]);
+
+  // Polling cada 30 segundos solo si está autenticado
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [status]);
+
+  const handleClick = () => {
+    if (status !== "authenticated") {
+      return;
+    }
+    
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      loadNotifications();
+    }
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      try {
+        // Marcar como leída
+        await fetch('/api/notifications', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ notificationId: notification.id }),
+        });
+        
+        // Actualizar estado local
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === notification.id ? { ...n, read: true } : n
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
+    
+    // SOLO REDIRIGIR A /home/tickets
+    router.push('/home/tickets');
+    setIsOpen(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Ahora mismo';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    
+    return date.toLocaleDateString('es-ES');
+  };
+
+  if (status !== "authenticated") {
+    return null;
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        className="relative p-2 text-white hover:bg-[#4c678a] rounded-full transition-colors duration-200"
+      >
+        <Bell size={20} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Modal de notificaciones */}
+      {isOpen && (
+        <div className="absolute right-0 top-12 w-80 bg-white rounded-lg shadow-lg z-50 border">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h3 className="font-semibold">Notificaciones</h3>
+            {unreadCount > 0 && (
+              <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                {unreadCount} nueva{unreadCount !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          
+          <div className="max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="p-4 text-center">
+                <p className="text-gray-500">Cargando notificaciones...</p>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-gray-500">No hay notificaciones</p>
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                    !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-900">{notification.title}</p>
+                      <p className="text-gray-600 text-xs mt-1">{notification.message}</p>
+                      <p className="text-gray-400 text-xs mt-2">
+                        {formatDate(notification.createdAt)}
+                      </p>
+                    </div>
+                    {!notification.read && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1 flex-shrink-0"></div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          {notifications.length > 0 && (
+            <div className="p-2 border-t">
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center text-sm text-blue-600 hover:text-blue-800 py-1"
+              >
+                Cerrar
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Navbar() {
@@ -112,8 +320,8 @@ export default function Navbar() {
       path: "/home/eventosExternos",
       label: "Eventos Externos",
       icon: Calendar,
-      roles: ["admin", "supervisor", "solicitante"], // Ahora incluye admin y solicitante
-      supervisorTipoId: 1, // Solo para supervisores con supervisorTipoId = 1
+      roles: ["admin", "supervisor", "solicitante"],
+      supervisorTipoId: 1,
     },
     {
       path: "/home/estadisticas",
@@ -146,7 +354,6 @@ export default function Navbar() {
 
     // Verificación especial para eventos externos
     if (route.path === "/home/eventosExternos") {
-      // Permitir si es admin O si es solicitante (rolId: 3) O si es supervisor con supervisorTipoId: 1
       if (
         userRole === "admin" ||
         userRolId === 3 ||
@@ -293,7 +500,6 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* En el servidor, renderizar estructura básica. En cliente, la completa */}
               {isClient &&
                 !isHomeRoute() &&
                 roleButtons.map((button) => {
@@ -317,14 +523,14 @@ export default function Navbar() {
                 })}
 
               <div className="flex items-center gap-4">
-                {/* Mostrar nombre del usuario solo cuando estamos en /home */}
                 {isClient && isHomeRoute() && session?.user && (
                   <h1 className="text-white text-lg">
                     Bienvenido, {session.user.nombre} {session.user.apellido}
                   </h1>
                 )}
 
-                {/* Botón de cerrar sesión - siempre visible */}
+                <NotificationBell />
+
                 <button
                   onClick={openLogoutModal}
                   className="flex items-center gap-2 cursor-pointer bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"

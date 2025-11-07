@@ -79,6 +79,7 @@ model Usuario {
   cambiosEstadoEvento              EventoExternoEstado[]
 
   @@map("usuarios")
+  notifications Notification[]
 }
 
 model TipoAnalista {
@@ -421,4 +422,20 @@ model EventoExternoEstado {
   usuario Usuario @relation(fields: [usuarioId], references: [id])
   
   @@map("evento_externo_estado")
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  userId      Int      
+  type        String   
+  title       String  
+  message     String   
+  read        Boolean  @default(false)
+  relatedId   Int?     
+  createdAt   DateTime @default(now())
+  
+  // Relaciones
+  user        Usuario  @relation(fields: [userId], references: [id])
+  
+  @@map("notifications")
 }

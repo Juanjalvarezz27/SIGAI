@@ -23,14 +23,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { 
-      titulo, 
-      descripcion, 
-      tipoTicketId, 
-      usuarioAfectadoId, 
+    const {
+      titulo,
+      descripcion,
+      tipoTicketId,
+      usuarioAfectadoId,
       equiposSeleccionados,
       sistemaId,
-      fallaId 
+      fallaId
     }: CreateTicketData = await request.json();
 
     // Validar campos requeridos
@@ -76,18 +76,18 @@ export async function POST(request: NextRequest) {
     // Validaciones específicas para tickets de sistemas
     if (parseInt(tipoTicketId) === 3) {
       if (!usuarioAfectadoId) {
-        return NextResponse.json({ 
-          error: 'Usuario afectado es requerido para tickets de sistemas' 
+        return NextResponse.json({
+          error: 'Usuario afectado es requerido para tickets de sistemas'
         }, { status: 400 });
       }
       if (!sistemaId) {
-        return NextResponse.json({ 
-          error: 'Sistema es requerido para tickets de sistemas' 
+        return NextResponse.json({
+          error: 'Sistema es requerido para tickets de sistemas'
         }, { status: 400 });
       }
       if (!fallaId) {
-        return NextResponse.json({ 
-          error: 'Tipo de falla es requerido para tickets de sistemas' 
+        return NextResponse.json({
+          error: 'Tipo de falla es requerido para tickets de sistemas'
         }, { status: 400 });
       }
     }
@@ -163,6 +163,18 @@ export async function POST(request: NextRequest) {
           usuarioAfectadoId: usuarioAfectado ? usuarioAfectado.id : null,
           estadoId: 1, // Estado "Abierto"
           tipoTicketId: parseInt(tipoTicketId)
+        }
+      });
+
+      // 🔔 NUEVO: Crear notificación para el analista asignado
+      await tx.notification.create({
+        data: {
+          userId: analistaAsignado.id,
+          type: 'TICKET_ASSIGNED',
+          title: 'Nuevo ticket asignado',
+          message: `Se te ha asignado el ticket: "${titulo}"`,
+          relatedId: ticket.id,
+          read: false
         }
       });
 

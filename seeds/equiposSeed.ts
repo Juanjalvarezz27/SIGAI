@@ -3078,65 +3078,105 @@ export default async function seedEquipos(prisma: PrismaClient) {
 {tipo: "Regulador", marca: "CDP", modelo: "B-AVR1006", bienNacional: "20839", serial: "070527-1290912", statusId: 1, estadoId: 2, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Telefono", marca: "AVAYA", modelo: "4610SW IP", bienNacional: "19240", serial: "NO POSEE", statusId: 1, estadoId: 2, observaciones: "EXT 1519", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Chromecast", marca: "GOOGLE", modelo: "GZRRNN", bienNacional: "31551", serial: "18101HFDD31R8S", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-];
+] as const;
 
-    //Validar campos de equipos
-      for (const eq of equiposData) {
-        const tipoEquipoDb = await prisma.tipoEquipo.findFirst({ where: { nombre: eq.tipo } });
-        if (!tipoEquipoDb) {
-          continue;
-        }
-
-        let marcaDb = await prisma.marca.findFirst({ where: { nombre: eq.marca } });
-        if (!marcaDb) {
-          marcaDb = await prisma.marca.create({ data: { nombre: eq.marca } });
-        }
-
-        let modeloDb = await prisma.modelo.findFirst({
-          where: {
-            nombre: eq.modelo,
-          },
-        });
-
-        if (!modeloDb) {
-          modeloDb = await prisma.modelo.create({
-            data: {
-              nombre: eq.modelo,
-              marcaId: marcaDb.id,
-            },
-          });
-        }
-
-        // Comprobar si el tipo es uno de los especiales (Ordenador, Laptop, AllInOne)
-        let especificacionesDb = null;
-        if (["Ordenador", "Laptop", "AllInOne"].includes(eq.tipo)) {
-          // Crear especificaciones adicionales si el equipo es de tipo especial
-          especificacionesDb = await prisma.especificacionesAdicionales.create({
-            data: {
-              memoriaRam: eq.memoriaRam || null,  
-              modulosRam: eq.modulosRam || null,
-              capacidadDisco: eq.capacidadDisco || null,
-              tipoDisco: eq.tipoDisco || null,
-              procesador: eq.procesador || null,
-            },
-          });
-        }
-
-        // Crear equipo
-        await prisma.equipos.create({
-          data: {
-            bienNacional: eq.bienNacional,
-            serial: eq.serial,
-            observaciones: eq.observaciones,
-            tipoEquipoId: tipoEquipoDb.id,
-            modeloId: modeloDb.id,
-            statusId: eq.statusId,
-            estadoId: eq.estadoId,
-            usuarioId: eq.usuarioId,
-            especificacionesId: especificacionesDb ? especificacionesDb.id : null, // Solo asignar especificaciones si existen
-          },
-        });
-      }
-      
-  console.log("Equipos y tipos creados.");
+// Definir interfaces específicas
+interface EquipoBase {
+  readonly tipo: string;
+  readonly marca: string;
+  readonly modelo: string;
+  readonly bienNacional: string;
+  readonly serial: string | null;
+  readonly observaciones: string | null;
+  readonly statusId: number | null;
+  readonly estadoId: number | null;
+  readonly usuarioId: number | null;
+  readonly memoriaRam?: string;
+  readonly modulosRam?: string;
+  readonly capacidadDisco?: string;
+  readonly tipoDisco?: string;
+  readonly procesador?: string;
 }
+
+// Type guard simplificado y seguro
+function esEquipoConEspecificaciones(eq: EquipoBase): boolean {
+  const esTipoValido = eq.tipo === "Laptop" || eq.tipo === "Ordenador" || eq.tipo === "AllInOne";
+  if (!esTipoValido) return false;
+  
+  // Verificar que tenga los campos necesarios
+  return 'memoriaRam' in eq && 
+         'modulosRam' in eq && 
+         'capacidadDisco' in eq && 
+         'tipoDisco' in eq && 
+         'procesador' in eq;
+}
+
+// Validar campos de equipos
+for (const eq of equiposData as unknown as EquipoBase[]) {
+  const tipoEquipoDb = await prisma.tipoEquipo.findFirst({ 
+    where: { nombre: eq.tipo } 
+  });
+  if (!tipoEquipoDb) {
+    continue;
+  }
+
+  let marcaDb = await prisma.marca.findFirst({ 
+    where: { nombre: eq.marca } 
+  });
+  if (!marcaDb) {
+    marcaDb = await prisma.marca.create({ 
+      data: { nombre: eq.marca } 
+    });
+  }
+
+  let modeloDb = await prisma.modelo.findFirst({
+    where: {
+      nombre: eq.modelo,
+    },
+  });
+
+  if (!modeloDb) {
+    modeloDb = await prisma.modelo.create({
+      data: {
+        nombre: eq.modelo,
+        marcaId: marcaDb.id,
+      },
+    });
+  }
+
+  // Comprobar si el tipo es uno de los especiales
+  let especificacionesDb = null;
+  if (esEquipoConEspecificaciones(eq)) {
+    // Usar type assertion solo aquí donde sabemos que los campos existen
+    const eqConEspec = eq as Required<Pick<EquipoBase, 'memoriaRam' | 'modulosRam' | 'capacidadDisco' | 'tipoDisco' | 'procesador'>>;
+    
+    especificacionesDb = await prisma.especificacionesAdicionales.create({
+      data: {
+        memoriaRam: eqConEspec.memoriaRam && eqConEspec.memoriaRam !== "N/A" ? eqConEspec.memoriaRam : null,
+        modulosRam: eqConEspec.modulosRam && eqConEspec.modulosRam !== "N/A" ? eqConEspec.modulosRam : null,
+        capacidadDisco: eqConEspec.capacidadDisco && eqConEspec.capacidadDisco !== "N/A" ? eqConEspec.capacidadDisco : null,
+        tipoDisco: eqConEspec.tipoDisco && eqConEspec.tipoDisco !== "N/A" ? eqConEspec.tipoDisco : null,
+        procesador: eqConEspec.procesador && eqConEspec.procesador !== "N/A" ? eqConEspec.procesador : null,
+      },
+    });
+  }
+
+  // Crear equipo - extraer a variable separada para evitar complejidad
+  const dataEquipo = {
+    bienNacional: eq.bienNacional,
+    serial: eq.serial,
+    observaciones: eq.observaciones,
+    tipoEquipoId: tipoEquipoDb.id,
+    modeloId: modeloDb.id,
+    statusId: eq.statusId,
+    estadoId: eq.estadoId,
+    usuarioId: eq.usuarioId,
+    especificacionesId: especificacionesDb ? especificacionesDb.id : null,
+  };
+
+  await prisma.equipos.create({
+    data: dataEquipo,
+  });
+}
+
+console.log("Equipos y tipos creados.");  }
