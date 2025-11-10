@@ -12,7 +12,7 @@ interface ExportarPDFModalProps {
   ticket: Ticket | null
 }
 
-// Imágenes en Base64 hardcodeadas como fallback (las mismas que en estadísticas)
+// Imágenes en Base64 hardcodeadas como fallback
 const CINTILLO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const LOGO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
@@ -24,7 +24,7 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
     return usuario.apellido ? `${usuario.nombre} ${usuario.apellido}` : usuario.nombre;
   };
 
-  // Función para cargar imagen como Base64 desde URL pública (igual que en estadísticas)
+  // Función para cargar imagen como Base64 desde URL pública
   const cargarImagenComoBase64 = async (url: string): Promise<string> => {
     try {
       const publicUrl = url.startsWith('/') ? url : `/${url}`
@@ -67,7 +67,7 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
       // Crear workbook
       const workbook = XLSX.utils.book_new()
 
-      // Datos principales del ticket
+      // Datos principales del ticket (optimizados)
       const datosPrincipales = [
         ['REPORTE DE TICKET', ''],
         [`Ticket #${ticket.id} - ${ticket.titulo}`, ''],
@@ -76,11 +76,9 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         ['Título', ticket.titulo],
         ['Estado', ticket.estado.estado],
         ['Tipo de Ticket', ticket.tipoTicket.tipo],
-        ['Fecha de creación', new Date(ticket.fecha_creacion).toLocaleDateString('es-ES')],
-        ['Hora de creación', new Date(ticket.fecha_creacion).toLocaleTimeString('es-ES')],
+        ['Fecha/Hora creación', `${new Date(ticket.fecha_creacion).toLocaleDateString('es-ES')} ${new Date(ticket.fecha_creacion).toLocaleTimeString('es-ES')}`],
         ...(ticket.fecha_cierre ? [
-          ['Fecha de cierre', new Date(ticket.fecha_cierre).toLocaleDateString('es-ES')],
-          ['Hora de cierre', new Date(ticket.fecha_cierre).toLocaleTimeString('es-ES')]
+          ['Fecha/Hora cierre', `${new Date(ticket.fecha_cierre).toLocaleDateString('es-ES')} ${new Date(ticket.fecha_cierre).toLocaleTimeString('es-ES')}`]
         ] : []),
         ['', ''],
         ['INFORMACIÓN DE ASIGNACIÓN', ''],
@@ -107,27 +105,22 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
           ['Nombre', getNombreCompleto(ticket.usuarioAfectado)],
           ...(ticket.usuarioAfectado.cedula ? [['Cédula', ticket.usuarioAfectado.cedula]] : []),
           ...(ticket.usuarioAfectado.direccion ? [
-            ['Piso', ticket.usuarioAfectado.direccion.piso.piso],
-            ['Dirección', ticket.usuarioAfectado.direccion.direccion]
+            ['Ubicación', `${ticket.usuarioAfectado.direccion.piso.piso} - ${ticket.usuarioAfectado.direccion.direccion}`]
           ] : []),
           ...(ticket.usuarioAfectado.area ? [['Área', ticket.usuarioAfectado.area.nombre]] : []),
           ['', '']
         )
       }
 
-      // Agregar equipos afectados si existen
+      // Agregar equipos afectados si existen (formato compacto)
       if (ticket.ticketEquipos && ticket.ticketEquipos.length > 0) {
         datosPrincipales.push(['EQUIPOS AFECTADOS', ''])
         ticket.ticketEquipos.forEach((ticketEquipo, index) => {
           const equipo = ticketEquipo.equipo
           datosPrincipales.push(
-            [`Equipo ${index + 1}`, ''],
-            ['Tipo', equipo.tipoEquipo?.nombre || 'Equipo'],
-            ['Marca', equipo.modelo?.marca?.nombre || ''],
-            ['Modelo', equipo.modelo?.nombre || ''],
-            ['Bien Nacional', equipo.bienNacional || 'No asignado'],
-            ['Serial', equipo.serial || 'No asignado'],
-            ['Status', equipo.status?.estado || 'No especificado'],
+            [`Equipo ${index + 1}`, `${equipo.tipoEquipo?.nombre || 'Equipo'} - ${equipo.modelo?.marca?.nombre || ''} ${equipo.modelo?.nombre || ''}`],
+            [`  Bien Nacional/Serial`, `${equipo.bienNacional || 'N/A'} / ${equipo.serial || 'N/A'}`],
+            [`  Status`, equipo.status?.estado || 'No especificado'],
             ['', '']
           )
         })
@@ -138,10 +131,8 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         datosPrincipales.push(['INFORMACIÓN DE SISTEMAS', ''])
         ticket.TicketSistema.forEach((ticketSistema, index) => {
           datosPrincipales.push(
-            [`Sistema ${index + 1}`, ''],
-            ...(ticketSistema.sistema ? [['Sistema', ticketSistema.sistema.nombre]] : []),
-            ...(ticketSistema.falla ? [['Falla', ticketSistema.falla.nombre]] : []),
-            ['Descripción', ticketSistema.descripcion || 'No especificada'],
+            [`Sistema ${index + 1}`, `${ticketSistema.sistema?.nombre || 'N/A'} - ${ticketSistema.falla?.nombre || 'N/A'}`],
+            [`  Descripción`, ticketSistema.descripcion || 'No especificada'],
             ['', '']
           )
         })
@@ -152,9 +143,9 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         datosPrincipales.push(
           ['INFORMACIÓN DE CIERRE', ''],
           ['Condición', ticket.ticketCierre.condicion],
-          ['Memo de Finalización', ticket.ticketCierre.memoFinalizacion],
+          ['Memo Finalización', ticket.ticketCierre.memoFinalizacion],
           ...(ticket.ticketCierre.observaciones ? [
-            ['Observaciones Adicionales', ticket.ticketCierre.observaciones]
+            ['Observaciones', ticket.ticketCierre.observaciones]
           ] : []),
           ...(ticket.ticketCierre.usuarioCerrador ? [
             ['Cerrado por', getNombreCompleto(ticket.ticketCierre.usuarioCerrador)]
@@ -163,19 +154,16 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         )
       }
 
-      // Agregar reasignaciones si existen
+      // Agregar reasignaciones si existen (formato compacto)
       const reasignaciones = ticket.ticketReasignaciones || ticket.reasignaciones || []
       if (reasignaciones.length > 0) {
         datosPrincipales.push(['HISTORIAL DE REASIGNACIONES', ''])
         reasignaciones.forEach((reasignacion, index) => {
           datosPrincipales.push(
-            [`Reasignación ${index + 1}`, ''],
-            ['De', reasignacion.analistaAnterior ? getNombreCompleto(reasignacion.analistaAnterior) : 'No especificado'],
-            ['A', reasignacion.analistaNuevo ? getNombreCompleto(reasignacion.analistaNuevo) : 'No especificado'],
-            ...(reasignacion.motivo ? [['Motivo', reasignacion.motivo]] : []),
-            ...(reasignacion.supervisor ? [['Supervisor', getNombreCompleto(reasignacion.supervisor)]] : []),
-            ['Fecha', new Date(reasignacion.fechaReasignacion).toLocaleDateString('es-ES')],
-            ['Hora', new Date(reasignacion.fechaReasignacion).toLocaleTimeString('es-ES')],
+            [`Reasignación ${index + 1}`, `${reasignacion.analistaAnterior ? getNombreCompleto(reasignacion.analistaAnterior) : 'N/A'} → ${reasignacion.analistaNuevo ? getNombreCompleto(reasignacion.analistaNuevo) : 'N/A'}`],
+            [`  Fecha/Hora`, `${new Date(reasignacion.fechaReasignacion).toLocaleDateString('es-ES')} ${new Date(reasignacion.fechaReasignacion).toLocaleTimeString('es-ES')}`],
+            ...(reasignacion.motivo ? [['  Motivo', reasignacion.motivo]] : []),
+            ...(reasignacion.supervisor ? [['  Supervisor', getNombreCompleto(reasignacion.supervisor)]] : []),
             ['', '']
           )
         })
@@ -183,10 +171,10 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
 
       const worksheet = XLSX.utils.aoa_to_sheet(datosPrincipales)
       
-      // Ajustar anchos de columnas
+      // Ajustar anchos de columnas optimizados
       const colWidths = [
-        { wch: 30 }, // Columna Descripción
-        { wch: 50 }, // Columna Valor
+        { wch: 25 }, // Columna Descripción
+        { wch: 40 }, // Columna Valor
       ]
       worksheet['!cols'] = colWidths
 
@@ -212,16 +200,17 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
     try {
       const doc = new jsPDF()
 
-      // Configuración inicial (igual que en estadísticas)
-      const margin = 20
+      // Configuración optimizada para mejor uso del espacio
+      const margin = 15 // Reducido de 20
       let yPosition = margin
       const pageWidth = doc.internal.pageSize.width
       const pageHeight = doc.internal.pageSize.height
       let currentPage = 1
 
       // Color azul corporativo
-      const colorAzul = [0, 51, 102] // #003366
-      const colorGris = [245, 245, 245]
+      const colorAzul = [0, 51, 102]
+      const colorGrisClaro = [245, 245, 245]
+      const colorGrisMedio = [220, 220, 220]
 
       // Función para agregar cintillo (SOLO en primera página)
       const agregarCintillo = async () => {
@@ -233,27 +222,27 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             cintilloBase64 = CINTILLO_BASE64
           }
 
-          const cintilloHeight = 50
+          const cintilloHeight = 40 // Reducido de 50
           doc.addImage(cintilloBase64, 'PNG', 0, 0, pageWidth, cintilloHeight)
           doc.setFillColor(200, 200, 200)
-          doc.rect(0, cintilloHeight, pageWidth, 2, 'F')
-          yPosition = cintilloHeight + 15
+          doc.rect(0, cintilloHeight, pageWidth, 1, 'F') // Línea más delgada
+          yPosition = cintilloHeight + 10 // Reducido espacio
         } catch (error) {
           console.error('Error cargando cintillo:', error)
-          const cintilloHeight = 50
+          const cintilloHeight = 40
           doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
           doc.rect(0, 0, pageWidth, cintilloHeight, 'F')
           doc.setTextColor(255, 255, 255)
-          doc.setFontSize(16)
+          doc.setFontSize(14) // Reducido
           doc.setFont('helvetica', 'bold')
           doc.text('REPORTE DE TICKET', pageWidth / 2, cintilloHeight / 2 - 5, { align: 'center' })
-          doc.setFontSize(10)
-          doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, pageWidth / 2, cintilloHeight / 2 + 10, { align: 'center' })
-          yPosition = cintilloHeight + 15
+          doc.setFontSize(8) // Reducido
+          doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, pageWidth / 2, cintilloHeight / 2 + 8, { align: 'center' })
+          yPosition = cintilloHeight + 10
         }
       }
 
-      // Función para agregar logo al final
+      // Función para agregar logo al final (más compacto)
       const agregarLogoFinal = async () => {
         try {
           let logoBase64
@@ -263,27 +252,27 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             logoBase64 = LOGO_BASE64
           }
 
-          yPosition += 20
-          doc.setDrawColor(200, 200, 200)
+          yPosition += 15 // Reducido espacio
+          doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
           doc.line(margin, yPosition, pageWidth - margin, yPosition)
-          yPosition += 15
+          yPosition += 10 // Reducido
 
           if (logoBase64 && logoBase64.startsWith('data:image/')) {
-            const logoWidth = 40
-            const logoHeight = 40
+            const logoWidth = 30 // Reducido
+            const logoHeight = 30
             const logoX = (pageWidth - logoWidth) / 2
             doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight)
-            yPosition += logoHeight + 10
+            yPosition += logoHeight + 5 // Reducido
           }
 
-          doc.setFontSize(10)
+          doc.setFontSize(8) // Reducido
           doc.setTextColor(100, 100, 100)
           doc.setFont('helvetica', 'normal')
           doc.text('Sistema de Gestión de TI', pageWidth / 2, yPosition, { align: 'center' })
         } catch (error) {
           console.error('Error agregando logo:', error)
-          yPosition += 20
-          doc.setFontSize(10)
+          yPosition += 15
+          doc.setFontSize(8)
           doc.setTextColor(100, 100, 100)
           doc.text('Sistema de Gestión de TI', pageWidth / 2, yPosition, { align: 'center' })
         }
@@ -295,13 +284,13 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         doc.setFont('helvetica', 'normal')
       }
 
-      // Función para agregar pie de página
+      // Función para agregar pie de página más compacto
       const addFooter = () => {
-        const footerY = pageHeight - 15
-        doc.setFontSize(8)
+        const footerY = pageHeight - 10 // Subido
+        doc.setFontSize(7) // Reducido
         doc.setTextColor(100, 100, 100)
         doc.text(
-          `Página ${currentPage} - Generado el ${new Date().toLocaleDateString('es-ES')}`,
+          `Página ${currentPage} - ${new Date().toLocaleDateString('es-ES')}`,
           pageWidth / 2,
           footerY,
           { align: 'center' }
@@ -320,130 +309,137 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         return false
       }
 
-      // Función para agregar sección (estilo igual que estadísticas)
+      // Función optimizada para agregar sección
       const agregarSeccion = (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
-        // Espacio antes de cada sección
-        yPosition += 10
+        // Espacio antes de cada sección reducido
+        yPosition += 5
         
-        // Título de sección
-        checkPageBreak(25)
+        // Título de sección más compacto
+        checkPageBreak(20) // Reducido de 25
         doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-        doc.rect(margin - 2, yPosition - 8, pageWidth - (margin * 2) + 4, 16, 'F')
+        doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 12, 'F') // Altura reducida
         doc.setTextColor(255, 255, 255)
-        doc.setFontSize(11)
+        doc.setFontSize(10) // Reducido
         doc.setFont('helvetica', 'bold')
         doc.text(titulo.toUpperCase(), margin, yPosition + 2)
-        yPosition += 12
+        yPosition += 8 // Reducido
 
-        // Contenido de la sección
+        // Contenido de la sección optimizado
         resetTextColor()
-        doc.setFontSize(9)
+        doc.setFontSize(8) // Reducido para más contenido
 
         datos.forEach((fila, filaIndex) => {
-          checkPageBreak(18)
+          checkPageBreak(12) // Reducido de 18
 
-          // Color de fondo alternado
+          // Color de fondo alternado más sutil
           if (filaIndex % 2 === 0) {
             doc.setFillColor(255, 255, 255)
           } else {
-            doc.setFillColor(colorGris[0], colorGris[1], colorGris[2])
+            doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
           }
-          doc.rect(margin, yPosition, pageWidth - (margin * 2), 15, 'F')
+          doc.rect(margin, yPosition, pageWidth - (margin * 2), 12, 'F') // Altura reducida
 
-          // Borde sutil
-          doc.setDrawColor(220, 220, 220)
-          doc.rect(margin, yPosition, pageWidth - (margin * 2), 15, 'S')
+          // Borde más sutil
+          doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+          doc.rect(margin, yPosition, pageWidth - (margin * 2), 12, 'S')
 
           // Dividir texto en múltiples líneas si es necesario
-          const textoLines = doc.splitTextToSize(fila.descripcion, pageWidth - margin - 80)
-          const valorLines = doc.splitTextToSize(fila.valor, 60)
+          const maxDescWidth = (pageWidth - margin * 2) * 0.4 // 40% para descripción
+          const maxValorWidth = (pageWidth - margin * 2) * 0.5 // 50% para valor
+          
+          const textoLines = doc.splitTextToSize(fila.descripcion, maxDescWidth)
+          const valorLines = doc.splitTextToSize(fila.valor, maxValorWidth)
 
-          // Texto (negro)
+          // Texto (más compacto)
           resetTextColor()
           doc.setFont('helvetica', 'normal')
           textoLines.forEach((line: string, lineIndex: number) => {
-            doc.text(line, margin + 5, yPosition + 6 + (lineIndex * 4))
+            doc.text(line, margin + 3, yPosition + 4 + (lineIndex * 3)) // Espaciado reducido
           })
 
-          // Valor (negro y en negrita)
+          // Valor (negrita y alineado a la derecha)
           resetTextColor()
           doc.setFont('helvetica', 'bold')
           valorLines.forEach((line: string, lineIndex: number) => {
-            doc.text(line, pageWidth - margin - 65, yPosition + 6 + (lineIndex * 4))
+            doc.text(line, pageWidth - margin - maxValorWidth + 5, yPosition + 4 + (lineIndex * 3))
           })
           doc.setFont('helvetica', 'normal')
 
-          yPosition += Math.max(15, Math.max(textoLines.length, valorLines.length) * 4 + 8)
+          yPosition += Math.max(12, Math.max(textoLines.length, valorLines.length) * 3 + 4) // Cálculo optimizado
         })
 
-        yPosition += 8
+        yPosition += 5 // Espacio reducido entre secciones
       }
 
       // Agregar cintillo SOLO en la primera página
       await agregarCintillo()
 
-      // Título principal
-      checkPageBreak(30)
-      doc.setFontSize(16)
+      // Título principal más compacto
+      checkPageBreak(25) // Reducido
+      doc.setFontSize(14) // Reducido
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
       doc.text(`TICKET #${ticket.id}`, pageWidth / 2, yPosition, { align: 'center' })
-      yPosition += 8
+      yPosition += 6 // Reducido
       
-      doc.setFontSize(12)
-      doc.text(ticket.titulo, pageWidth / 2, yPosition, { align: 'center' })
-      yPosition += 15
+      doc.setFontSize(10) // Reducido
+      const tituloLines = doc.splitTextToSize(ticket.titulo, pageWidth - margin * 2)
+      tituloLines.forEach((line: string) => {
+        doc.text(line, pageWidth / 2, yPosition, { align: 'center' })
+        yPosition += 4
+      })
+      yPosition += 8 // Reducido
 
-      // Información básica
+      // Información básica optimizada
       const infoBasica = [
         { descripcion: 'Título', valor: ticket.titulo },
         { descripcion: 'Estado', valor: ticket.estado.estado },
-        { descripcion: 'Tipo de Ticket', valor: ticket.tipoTicket.tipo },
-        { descripcion: 'Fecha de creación', valor: new Date(ticket.fecha_creacion).toLocaleDateString('es-ES') },
-        { descripcion: 'Hora de creación', valor: new Date(ticket.fecha_creacion).toLocaleTimeString('es-ES') },
+        { descripcion: 'Tipo', valor: ticket.tipoTicket.tipo },
+        { descripcion: 'Creación', valor: `${new Date(ticket.fecha_creacion).toLocaleDateString('es-ES')} ${new Date(ticket.fecha_creacion).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}` },
         ...(ticket.fecha_cierre ? [
-          { descripcion: 'Fecha de cierre', valor: new Date(ticket.fecha_cierre).toLocaleDateString('es-ES') },
-          { descripcion: 'Hora de cierre', valor: new Date(ticket.fecha_cierre).toLocaleTimeString('es-ES') }
+          { descripcion: 'Cierre', valor: `${new Date(ticket.fecha_cierre).toLocaleDateString('es-ES')} ${new Date(ticket.fecha_cierre).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}` }
         ] : [])
       ]
       agregarSeccion('Información Básica', infoBasica)
 
-      // Información de asignación
+      // Información de asignación optimizada
       const infoAsignacion = [
         { descripcion: 'Creado por', valor: getNombreCompleto(ticket.usuarioCreador) },
         ...(ticket.usuarioCerrador ? [
           { descripcion: 'Asignado a', valor: getNombreCompleto(ticket.usuarioCerrador) },
           ...(ticket.usuarioCerrador.tipoAnalista ? [
-            { descripcion: 'Tipo de analista', valor: ticket.usuarioCerrador.tipoAnalista.tipo }
+            { descripcion: 'Tipo analista', valor: ticket.usuarioCerrador.tipoAnalista.tipo }
           ] : [])
         ] : []),
         ...(ticket.tiempoEjecucion ? [
-          { descripcion: 'Tiempo de ejecución', valor: ticket.tiempoEjecucion }
+          { descripcion: 'Tiempo ejecución', valor: ticket.tiempoEjecucion }
         ] : [])
       ]
-      agregarSeccion('Información de Asignación', infoAsignacion)
+      if (infoAsignacion.length > 1) {
+        agregarSeccion('Asignación', infoAsignacion)
+      }
 
-      // Descripción (como texto normal)
-      checkPageBreak(25)
+      // Descripción optimizada
+      checkPageBreak(20)
       doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-      doc.rect(margin - 2, yPosition - 8, pageWidth - (margin * 2) + 4, 16, 'F')
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 12, 'F')
       doc.setTextColor(255, 255, 255)
-      doc.setFontSize(11)
+      doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
       doc.text('DESCRIPCIÓN', margin, yPosition + 2)
-      yPosition += 12
+      yPosition += 10
 
       resetTextColor()
-      doc.setFontSize(9)
+      doc.setFontSize(8)
       const descripcionLines = doc.splitTextToSize(ticket.descripcion, pageWidth - (margin * 2))
       descripcionLines.forEach((line: string) => {
-        checkPageBreak(6)
+        checkPageBreak(4) // Reducido
         doc.text(line, margin, yPosition)
-        yPosition += 5
+        yPosition += 3.5 // Reducido
       })
-      yPosition += 8
+      yPosition += 5
 
-      // Usuario afectado
+      // Usuario afectado optimizado
       if (ticket.usuarioAfectado) {
         const usuarioAfectado = [
           { descripcion: 'Nombre', valor: getNombreCompleto(ticket.usuarioAfectado) },
@@ -451,8 +447,7 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             { descripcion: 'Cédula', valor: ticket.usuarioAfectado.cedula }
           ] : []),
           ...(ticket.usuarioAfectado.direccion ? [
-            { descripcion: 'Piso', valor: ticket.usuarioAfectado.direccion.piso.piso },
-            { descripcion: 'Dirección', valor: ticket.usuarioAfectado.direccion.direccion }
+            { descripcion: 'Ubicación', valor: `${ticket.usuarioAfectado.direccion.piso.piso} - ${ticket.usuarioAfectado.direccion.direccion}` }
           ] : []),
           ...(ticket.usuarioAfectado.area ? [
             { descripcion: 'Área', valor: ticket.usuarioAfectado.area.nombre }
@@ -461,74 +456,89 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         agregarSeccion('Usuario Afectado', usuarioAfectado)
       }
 
-      // Equipos afectados
+      // Equipos afectados optimizados (formato compacto)
       if (ticket.ticketEquipos && ticket.ticketEquipos.length > 0) {
         const equiposData: Array<{descripcion: string, valor: string}> = []
         ticket.ticketEquipos.forEach((ticketEquipo, index) => {
           const equipo = ticketEquipo.equipo
           equiposData.push(
-            { descripcion: `Equipo ${index + 1} - Tipo`, valor: equipo.tipoEquipo?.nombre || 'Equipo' },
-            { descripcion: `Equipo ${index + 1} - Marca`, valor: equipo.modelo?.marca?.nombre || '' },
-            { descripcion: `Equipo ${index + 1} - Modelo`, valor: equipo.modelo?.nombre || '' },
-            { descripcion: `Equipo ${index + 1} - Bien Nacional`, valor: equipo.bienNacional || 'No asignado' },
-            { descripcion: `Equipo ${index + 1} - Serial`, valor: equipo.serial || 'No asignado' },
-            { descripcion: `Equipo ${index + 1} - Status`, valor: equipo.status?.estado || 'No especificado' }
+            { 
+              descripcion: `Equipo ${index + 1}`, 
+              valor: `${equipo.tipoEquipo?.nombre || 'Equipo'} - ${equipo.modelo?.marca?.nombre || ''} ${equipo.modelo?.nombre || ''}` 
+            },
+            { 
+              descripcion: `  BN/Serial`, 
+              valor: `${equipo.bienNacional || 'N/A'} / ${equipo.serial || 'N/A'}` 
+            },
+            { 
+              descripcion: `  Status`, 
+              valor: equipo.status?.estado || 'No especificado' 
+            }
           )
         })
         agregarSeccion('Equipos Afectados', equiposData)
       }
 
-      // Información de sistemas
+      // Información de sistemas optimizada
       if (ticket.TicketSistema && ticket.TicketSistema.length > 0) {
         const sistemasData: Array<{descripcion: string, valor: string}> = []
         ticket.TicketSistema.forEach((ticketSistema, index) => {
           sistemasData.push(
-            { descripcion: `Sistema ${index + 1} - Sistema`, valor: ticketSistema.sistema?.nombre || 'No especificado' },
-            { descripcion: `Sistema ${index + 1} - Falla`, valor: ticketSistema.falla?.nombre || 'No especificado' },
-            { descripcion: `Sistema ${index + 1} - Descripción`, valor: ticketSistema.descripcion || 'No especificada' }
+            { 
+              descripcion: `Sistema ${index + 1}`, 
+              valor: `${ticketSistema.sistema?.nombre || 'N/A'} - ${ticketSistema.falla?.nombre || 'N/A'}` 
+            },
+            { 
+              descripcion: `  Descripción`, 
+              valor: ticketSistema.descripcion || 'No especificada' 
+            }
           )
         })
-        agregarSeccion('Información de Sistemas', sistemasData)
+        agregarSeccion('Sistemas', sistemasData)
       }
 
-      // Información de cierre
+      // Información de cierre optimizada
       if (ticket.estadoId === 2 && ticket.ticketCierre) {
         const cierreData = [
           { descripcion: 'Condición', valor: ticket.ticketCierre.condicion },
-          { descripcion: 'Memo de Finalización', valor: ticket.ticketCierre.memoFinalizacion },
+          { descripcion: 'Memo Finalización', valor: ticket.ticketCierre.memoFinalizacion },
           ...(ticket.ticketCierre.observaciones ? [
-            { descripcion: 'Observaciones Adicionales', valor: ticket.ticketCierre.observaciones }
+            { descripcion: 'Observaciones', valor: ticket.ticketCierre.observaciones }
           ] : []),
           ...(ticket.ticketCierre.usuarioCerrador ? [
             { descripcion: 'Cerrado por', valor: getNombreCompleto(ticket.ticketCierre.usuarioCerrador) }
           ] : [])
         ]
-        agregarSeccion('Información de Cierre', cierreData)
+        agregarSeccion('Cierre', cierreData)
       }
 
-      // Reasignaciones
+      // Reasignaciones optimizadas (formato compacto)
       const reasignaciones = ticket.ticketReasignaciones || ticket.reasignaciones || []
       if (reasignaciones.length > 0) {
         const reasignacionesData: Array<{descripcion: string, valor: string}> = []
         reasignaciones.forEach((reasignacion, index) => {
           reasignacionesData.push(
-            { descripcion: `Reasignación ${index + 1} - De`, valor: reasignacion.analistaAnterior ? getNombreCompleto(reasignacion.analistaAnterior) : 'No especificado' },
-            { descripcion: `Reasignación ${index + 1} - A`, valor: reasignacion.analistaNuevo ? getNombreCompleto(reasignacion.analistaNuevo) : 'No especificado' },
+            { 
+              descripcion: `Reasignación ${index + 1}`, 
+              valor: `${reasignacion.analistaAnterior ? getNombreCompleto(reasignacion.analistaAnterior) : 'N/A'} → ${reasignacion.analistaNuevo ? getNombreCompleto(reasignacion.analistaNuevo) : 'N/A'}` 
+            },
+            { 
+              descripcion: `  Fecha/Hora`, 
+              valor: `${new Date(reasignacion.fechaReasignacion).toLocaleDateString('es-ES')} ${new Date(reasignacion.fechaReasignacion).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}` 
+            },
             ...(reasignacion.motivo ? [
-              { descripcion: `Reasignación ${index + 1} - Motivo`, valor: reasignacion.motivo }
+              { descripcion: `  Motivo`, valor: reasignacion.motivo }
             ] : []),
             ...(reasignacion.supervisor ? [
-              { descripcion: `Reasignación ${index + 1} - Supervisor`, valor: getNombreCompleto(reasignacion.supervisor) }
-            ] : []),
-            { descripcion: `Reasignación ${index + 1} - Fecha`, valor: new Date(reasignacion.fechaReasignacion).toLocaleDateString('es-ES') },
-            { descripcion: `Reasignación ${index + 1} - Hora`, valor: new Date(reasignacion.fechaReasignacion).toLocaleTimeString('es-ES') }
+              { descripcion: `  Supervisor`, valor: getNombreCompleto(reasignacion.supervisor) }
+            ] : [])
           )
         })
-        agregarSeccion('Historial de Reasignaciones', reasignacionesData)
+        agregarSeccion('Reasignaciones', reasignacionesData)
       }
 
       // Agregar logo al final del documento
-      checkPageBreak(80)
+      checkPageBreak(60) // Reducido
       await agregarLogoFinal()
 
       // Agregar pie de página final
@@ -574,14 +584,14 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             <h4 className="text-lg font-semibold text-gray-900 mb-2">
               Ticket #{ticket.id}
             </h4>
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 mb-2 line-clamp-2">
               {ticket.titulo}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              Selecciona el formato de exportación para el ticket.
+              Selecciona el formato de exportación.
             </p>
 
-            {/* Botones de exportación con el mismo estilo que estadísticas */}
+            {/* Botones de exportación */}
             <div className="flex gap-3 justify-center">
               <button
                 onClick={generarExcel}

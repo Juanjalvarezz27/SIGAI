@@ -293,7 +293,7 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         }
         
         // TAMAÑO ESPECÍFICO PARA EL CINTILLO (50 unidades ≈ 3.5cm en A4)
-        const cintilloHeight = 50
+        const cintilloHeight = 40
         
         // Agregar el cintillo en la parte superior
         doc.addImage(cintilloBase64, 'PNG', 0, 0, pageWidth, cintilloHeight)

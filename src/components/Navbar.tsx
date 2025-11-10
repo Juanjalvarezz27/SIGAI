@@ -17,6 +17,8 @@ import {
   User,
   UserCheck,
   House,
+  BookOpen,
+  LogIn,
 } from "lucide-react";
 
 import Logo from "@/assets/logo.png";
@@ -41,6 +43,13 @@ interface UsuarioInfo {
     id: number;
     tipo: string;
   } | null;
+}
+
+// Tipo para botones no autenticados
+interface UnauthenticatedButton {
+  path: string;
+  label: string;
+  icon: LucideIcon | null;
 }
 
 export default function Navbar() {
@@ -129,6 +138,20 @@ export default function Navbar() {
     },
   ];
 
+  // Botones para usuarios no autenticados CON ICONOS
+  const unauthenticatedButtons: UnauthenticatedButton[] = [
+    { 
+      path: "/docs/manualDeUso", 
+      label: "Manual de usuario", 
+      icon: BookOpen 
+    },
+    { 
+      path: "/", 
+      label: "Iniciar Sesión", 
+      icon: LogIn 
+    },
+  ];
+
   // Función para verificar si estamos en la ruta /home
   const isHomeRoute = () => {
     return pathname === "/home";
@@ -210,12 +233,6 @@ export default function Navbar() {
     handleLogout();
   };
 
-  // Botones para usuarios no autenticados
-  const unauthenticatedButtons: Omit<NavButton, "roles">[] = [
-    { path: "/docs/manualDeUso", label: "Más Info", icon: null },
-    { path: "/", label: "Iniciar Sesión", icon: null },
-  ];
-
   // Obtener botones filtrados por rol del usuario
   const getRoleButtons = (): NavButton[] => {
     const userRole = session?.user?.rol || "";
@@ -228,7 +245,7 @@ export default function Navbar() {
   // Si no hay sesión
   if (status === "unauthenticated") {
     return (
-      <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl">
+      <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl relative z-50">
         <div className="py-3 px-8">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center">
@@ -236,19 +253,22 @@ export default function Navbar() {
               <h1 className="text-white text-xl font-bold ml-2">OTIC</h1>
             </div>
 
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4">
               {unauthenticatedButtons.map((button) => {
                 const isActive = pathname === button.path;
+                const IconComponent = button.icon;
+
                 return (
                   <button
                     key={button.path}
                     onClick={() => handleNavigation(button.path)}
-                    className={`cursor-pointer text-white text-md font-medium p-4 rounded-3xl transform transition-all duration-200 hover:scale-105 ${
+                    className={`cursor-pointer flex items-center gap-2 text-white text-sm font-medium px-4 py-2 rounded-2xl transform transition-all duration-200 hover:scale-105 ${
                       isActive
                         ? "bg-[#4c678a]"
-                        : "transform transition-all duration-200 hover:scale-112"
+                        : "hover:bg-[#003366]"
                     }`}
                   >
+                    {IconComponent && <IconComponent size={18} />}
                     {button.label}
                   </button>
                 );
@@ -266,7 +286,7 @@ export default function Navbar() {
   // Mostrar loading mientras se obtiene la información del usuario
   if (loadingUserInfo) {
     return (
-      <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl">
+      <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl relative z-50">
         <div className="py-3 px-8">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center">
@@ -283,7 +303,7 @@ export default function Navbar() {
   // Renderizar una versión simple en el servidor, completa en el cliente
   return (
     <>
-      <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl">
+      <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl relative z-50">
         <div className="py-3 px-8">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center">
@@ -306,7 +326,7 @@ export default function Navbar() {
                       className={`cursor-pointer flex items-center gap-2 text-white text-sm font-medium px-4 py-2 rounded-2xl transform transition-all duration-200 hover:scale-105 ${
                         isActive
                           ? "bg-[#4c678a]"
-                          : "transform transition-all duration-200 hover:scale-112"
+                          : "hover:bg-[#003366]"
                       }`}
                     >
                       {IconComponent && <IconComponent size={18} />}

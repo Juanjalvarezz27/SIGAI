@@ -187,7 +187,7 @@ export default function NotificationBell() {
     <div className="relative notification-bell-container">
       <button
         onClick={handleClick}
-        className="relative p-2 text-white hover:bg-[#4c678a] rounded-full transition-colors duration-200"
+        className="relative cursor-pointer p-2 text-white hover:bg-[#4c678a] rounded-full transition-colors duration-200"
       >
         <Bell size={20} />
         {unreadCount > 0 && (
