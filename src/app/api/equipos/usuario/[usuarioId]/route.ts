@@ -3,7 +3,7 @@ import prismadb from '@/lib/prismadb'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { usuarioId: string } }
+  { params }: { params: Promise<{ usuarioId: string }> }
 ) {
   try {
     // Await al objeto params completo primero

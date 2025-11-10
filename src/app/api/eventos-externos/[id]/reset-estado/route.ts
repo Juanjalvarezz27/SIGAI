@@ -5,7 +5,7 @@ import prisma from '@/lib/prismadb';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Obtener el usuario que realiza la acción
     const usuario = await prisma.usuario.findUnique({

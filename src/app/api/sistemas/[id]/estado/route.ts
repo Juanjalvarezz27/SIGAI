@@ -6,9 +6,9 @@ import { authOptions } from "@/lib/auth"
 const prisma = new PrismaClient()
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // PATCH - Cambiar estado del sistema (Activo/Inactivo)
@@ -36,8 +36,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'No tienes permisos para esta acción' }, { status: 403 })
     }
 
-    const sistemaId = parseInt(params.id)
-    
+    const { id } = await params;
+    const sistemaId = parseInt(id)
+
     if (isNaN(sistemaId)) {
       return NextResponse.json(
         { error: 'ID del sistema inválido' },
@@ -83,8 +84,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // GET - Obtener sistema específico
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const sistemaId = parseInt(params.id)
-    
+    const { id } = await params;
+    const sistemaId = parseInt(id)
+
     if (isNaN(sistemaId)) {
       return NextResponse.json(
         { error: 'ID del sistema inválido' },

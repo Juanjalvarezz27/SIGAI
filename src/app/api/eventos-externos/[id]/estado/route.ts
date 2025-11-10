@@ -6,7 +6,7 @@ import { CambioEstadoData } from '../../../../../../types/eventos';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body: CambioEstadoData = await request.json();
     const { estado, motivo } = body;
 
@@ -38,16 +38,16 @@ export async function POST(
       where: { id: parseInt(id) },
       include: {
         usuarioSolicitante: {
-          select: { 
+          select: {
             id: true,
-            nombre: true, 
-            apellido: true 
+            nombre: true,
+            apellido: true
           }
         },
         usuarioAsignado: {
-          select: { 
-            nombre: true, 
-            apellido: true 
+          select: {
+            nombre: true,
+            apellido: true
           }
         }
       }
@@ -59,8 +59,8 @@ export async function POST(
 
     // Si el usuario es solicitante (rolId 3), verificar que el evento sea de su dirección
     if (usuario.rolId === 3 && eventoExistente.direccionId !== usuario.direccionId) {
-      return NextResponse.json({ 
-        error: 'No tienes permisos para modificar este evento' 
+      return NextResponse.json({
+        error: 'No tienes permisos para modificar este evento'
       }, { status: 403 });
     }
 
@@ -115,8 +115,8 @@ export async function POST(
           userId: eventoExistente.usuarioSolicitante.id,
           type: estado === 'Aceptado' ? 'EVENTO_ACEPTADO' : 'EVENTO_RECHAZADO',
           title: estado === 'Aceptado' ? 'Evento aceptado' : 'Evento rechazado',
-          message: estado === 'Aceptado' 
-            ? `Tu evento "${eventoExistente.nombre}" ha sido aceptado` 
+          message: estado === 'Aceptado'
+            ? `Tu evento "${eventoExistente.nombre}" ha sido aceptado`
             : `Tu evento "${eventoExistente.nombre}" ha sido rechazado${motivo ? `: ${motivo}` : ''}`,
           relatedId: parseInt(id),
           read: false

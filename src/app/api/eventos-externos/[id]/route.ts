@@ -5,7 +5,7 @@ import prisma from '@/lib/prismadb';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Obtener el usuario que realiza la acción
     const usuario = await prisma.usuario.findUnique({
@@ -27,9 +27,9 @@ export async function PATCH(
     // Verificar que el evento existe y obtener su dirección
     const eventoExistente = await prisma.eventoExterno.findUnique({
       where: { id: parseInt(id) },
-      select: { 
+      select: {
         id: true,
-        direccionId: true 
+        direccionId: true
       }
     });
 
@@ -39,8 +39,8 @@ export async function PATCH(
 
     // Si el usuario es solicitante (rolId 3), verificar que el evento sea de su dirección
     if (usuario.rolId === 3 && eventoExistente.direccionId !== usuario.direccionId) {
-      return NextResponse.json({ 
-        error: 'No tienes permisos para modificar este evento' 
+      return NextResponse.json({
+        error: 'No tienes permisos para modificar este evento'
       }, { status: 403 });
     }
 

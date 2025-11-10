@@ -391,7 +391,6 @@ export default function VistaDetalleUsuarioSupervisor({
                 onError={manejarError}
                 onClose={cerrarModalEditar}
                 usuarioPrecargado={usuario}
-                esSupervisor={true}
               />
             </div>
           </div>

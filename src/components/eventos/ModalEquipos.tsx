@@ -35,6 +35,8 @@ export default function ModalEquipos({ isOpen, onClose, onEquiposSeleccionados, 
         <SeleccionEquipos
           equiposSeleccionados={equiposSeleccionados}
           onEquiposChange={handleEquiposChange}
+          isOpen={isOpen} 
+          onClose={onClose} 
         />
 
         <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
