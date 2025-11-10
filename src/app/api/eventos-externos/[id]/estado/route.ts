@@ -33,12 +33,23 @@ export async function POST(
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
-    // Verificar que el evento existe y obtener su dirección
+    // Verificar que el evento existe y obtener información completa
     const eventoExistente = await prisma.eventoExterno.findUnique({
       where: { id: parseInt(id) },
-      select: { 
-        id: true,
-        direccionId: true 
+      include: {
+        usuarioSolicitante: {
+          select: { 
+            id: true,
+            nombre: true, 
+            apellido: true 
+          }
+        },
+        usuarioAsignado: {
+          select: { 
+            nombre: true, 
+            apellido: true 
+          }
+        }
       }
     });
 
@@ -95,6 +106,20 @@ export async function POST(
           estado,
           motivo,
           usuarioId: usuario.id
+        }
+      });
+
+      // 🔔 NUEVO: Crear notificación para el usuario solicitante
+      await tx.notification.create({
+        data: {
+          userId: eventoExistente.usuarioSolicitante.id,
+          type: estado === 'Aceptado' ? 'EVENTO_ACEPTADO' : 'EVENTO_RECHAZADO',
+          title: estado === 'Aceptado' ? 'Evento aceptado' : 'Evento rechazado',
+          message: estado === 'Aceptado' 
+            ? `Tu evento "${eventoExistente.nombre}" ha sido aceptado` 
+            : `Tu evento "${eventoExistente.nombre}" ha sido rechazado${motivo ? `: ${motivo}` : ''}`,
+          relatedId: parseInt(id),
+          read: false
         }
       });
 

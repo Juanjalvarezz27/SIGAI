@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
       where: { id: parseInt(ticketId) },
       include: {
         estado: true,
-        usuarioCerrador: true
+        usuarioCerrador: true,
+        usuarioCreador: true
       }
     });
 
@@ -39,6 +40,15 @@ export async function POST(request: NextRequest) {
 
     if (!ticket.usuarioCerradorId) {
       return NextResponse.json({ error: 'No hay analista asignado al ticket' }, { status: 400 });
+    }
+
+    // Obtener el usuario actual (quien cierra el ticket)
+    const usuarioActual = await prismadb.usuario.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!usuarioActual) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
     // Calcular tiempo de ejecución en minutos
@@ -60,6 +70,33 @@ export async function POST(request: NextRequest) {
           tiempoEjecucionMinutos // Guardar el tiempo en la base de datos
         }
       });
+
+      // 🔔 NUEVO: Obtener todos los usuarios admin (rolId: 1)
+      const usuariosAdmin = await tx.usuario.findMany({
+        where: {
+          rolId: 1, // Rol admin
+          estado: 'Activo'
+        },
+        select: {
+          id: true
+        }
+      });
+
+      // 🔔 NUEVO: Crear notificaciones para todos los administradores
+      if (usuariosAdmin.length > 0) {
+        const notificacionesAdmin = usuariosAdmin.map(admin => ({
+          userId: admin.id,
+          type: 'TICKET_CLOSED',
+          title: 'Ticket cerrado',
+          message: `El analista ${usuarioActual.nombre} ${usuarioActual.apellido} ha cerrado el ticket: "${ticket.titulo}"`,
+          relatedId: parseInt(ticketId),
+          read: false
+        }));
+
+        await tx.notification.createMany({
+          data: notificacionesAdmin
+        });
+      }
 
       // 2. Actualizar el ticket a estado "Cerrado" (id: 2)
       const ticketActualizado = await tx.ticket.update({

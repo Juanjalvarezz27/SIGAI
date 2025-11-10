@@ -284,7 +284,7 @@ export default function Tickets() {
           </div>
 
           {/* Filtro por período */}
-          <div className="mb-6 flex justify-end">
+          <div className="z-[-1] mb-6 flex justify-end">
             <FiltroPeriodo
               onFiltroChange={handleFiltroPeriodoChange}
               loading={isLoading}

@@ -208,53 +208,70 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Debe seleccionar al menos un equipo' }, { status: 400 });
     }
 
-    // Crear el evento externo
-    const evento = await prisma.eventoExterno.create({
-      data: {
-        nombre,
-        descripcion,
-        fechaInicial: fechaInicialDate,
-        fechaFinal: fechaFinalDate,
-        usuarioSolicitanteId: usuarioSesion.id,
-        usuarioAsignadoId: usuarioAsignado.id,
-        direccionId: usuarioSesion.direccionId,
-        pisoId: usuarioSesion.direccion.pisoId,
-        equiposEvento: {
-          create: equipos.map((equipo: EquipoSeleccionado) => ({
-            tipoEquipoId: equipo.tipoEquipoId,
-            cantidad: equipo.cantidad
-          }))
-        }
-      },
-      include: {
-        usuarioSolicitante: {
-          select: {
-            nombre: true,
-            apellido: true
+    // Crear el evento externo en una transacción
+    const evento = await prisma.$transaction(async (tx) => {
+      // 1. Crear el evento externo
+      const nuevoEvento = await tx.eventoExterno.create({
+        data: {
+          nombre,
+          descripcion,
+          fechaInicial: fechaInicialDate,
+          fechaFinal: fechaFinalDate,
+          usuarioSolicitanteId: usuarioSesion.id,
+          usuarioAsignadoId: usuarioAsignado.id,
+          direccionId: usuarioSesion.direccionId,
+          pisoId: usuarioSesion.direccion.pisoId,
+          equiposEvento: {
+            create: equipos.map((equipo: EquipoSeleccionado) => ({
+              tipoEquipoId: equipo.tipoEquipoId,
+              cantidad: equipo.cantidad
+            }))
           }
         },
-        usuarioAsignado: {
-          select: {
-            nombre: true,
-            apellido: true
-          }
-        },
-        direccion: {
-          include: {
-            piso: true
-          }
-        },
-        piso: true,
-        equiposEvento: {
-          include: {
-            tipoEquipo: {
-              select: {
-                nombre: true
+        include: {
+          usuarioSolicitante: {
+            select: {
+              nombre: true,
+              apellido: true
+            }
+          },
+          usuarioAsignado: {
+            select: {
+              nombre: true,
+              apellido: true
+            }
+          },
+          direccion: {
+            include: {
+              piso: true
+            }
+          },
+          piso: true,
+          equiposEvento: {
+            include: {
+              tipoEquipo: {
+                select: {
+                  nombre: true
+                }
               }
             }
           }
         }
-      }
+      });
+
+      // 🔔 NUEVO: Crear notificación para el usuario asignado
+      await tx.notification.create({
+        data: {
+          userId: usuarioAsignado.id,
+          type: 'EVENTO_SOLICITADO',
+          title: 'Nuevo evento externo solicitado',
+          message: `Se ha solicitado un nuevo evento: "${nombre}" por ${usuarioSesion.nombre} ${usuarioSesion.apellido}`,
+          relatedId: nuevoEvento.id,
+          read: false
+        }
+      });
+
+      return nuevoEvento;
     });
 
     return NextResponse.json(evento);

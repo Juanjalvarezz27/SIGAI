@@ -5,6 +5,36 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
+// Función para limpieza automática semanal
+async function cleanOldNotifications() {
+  try {
+    // Eliminar notificaciones mayores a 7 días
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const result = await prisma.notification.deleteMany({
+      where: {
+        createdAt: {
+          lt: oneWeekAgo
+        }
+      }
+    });
+
+    console.log(`Limpieza automática: ${result.count} notificaciones eliminadas (mayores a 7 días)`);
+    return result.count;
+  } catch (error) {
+    console.error('Error en limpieza automática de notificaciones:', error);
+    return 0;
+  }
+}
+
+// Ejecutar limpieza automática al cargar el módulo (solo en producción)
+if (process.env.NODE_ENV === 'production') {
+  // Ejecutar limpieza inmediatamente y luego cada 24 horas
+  cleanOldNotifications();
+  setInterval(cleanOldNotifications, 24 * 60 * 60 * 1000); // 24 horas
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,6 +52,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
+    // Ejecutar limpieza antes de obtener notificaciones (opcional)
+    await cleanOldNotifications();
+
     // Obtener notificaciones del usuario
     const notifications = await prisma.notification.findMany({
       where: {
@@ -30,7 +63,7 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: 'desc'
       },
-      take: 20 // Últimas 20 notificaciones
+      take: 50 // Últimas 50 notificaciones
     });
 
     // Contar notificaciones no leídas
@@ -81,7 +114,7 @@ export async function PUT(request: NextRequest) {
     const updatedNotification = await prisma.notification.update({
       where: {
         id: notificationId,
-        userId: usuarioActual.id // Asegurar que solo puede marcar sus propias notificaciones
+        userId: usuarioActual.id
       },
       data: {
         read: true
@@ -92,6 +125,67 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     console.error('Error updating notification:', error);
+    return NextResponse.json({
+      error: 'Error interno del servidor'
+    }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // Obtener el usuario actual
+    const usuarioActual = await prisma.usuario.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!usuarioActual) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    // Eliminar todas las notificaciones del usuario
+    const deleteResult = await prisma.notification.deleteMany({
+      where: {
+        userId: usuarioActual.id
+      }
+    });
+
+    return NextResponse.json({ 
+      message: 'Notificaciones eliminadas',
+      deletedCount: deleteResult.count
+    });
+
+  } catch (error) {
+    console.error('Error clearing notifications:', error);
+    return NextResponse.json({
+      error: 'Error interno del servidor'
+    }, { status: 500 });
+  }
+}
+
+// Endpoint adicional para forzar limpieza manual (útil para testing)
+export async function POST(request: NextRequest) {
+  try {
+    // Verificar si es una solicitud de limpieza (podrías agregar autenticación aquí)
+    const { action } = await request.json();
+    
+    if (action === 'cleanup') {
+      const cleanedCount = await cleanOldNotifications();
+      return NextResponse.json({
+        message: 'Limpieza ejecutada',
+        cleanedCount
+      });
+    }
+
+    return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
+
+  } catch (error) {
+    console.error('Error en limpieza manual:', error);
     return NextResponse.json({
       error: 'Error interno del servidor'
     }, { status: 500 });

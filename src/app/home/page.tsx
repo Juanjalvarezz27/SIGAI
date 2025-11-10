@@ -172,7 +172,7 @@ async function Inicio() {
       <Navbar />
       <Title text={"Inicio"} />
 
-      <div className="w-11/12 mx-auto">
+      <div className="w-11/12 mx-auto z-[-1]">
         {/* Grid de botones estilo bento para desktop */}
         <div className="grid grid-cols-3 gap-6 w-10/12 mx-auto mt-8">
           {availableRoutes.map((route, index) => {
@@ -184,7 +184,7 @@ async function Inicio() {
                 key={route.path}
                 href={route.path}
                 className={`
-group relative p-8 rounded-2xl border-2 border-gray-100
+group relative p-8 rounded-2xl border-2 border-gray-100 z-[-1]
 bg-white shadow-lg hover:shadow-2xl transition-all duration-300
 hover:scale-105 hover:-translate-y-1 overflow-hidden
 ${colorVariant === 0 ? "hover:border-[#5D8AA8]" : ""}
@@ -195,7 +195,7 @@ ${colorVariant === 2 ? "hover:border-[#E8A881]" : ""}
                 {/* Efecto de brillo sutil */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                <div className="relative flex flex-col items-center text-center space-y-4">
                   {/* Cuadro del Icono */}
                   <div
                     className={`

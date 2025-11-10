@@ -72,6 +72,27 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      // NUEVO: Eliminar notificación del usuario anterior
+      await tx.notification.deleteMany({
+        where: {
+          userId: ticket.usuarioCerradorId!, // Usuario anterior
+          relatedId: parseInt(ticketId),
+          type: 'TICKET_ASSIGNED'
+        }
+      });
+
+      // NUEVO: Crear notificación para el usuario nuevo
+      await tx.notification.create({
+        data: {
+          userId: nuevoAnalistaId, // Usuario nuevo
+          type: 'TICKET_REASSIGNED',
+          title: 'Ticket reasignado',
+          message: `Se te ha reasignado el ticket: "${ticket.titulo}"`,
+          relatedId: parseInt(ticketId),
+          read: false
+        }
+      });
+
       // 2. Actualizar el ticket con el nuevo analista
       const ticketActualizado = await tx.ticket.update({
         where: { id: parseInt(ticketId) },
