@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import axios from "axios";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -184,33 +185,23 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post("/api/auth/signout");
-
+      // ✅ SOLO esto es necesario - NextAuth funciona perfecto
+      await signOut({ 
+        redirect: true, // Deja que NextAuth maneje la redirección
+        callbackUrl: "/"
+      });
+      
+      // ✅ Limpieza opcional y mínima
       if (typeof window !== "undefined") {
-        const cookies = document.cookie.split(";");
-        cookies.forEach((cookie) => {
-          const eqPos = cookie.indexOf("=");
-          const name =
-            eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-
-          if (name.includes("auth") || name.includes("next")) {
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-          }
-        });
-
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = "/";
       }
+      
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.error("Error en logout:", error);
+      
+      // ✅ Fallback simple
       if (typeof window !== "undefined") {
-        document.cookie.split(";").forEach((cookie) => {
-          const name = cookie.split("=")[0].trim();
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        });
         window.location.href = "/";
       }
     }

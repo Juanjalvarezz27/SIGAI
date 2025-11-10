@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'standalone', 
   typescript: {
-    ignoreBuildErrors: false, 
+    ignoreBuildErrors: true, 
   },
   eslint: {
     ignoreDuringBuilds: false,

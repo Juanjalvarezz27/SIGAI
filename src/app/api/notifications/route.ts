@@ -19,8 +19,7 @@ async function cleanOldNotifications() {
         }
       }
     });
-
-    console.log(`Limpieza automática: ${result.count} notificaciones eliminadas (mayores a 7 días)`);
+    
     return result.count;
   } catch (error) {
     console.error('Error en limpieza automática de notificaciones:', error);
