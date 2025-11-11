@@ -402,7 +402,7 @@ export default function TicketsList({
 
                     {estaExpandido.descripcion && (
                       <div className="mt-2 p-3 bg-white border border-gray-200 rounded-lg animate-slide-down">
-                        <p className="text-gray-600 text-sm">{ticket.descripcion}</p>
+                        <p className=" text-sm">{ticket.descripcion}</p>
                       </div>
                     )}
                   </div>
@@ -497,9 +497,9 @@ export default function TicketsList({
                             {ticket.ticketEquipos.map((ticketEquipo) => {
                               const infoEquipo = getInfoEquipo(ticketEquipo.equipo);
                               return (
-                                <div key={ticketEquipo.id} className="pb-2 border-b border-gray-100 last:border-b-0 last:pb-0">
-                                  <div className="font-medium text-sm mb-1">{infoEquipo.nombre}</div>
-                                  <div className="text-gray-600 text-xs space-y-1">
+                                <div key={ticketEquipo.id} className="pb-2 border-b border-gray-300 last:border-b-0 last:pb-0">
+                                  <div className="font-bold text-md mb-1">{infoEquipo.nombre}</div>
+                                  <div className="text-sm space-y-1">
                                     <div className="flex justify-between">
                                       <span>Bien Nacional:</span>
                                       <span className="font-medium">{infoEquipo.bienNacional}</span>
@@ -560,7 +560,7 @@ export default function TicketsList({
                                 <FileText className="w-4 h-4 text-gray-600" />
                                 <div className="text-sm font-medium text-gray-900">Memo de Finalización</div>
                               </div>
-                              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                              <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 {ticket.ticketCierre.memoFinalizacion}
                               </div>
                             </div>
@@ -628,7 +628,7 @@ export default function TicketsList({
 
                 {/* Información del ticket (siempre visible) - Se mantiene al fondo */}
                 <div className="mt-auto pt-4 border-t border-gray-100">
-                  <div className="space-y-2 text-sm text-gray-500">
+                  <div className="space-y-2 text-sm text-gray-900">
                     <div className="flex justify-between">
                       <span>Creado por:</span>
                       <span className="font-medium text-gray-700">

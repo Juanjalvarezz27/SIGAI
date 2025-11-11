@@ -346,7 +346,7 @@ export default function ListaEventosExternos({
                 </button>
                 {descripcionAbierta[evento.id] && (
                   <div className="mt-2 p-3 bg-white border border-blue-200 rounded-lg animate-slide-down">
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    <p className="text-sm text-gray-900 leading-relaxed">
                       {evento.descripcion}
                     </p>
                   </div>
@@ -414,11 +414,11 @@ export default function ListaEventosExternos({
                 {motivoAbierto[evento.id] && evento.estadoDetalle && (
                   <div className="mt-2 p-3 bg-white border border-gray-200 rounded-lg animate-slide-down">
                     <div className="mb-3">
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-sm text-gray-900 leading-relaxed">
                         {evento.estadoDetalle.motivo || 'No se especificó un mensaje.'}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-2">
+                    <div className="flex items-center justify-between text-sm text-gray-900 border-t border-gray-100 pt-2">
                       <span>
                         Por: {evento.estadoDetalle.usuario.nombre} {evento.estadoDetalle.usuario.apellido || ''}
                       </span>

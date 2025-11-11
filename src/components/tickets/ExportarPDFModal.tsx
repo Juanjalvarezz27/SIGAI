@@ -201,78 +201,107 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
       const doc = new jsPDF()
 
       // Configuración optimizada para mejor uso del espacio
-      const margin = 15 // Reducido de 20
-      let yPosition = margin
+      const margin = 15
+      const cintilloHeight = 35 // Altura fija del cintillo
+      let yPosition = margin // Comenzar en el margen normal
       const pageWidth = doc.internal.pageSize.width
       const pageHeight = doc.internal.pageSize.height
       let currentPage = 1
-
+      let primeraPagina = true // Bandera para identificar la primera página
+      
       // Color azul corporativo
       const colorAzul = [0, 51, 102]
       const colorGrisClaro = [245, 245, 245]
       const colorGrisMedio = [220, 220, 220]
 
-      // Función para agregar cintillo (SOLO en primera página)
-      const agregarCintillo = async () => {
-        try {
-          let cintilloBase64
-          try {
-            cintilloBase64 = await cargarImagenComoBase64('/Cintillo.png')
-          } catch (error) {
-            cintilloBase64 = CINTILLO_BASE64
-          }
+      // Variable para almacenar la imagen del cintillo
+      let cintilloBase64: string | null = null
 
-          const cintilloHeight = 40 // Reducido de 50
-          doc.addImage(cintilloBase64, 'PNG', 0, 0, pageWidth, cintilloHeight)
-          doc.setFillColor(200, 200, 200)
-          doc.rect(0, cintilloHeight, pageWidth, 1, 'F') // Línea más delgada
-          yPosition = cintilloHeight + 10 // Reducido espacio
+      // Función para cargar el cintillo una sola vez
+      const cargarCintillo = async (): Promise<string> => {
+        if (cintilloBase64) return cintilloBase64
+        
+        try {
+          cintilloBase64 = await cargarImagenComoBase64('/Cintillo.png')
         } catch (error) {
           console.error('Error cargando cintillo:', error)
-          const cintilloHeight = 40
+          cintilloBase64 = CINTILLO_BASE64
+        }
+        return cintilloBase64
+      }
+
+      // Función para agregar cintillo SOLO en la primera página
+      const agregarCintillo = async () => {
+        if (!primeraPagina) return // Solo agregar en primera página
+        
+        try {
+          const cintilloImg = await cargarCintillo()
+          
+          // Agregar cintillo con altura fija de 35px
+          doc.addImage(cintilloImg, 'PNG', 0, 0, pageWidth, cintilloHeight)
+          
+          // Línea separadora más delgada
+          doc.setFillColor(200, 200, 200)
+          doc.rect(0, cintilloHeight, pageWidth, 1, 'F')
+          
+          // Ajustar posición Y para que el contenido empiece después del cintillo
+          yPosition = cintilloHeight + 10
+          
+        } catch (error) {
+          console.error('Error agregando cintillo:', error)
+          // Fallback: cintillo azul sólido
           doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
           doc.rect(0, 0, pageWidth, cintilloHeight, 'F')
           doc.setTextColor(255, 255, 255)
-          doc.setFontSize(14) // Reducido
+          doc.setFontSize(12)
           doc.setFont('helvetica', 'bold')
-          doc.text('REPORTE DE TICKET', pageWidth / 2, cintilloHeight / 2 - 5, { align: 'center' })
-          doc.setFontSize(8) // Reducido
-          doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, pageWidth / 2, cintilloHeight / 2 + 8, { align: 'center' })
+          doc.text('REPORTE DE TICKET', pageWidth / 2, cintilloHeight / 2 - 3, { align: 'center' })
+          
+          // Ajustar posición Y para el fallback también
           yPosition = cintilloHeight + 10
         }
       }
 
-      // Función para agregar logo al final (más compacto)
+      // Función para agregar logo al final
       const agregarLogoFinal = async () => {
         try {
+          // Intentar cargar el logo
           let logoBase64
           try {
             logoBase64 = await cargarImagenComoBase64('/logo.png')
           } catch (error) {
+            console.log('Usando fallback para logo')
             logoBase64 = LOGO_BASE64
           }
-
-          yPosition += 15 // Reducido espacio
+          
+          // Agregar espacio antes del logo
+          yPosition += 20
+          
+          // Agregar línea separadora
           doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
           doc.line(margin, yPosition, pageWidth - margin, yPosition)
-          yPosition += 10 // Reducido
-
+          yPosition += 15
+          
+          // Agregar logo centrado con dimensiones específicas
           if (logoBase64 && logoBase64.startsWith('data:image/')) {
-            const logoWidth = 30 // Reducido
-            const logoHeight = 30
+            const logoWidth = 30
+            const logoHeight = 40
             const logoX = (pageWidth - logoWidth) / 2
             doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight)
-            yPosition += logoHeight + 5 // Reducido
+            yPosition += logoHeight + 5
           }
-
-          doc.setFontSize(8) // Reducido
+          
+          // Texto debajo del logo
+          doc.setFontSize(10)
           doc.setTextColor(100, 100, 100)
           doc.setFont('helvetica', 'normal')
           doc.text('Sistema de Gestión de TI', pageWidth / 2, yPosition, { align: 'center' })
+          
         } catch (error) {
           console.error('Error agregando logo:', error)
-          yPosition += 15
-          doc.setFontSize(8)
+          // Fallback: texto simple
+          yPosition += 20
+          doc.setFontSize(10)
           doc.setTextColor(100, 100, 100)
           doc.text('Sistema de Gestión de TI', pageWidth / 2, yPosition, { align: 'center' })
         }
@@ -284,52 +313,70 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         doc.setFont('helvetica', 'normal')
       }
 
-      // Función para agregar pie de página más compacto
+      // Función para agregar pie de página
       const addFooter = () => {
-        const footerY = pageHeight - 10 // Subido
-        doc.setFontSize(7) // Reducido
+        const footerY = pageHeight - 10
+        doc.setFontSize(7)
         doc.setTextColor(100, 100, 100)
         doc.text(
-          `Página ${currentPage} - ${new Date().toLocaleDateString('es-ES')}`,
+          `Página ${currentPage} - Generado el ${new Date().toLocaleDateString('es-ES')}`,
           pageWidth / 2,
           footerY,
           { align: 'center' }
         )
       }
 
-      // Función para verificar si necesita nueva página
+      // Función para verificar si necesita nueva página (CORREGIDA)
       const checkPageBreak = (requiredSpace: number) => {
         if (yPosition + requiredSpace > pageHeight - margin) {
           addFooter()
           doc.addPage()
           currentPage++
-          yPosition = margin
+          primeraPagina = false // Ya no es la primera página
+          yPosition = margin // Reset a margen normal para páginas siguientes
           return true
         }
         return false
       }
 
-      // Función optimizada para agregar sección
+      // Función mejorada para calcular altura dinámica de filas
+      const calcularAlturaFila = (texto: string, maxWidth: number, fontSize: number = 9): number => {
+        const lines = doc.splitTextToSize(texto, maxWidth)
+        return Math.max(15, lines.length * 5 + 6) // Mínimo 15px, más padding
+      }
+
+      // Función optimizada para agregar sección con mejor manejo de texto
       const agregarSeccion = (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
-        // Espacio antes de cada sección reducido
-        yPosition += 5
+        // Espacio antes de cada sección aumentado para mejor separación
+        yPosition += 10
         
-        // Título de sección más compacto
-        checkPageBreak(20) // Reducido de 25
+        // Título de sección
+        checkPageBreak(25) // Más espacio para el título
         doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-        doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 12, 'F') // Altura reducida
+        doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F') // Altura aumentada
         doc.setTextColor(255, 255, 255)
-        doc.setFontSize(10) // Reducido
+        doc.setFontSize(11) // Tamaño aumentado para mejor legibilidad
         doc.setFont('helvetica', 'bold')
-        doc.text(titulo.toUpperCase(), margin, yPosition + 2)
-        yPosition += 8 // Reducido
+        doc.text(titulo.toUpperCase(), margin, yPosition + 3)
+        yPosition += 12
 
         // Contenido de la sección optimizado
         resetTextColor()
-        doc.setFontSize(8) // Reducido para más contenido
+        doc.setFontSize(9) // Tamaño aumentado para mejor legibilidad
 
         datos.forEach((fila, filaIndex) => {
-          checkPageBreak(12) // Reducido de 18
+          const maxDescWidth = (pageWidth - margin * 2) * 0.35 // 35% para descripción
+          const maxValorWidth = (pageWidth - margin * 2) * 0.55 // 55% para valor (más espacio)
+          
+          const descLines = doc.splitTextToSize(fila.descripcion, maxDescWidth)
+          const valorLines = doc.splitTextToSize(fila.valor, maxValorWidth)
+          
+          // Calcular altura dinámica basada en el contenido más largo
+          const alturaDesc = descLines.length * 4.5
+          const alturaValor = valorLines.length * 4.5
+          const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6) // Mínimo 15px, más padding
+
+          checkPageBreak(alturaFila + 5)
 
           // Color de fondo alternado más sutil
           if (filaIndex % 2 === 0) {
@@ -337,58 +384,55 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
           } else {
             doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
           }
-          doc.rect(margin, yPosition, pageWidth - (margin * 2), 12, 'F') // Altura reducida
+          doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'F')
 
           // Borde más sutil
           doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
-          doc.rect(margin, yPosition, pageWidth - (margin * 2), 12, 'S')
+          doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'S')
 
-          // Dividir texto en múltiples líneas si es necesario
-          const maxDescWidth = (pageWidth - margin * 2) * 0.4 // 40% para descripción
-          const maxValorWidth = (pageWidth - margin * 2) * 0.5 // 50% para valor
-          
-          const textoLines = doc.splitTextToSize(fila.descripcion, maxDescWidth)
-          const valorLines = doc.splitTextToSize(fila.valor, maxValorWidth)
-
-          // Texto (más compacto)
+          // Texto de descripción (alineado a la izquierda)
           resetTextColor()
           doc.setFont('helvetica', 'normal')
-          textoLines.forEach((line: string, lineIndex: number) => {
-            doc.text(line, margin + 3, yPosition + 4 + (lineIndex * 3)) // Espaciado reducido
+          descLines.forEach((line: string, lineIndex: number) => {
+            doc.text(line, margin + 4, yPosition + 6 + (lineIndex * 4.5))
           })
 
-          // Valor (negrita y alineado a la derecha)
+          // Texto de valor (negrita y alineado a la izquierda con margen)
           resetTextColor()
           doc.setFont('helvetica', 'bold')
+          const valorX = margin + maxDescWidth + 8 // Espacio entre columnas aumentado
           valorLines.forEach((line: string, lineIndex: number) => {
-            doc.text(line, pageWidth - margin - maxValorWidth + 5, yPosition + 4 + (lineIndex * 3))
+            doc.text(line, valorX, yPosition + 6 + (lineIndex * 4.5))
           })
           doc.setFont('helvetica', 'normal')
 
-          yPosition += Math.max(12, Math.max(textoLines.length, valorLines.length) * 3 + 4) // Cálculo optimizado
+          yPosition += alturaFila + 2 // Espacio entre filas aumentado
         })
 
-        yPosition += 5 // Espacio reducido entre secciones
+        yPosition += 8 // Espacio aumentado entre secciones
       }
 
-      // Agregar cintillo SOLO en la primera página
+      // AGREGAR CINTILLO SOLO EN LA PRIMERA PÁGINA
       await agregarCintillo()
 
-      // Título principal más compacto
-      checkPageBreak(25) // Reducido
-      doc.setFontSize(14) // Reducido
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
-      doc.text(`TICKET #${ticket.id}`, pageWidth / 2, yPosition, { align: 'center' })
-      yPosition += 6 // Reducido
-      
-      doc.setFontSize(10) // Reducido
-      const tituloLines = doc.splitTextToSize(ticket.titulo, pageWidth - margin * 2)
-      tituloLines.forEach((line: string) => {
-        doc.text(line, pageWidth / 2, yPosition, { align: 'center' })
-        yPosition += 4
-      })
-      yPosition += 8 // Reducido
+      // Título principal - Solo en primera página
+      if (primeraPagina) {
+        checkPageBreak(30)
+        doc.setFontSize(16) // Tamaño aumentado
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
+        doc.text(`TICKET #${ticket.id}`, pageWidth / 2, yPosition, { align: 'center' })
+        yPosition += 8
+        
+        doc.setFontSize(11) // Tamaño aumentado
+        const tituloLines = doc.splitTextToSize(ticket.titulo, pageWidth - margin * 2)
+        tituloLines.forEach((line: string) => {
+          checkPageBreak(5)
+          doc.text(line, pageWidth / 2, yPosition, { align: 'center' })
+          yPosition += 5
+        })
+        yPosition += 12 // Espacio aumentado después del título
+      }
 
       // Información básica optimizada
       const infoBasica = [
@@ -419,25 +463,33 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         agregarSeccion('Asignación', infoAsignacion)
       }
 
-      // Descripción optimizada
-      checkPageBreak(20)
+      // Descripción optimizada con mejor manejo de texto largo
+      checkPageBreak(25)
       doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 12, 'F')
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
       doc.setTextColor(255, 255, 255)
-      doc.setFontSize(10)
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
-      doc.text('DESCRIPCIÓN', margin, yPosition + 2)
-      yPosition += 10
+      doc.text('DESCRIPCIÓN', margin, yPosition + 3)
+      yPosition += 12
 
       resetTextColor()
-      doc.setFontSize(8)
+      doc.setFontSize(9) // Tamaño aumentado para mejor legibilidad
       const descripcionLines = doc.splitTextToSize(ticket.descripcion, pageWidth - (margin * 2))
-      descripcionLines.forEach((line: string) => {
-        checkPageBreak(4) // Reducido
-        doc.text(line, margin, yPosition)
-        yPosition += 3.5 // Reducido
+      
+      // Fondo para la descripción
+      const alturaDescripcion = descripcionLines.length * 5 + 10
+      checkPageBreak(alturaDescripcion)
+      
+      doc.setFillColor(255, 255, 255)
+      doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaDescripcion, 'F')
+      doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+      doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaDescripcion, 'S')
+      
+      descripcionLines.forEach((line: string, index: number) => {
+        doc.text(line, margin + 4, yPosition + 8 + (index * 5))
       })
-      yPosition += 5
+      yPosition += alturaDescripcion + 10
 
       // Usuario afectado optimizado
       if (ticket.usuarioAfectado) {
@@ -538,9 +590,9 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
       }
 
       // Agregar logo al final del documento
-      checkPageBreak(60) // Reducido
+      checkPageBreak(80) // Espacio suficiente para el logo
       await agregarLogoFinal()
-
+      
       // Agregar pie de página final
       addFooter()
 

@@ -230,16 +230,22 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
     const doc = new jsPDF()
     
     // Configuración inicial
-    const margin = 20
-    let yPosition = margin // Se actualizará después del cintillo
+    const margin = 15
+    const cintilloHeight = 35 // Altura fija del cintillo
+    let yPosition = margin // Comenzar en el margen normal
     const pageWidth = doc.internal.pageSize.width
     const pageHeight = doc.internal.pageSize.height
     let currentPage = 1
+    let primeraPagina = true // Bandera para identificar la primera página
     
     // Color azul corporativo
-    const colorAzul = [0, 51, 102] // #003366
-    const colorGris = [245, 245, 245]
+    const colorAzul = [0, 51, 102]
+    const colorGrisClaro = [245, 245, 245]
+    const colorGrisMedio = [220, 220, 220]
     
+    // Variable para almacenar la imagen del cintillo
+    let cintilloBase64: string | null = null
+
     // Función para cargar imagen como Base64 desde URL pública
     const cargarImagenComoBase64 = async (url: string): Promise<string> => {
       try {
@@ -275,65 +281,51 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       }
     }
 
-    // Función para agregar cintillo (SOLO en primera página) - TAMAÑO ESPECÍFICO
-    const agregarCintillo = async () => {
+    // Función para cargar el cintillo una sola vez
+    const cargarCintillo = async (): Promise<string> => {
+      if (cintilloBase64) return cintilloBase64
+      
       try {
-        // Intentar cargar el cintillo
-        let cintilloBase64
-        try {
-          cintilloBase64 = await cargarImagenComoBase64('/Cintillo.png')
-        } catch (error) {
-          console.log('Usando fallback para cintillo')
-          cintilloBase64 = CINTILLO_BASE64
-        }
+        cintilloBase64 = await cargarImagenComoBase64('/Cintillo.png')
+      } catch (error) {
+        console.error('Error cargando cintillo:', error)
+        cintilloBase64 = CINTILLO_BASE64
+      }
+      return cintilloBase64
+    }
+
+    // Función para agregar cintillo SOLO en la primera página
+    const agregarCintillo = async () => {
+      if (!primeraPagina) return // Solo agregar en primera página
+      
+      try {
+        const cintilloImg = await cargarCintillo()
         
-        // Verificar que la imagen Base64 sea válida
-        if (!cintilloBase64.startsWith('data:image/')) {
-          throw new Error('Formato Base64 inválido para cintillo')
-        }
+        // Agregar cintillo con altura fija de 35px
+        doc.addImage(cintilloImg, 'PNG', 0, 0, pageWidth, cintilloHeight)
         
-        // TAMAÑO ESPECÍFICO PARA EL CINTILLO (50 unidades ≈ 3.5cm en A4)
-        const cintilloHeight = 40
-        
-        // Agregar el cintillo en la parte superior
-        doc.addImage(cintilloBase64, 'PNG', 0, 0, pageWidth, cintilloHeight)
-        
-        // Agregar sombra sutil debajo del cintillo
+        // Línea separadora más delgada
         doc.setFillColor(200, 200, 200)
-        doc.rect(0, cintilloHeight, pageWidth, 2, 'F')
+        doc.rect(0, cintilloHeight, pageWidth, 1, 'F')
         
-        // Actualizar yPosition para que el contenido empiece después del cintillo
-        yPosition = cintilloHeight + 15
+        // Ajustar posición Y para que el contenido empiece después del cintillo
+        yPosition = cintilloHeight + 10
         
       } catch (error) {
-        console.error('Error cargando cintillo, usando fallback completo:', error)
-        // Fallback completo: rectángulo azul si no carga la imagen
-        const cintilloHeight = 50 // Mismo tamaño para el fallback
-        
+        console.error('Error agregando cintillo:', error)
+        // Fallback: cintillo azul sólido
         doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
         doc.rect(0, 0, pageWidth, cintilloHeight, 'F')
-        
-        // Título en el fallback
         doc.setTextColor(255, 255, 255)
-        doc.setFontSize(16)
+        doc.setFontSize(12)
         doc.setFont('helvetica', 'bold')
-        doc.text(config.titulo, pageWidth / 2, cintilloHeight / 2 - 5, { align: 'center' })
+        doc.text('REPORTE DE ESTADÍSTICAS', pageWidth / 2, cintilloHeight / 2 - 3, { align: 'center' })
         
-        // Información de generación en el fallback
-        doc.setFontSize(10)
-        doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}`, pageWidth / 2, cintilloHeight / 2 + 10, { align: 'center' })
-        
-        // Actualizar yPosition para el fallback también
-        yPosition = cintilloHeight + 15
+        // Ajustar posición Y para el fallback también
+        yPosition = cintilloHeight + 10
       }
     }
-    
+
     // Función para agregar logo al final
     const agregarLogoFinal = async () => {
       try {
@@ -350,17 +342,17 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         yPosition += 20
         
         // Agregar línea separadora
-        doc.setDrawColor(200, 200, 200)
+        doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
         doc.line(margin, yPosition, pageWidth - margin, yPosition)
         yPosition += 15
         
-        // Agregar logo centrado (solo si tenemos una imagen válida)
+        // Agregar logo centrado con dimensiones específicas
         if (logoBase64 && logoBase64.startsWith('data:image/')) {
-          const logoWidth = 40
+          const logoWidth = 30
           const logoHeight = 40
           const logoX = (pageWidth - logoWidth) / 2
           doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight)
-          yPosition += logoHeight + 10
+          yPosition += logoHeight + 5
         }
         
         // Texto debajo del logo
@@ -387,8 +379,8 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
     
     // Función para agregar pie de página
     const addFooter = () => {
-      const footerY = pageHeight - 15
-      doc.setFontSize(8)
+      const footerY = pageHeight - 10
+      doc.setFontSize(7)
       doc.setTextColor(100, 100, 100)
       doc.text(
         `Página ${currentPage} - Generado el ${new Date().toLocaleDateString('es-ES')}`,
@@ -404,99 +396,122 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         addFooter()
         doc.addPage()
         currentPage++
+        primeraPagina = false // Ya no es la primera página
         yPosition = margin // Reset a margen normal para páginas siguientes
         return true
       }
       return false
     }
+
+    // Función mejorada para calcular altura dinámica de filas
+    const calcularAlturaFila = (texto: string, maxWidth: number, fontSize: number = 9): number => {
+      const lines = doc.splitTextToSize(texto, maxWidth)
+      return Math.max(15, lines.length * 5 + 6) // Mínimo 15px, más padding
+    }
+
+    // Función optimizada para agregar sección con mejor manejo de texto
+    const agregarSeccion = (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+      // Espacio antes de cada sección aumentado para mejor separación
+      yPosition += 10
+      
+      // Título de sección
+      checkPageBreak(25) // Más espacio para el título
+      doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F') // Altura aumentada
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(11) // Tamaño aumentado para mejor legibilidad
+      doc.setFont('helvetica', 'bold')
+      doc.text(titulo.toUpperCase(), margin, yPosition + 3)
+      yPosition += 12
+
+      // Contenido de la sección optimizado
+      resetTextColor()
+      doc.setFontSize(9) // Tamaño aumentado para mejor legibilidad
+
+      datos.forEach((fila, filaIndex) => {
+        const maxDescWidth = (pageWidth - margin * 2) * 0.35 // 35% para descripción
+        const maxValorWidth = (pageWidth - margin * 2) * 0.55 // 55% para valor (más espacio)
+        
+        const descLines = doc.splitTextToSize(fila.descripcion, maxDescWidth)
+        const valorLines = doc.splitTextToSize(fila.valor, maxValorWidth)
+        
+        // Calcular altura dinámica basada en el contenido más largo
+        const alturaDesc = descLines.length * 4.5
+        const alturaValor = valorLines.length * 4.5
+        const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6) // Mínimo 15px, más padding
+
+        checkPageBreak(alturaFila + 5)
+
+        // Color de fondo alternado más sutil
+        if (filaIndex % 2 === 0) {
+          doc.setFillColor(255, 255, 255)
+        } else {
+          doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
+        }
+        doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'F')
+
+        // Borde más sutil
+        doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+        doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'S')
+
+        // Texto de descripción (alineado a la izquierda)
+        resetTextColor()
+        doc.setFont('helvetica', 'normal')
+        descLines.forEach((line: string, lineIndex: number) => {
+          doc.text(line, margin + 4, yPosition + 6 + (lineIndex * 4.5))
+        })
+
+        // Texto de valor (negrita y alineado a la izquierda con margen)
+        resetTextColor()
+        doc.setFont('helvetica', 'bold')
+        const valorX = margin + maxDescWidth + 8 // Espacio entre columnas aumentado
+        valorLines.forEach((line: string, lineIndex: number) => {
+          doc.text(line, valorX, yPosition + 6 + (lineIndex * 4.5))
+        })
+        doc.setFont('helvetica', 'normal')
+
+        yPosition += alturaFila + 2 // Espacio entre filas aumentado
+      })
+
+      yPosition += 8 // Espacio aumentado entre secciones
+    }
     
     try {
-      // Agregar cintillo SOLO en la primera página
+      // AGREGAR CINTILLO SOLO EN LA PRIMERA PÁGINA
       await agregarCintillo()
-      
+
+      // Título principal - Solo en primera página
+      if (primeraPagina) {
+        checkPageBreak(30)
+        doc.setFontSize(16) // Tamaño aumentado
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
+        doc.text(config.titulo.toUpperCase(), pageWidth / 2, yPosition, { align: 'center' })
+        yPosition += 8
+        
+        doc.setFontSize(11) // Tamaño aumentado
+        const fechaGeneracion = `Generado el ${new Date().toLocaleDateString('es-ES', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric'
+        })}`
+        doc.text(fechaGeneracion, pageWidth / 2, yPosition, { align: 'center' })
+        yPosition += 12
+      }
+
       // Contenido de las secciones
       config.secciones?.forEach((seccion: SeccionPDF, seccionIndex: number) => {
-        // Espacio antes de cada sección (excepto la primera)
-        if (seccionIndex > 0) {
-          yPosition += 15
-        }
-        
-        // Título de sección (mejorado)
-        checkPageBreak(25)
-        doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-        doc.rect(margin - 2, yPosition - 8, pageWidth - (margin * 2) + 4, 16, 'F')
-        doc.setTextColor(255, 255, 255)
-        doc.setFontSize(11)
-        doc.setFont('helvetica', 'bold')
-        doc.text(seccion.titulo.toUpperCase(), margin, yPosition + 2)
-        yPosition += 12
-        
-        if (seccion.tipo === 'tabla') {
-          resetTextColor()
-          doc.setFontSize(9)
-          
-          seccion.datos.forEach((fila: Record<string, string | number>, filaIndex: number) => {
-            checkPageBreak(18)
-            
-            // Color de fondo alternado mejorado
-            if (filaIndex % 2 === 0) {
-              doc.setFillColor(255, 255, 255)
-            } else {
-              doc.setFillColor(colorGris[0], colorGris[1], colorGris[2])
-            }
-            doc.rect(margin, yPosition, pageWidth - (margin * 2), 15, 'F')
-            
-            // Borde sutil
-            doc.setDrawColor(220, 220, 220)
-            doc.rect(margin, yPosition, pageWidth - (margin * 2), 15, 'S')
-            
-            // Texto/descripción a la izquierda
-            const texto = String(fila[Object.keys(fila)[0]])
-            const valor = String(fila[Object.keys(fila)[1]])
-            
-            // Dividir texto en múltiples líneas si es necesario
-            const textoLines = doc.splitTextToSize(texto, pageWidth - margin - 80)
-            
-            // Texto (negro)
-            resetTextColor()
-            doc.setFont('helvetica', 'normal')
-            textoLines.forEach((line: string, lineIndex: number) => {
-              doc.text(line, margin + 5, yPosition + 6 + (lineIndex * 4))
-            })
-            
-            // Valor/Cantidad a la derecha (negro y en negrita)
-            resetTextColor()
-            doc.setFont('helvetica', 'bold')
-            const valorLines = doc.splitTextToSize(valor, 60)
-            valorLines.forEach((line: string, lineIndex: number) => {
-              doc.text(line, pageWidth - margin - 65, yPosition + 6 + (lineIndex * 4))
-            })
-            doc.setFont('helvetica', 'normal')
-            
-            yPosition += Math.max(15, textoLines.length * 4 + 8)
-          })
-          
-          yPosition += 8
-          
-        } else if (seccion.tipo === 'texto') {
-          seccion.datos.forEach((textoObj: Record<string, string | number>) => {
-            Object.values(textoObj).forEach((texto: string | number) => {
-              checkPageBreak(12)
-              doc.setFontSize(10)
-              resetTextColor()
-              
-              // Dividir texto largo en múltiples líneas
-              const lines = doc.splitTextToSize(String(texto), pageWidth - (margin * 2))
-              lines.forEach((line: string) => {
-                checkPageBreak(6)
-                doc.text(line, margin, yPosition)
-                yPosition += 5
-              })
-              
-              yPosition += 3
-            })
-          })
-        }
+        // Convertir datos de la sección al formato esperado
+        const datosSeccion = seccion.datos.map(fila => {
+          const keys = Object.keys(fila)
+          return {
+            descripcion: String(fila[keys[0]]),
+            valor: String(fila[keys[1]])
+          }
+        })
+
+        // Usar la función mejorada agregarSeccion
+        agregarSeccion(seccion.titulo, datosSeccion)
       })
       
       // Agregar logo al final del documento
@@ -512,8 +527,6 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       alert('Error al generar el PDF. Por favor, intente nuevamente.')
     }
   }
-
-  // ... (las funciones prepararConfiguracionExcel y prepararConfiguracionPDF permanecen igual)
 
   const prepararConfiguracionExcel = (
     tipo: "personal" | "equipos" | "tickets" | "eventos", 
