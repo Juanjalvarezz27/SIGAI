@@ -76,7 +76,7 @@ const routes: Route[] = [
     path: "/home/estadisticas",
     label: "Estadísticas",
     icon: BarChart3,
-    roles: ["admin", "supervisor"],
+    roles: ["admin"],
   },
   {
     path: "/home/perfil",

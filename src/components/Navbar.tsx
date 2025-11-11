@@ -129,7 +129,7 @@ export default function Navbar() {
       path: "/home/estadisticas",
       label: "Estadísticas",
       icon: BarChart3,
-      roles: ["admin", "supervisor"],
+      roles: ["admin"],
     },
     {
       path: "/home/perfil",
