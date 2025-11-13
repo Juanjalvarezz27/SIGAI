@@ -1,4 +1,5 @@
- import { NextRequest, NextResponse } from 'next/server'
+//Obtener todas las direcciones
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prismadb from '@/lib/prismadb'

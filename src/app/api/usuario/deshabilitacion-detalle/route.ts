@@ -1,3 +1,4 @@
+//Obtener el detalle de la deshabilitacion del usuario
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'

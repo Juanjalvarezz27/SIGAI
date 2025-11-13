@@ -1,3 +1,4 @@
+//crear nuevo modelo
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

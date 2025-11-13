@@ -1,3 +1,4 @@
+//Obtener usuario en especifico
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

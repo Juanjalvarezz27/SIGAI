@@ -1,3 +1,4 @@
+//reasginar equipo
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 import { getServerSession } from 'next-auth'

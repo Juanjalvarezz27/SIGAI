@@ -58,13 +58,13 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const [usuarioInfo, setUsuarioInfo] = useState<UsuarioInfo | null>(null);
   const [loadingUserInfo, setLoadingUserInfo] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Efecto para marcar cuando estamos en el cliente
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
   }, []);
 
   // Obtener información del usuario al cargar
@@ -185,13 +185,11 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      // ✅ SOLO esto es necesario - NextAuth funciona perfecto
       await signOut({ 
-        redirect: true, // Deja que NextAuth maneje la redirección
+        redirect: true,
         callbackUrl: "/"
       });
       
-      // ✅ Limpieza opcional y mínima
       if (typeof window !== "undefined") {
         localStorage.clear();
         sessionStorage.clear();
@@ -200,7 +198,6 @@ export default function Navbar() {
     } catch (error) {
       console.error("Error en logout:", error);
       
-      // ✅ Fallback simple
       if (typeof window !== "undefined") {
         window.location.href = "/";
       }
@@ -291,7 +288,6 @@ export default function Navbar() {
     );
   }
 
-  // Renderizar una versión simple en el servidor, completa en el cliente
   return (
     <>
       <nav className="bg-[#001f3f] opacity-90 w-11/12 mt-10 mx-auto rounded-2xl relative z-50">
@@ -302,10 +298,9 @@ export default function Navbar() {
               <h1 className="text-white text-xl font-bold ml-2">OTIC</h1>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* En el servidor, renderizar estructura básica. En cliente, la completa */}
-              {isClient &&
-                !isHomeRoute() &&
+            <div className="flex items-center gap-1">
+              {/* Renderizar botones de navegación - siempre renderizar estructura base */}
+              {!isHomeRoute() &&
                 roleButtons.map((button) => {
                   const isActive = pathname === button.path;
                   const IconComponent = button.icon;
@@ -314,7 +309,7 @@ export default function Navbar() {
                     <button
                       key={`${button.path}-${button.label}`}
                       onClick={() => handleNavigation(button.path)}
-                      className={`cursor-pointer flex items-center gap-2 text-white text-sm font-medium px-4 py-2 rounded-2xl transform transition-all duration-200 hover:scale-105 ${
+                      className={`cursor-pointer flex items-center gap-1 text-white text-sm font-medium px-4 py-2 rounded-2xl transform transition-all duration-200 hover:scale-105 ${
                         isActive
                           ? "bg-[#4c678a]"
                           : "hover:bg-[#003366]"
@@ -326,26 +321,36 @@ export default function Navbar() {
                   );
                 })}
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 {/* Mostrar nombre del usuario solo cuando estamos en /home */}
-                {isClient && isHomeRoute() && session?.user && (
+                {isHomeRoute() && session?.user && (
                   <h1 className="text-white text-lg">
                     Bienvenido, {session.user.nombre} {session.user.apellido}
                   </h1>
                 )}
 
-                {/* 🔔 Componente de notificaciones importado */}
+                {/* Botón Manual de Usuario - siempre presente pero con texto condicional */}
+                <button
+                  onClick={() => handleNavigation("/docs/manualDeUso")}
+                  className="flex items-center gap-2 cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-2xl transform transition-all duration-200 hover:scale-105 hover:bg-[#003366]"
+                  title="Manual de Usuario"
+                >
+                  <BookOpen size={18} />
+                  {isHomeRoute() && mounted}
+                </button>
+
+                {/* 🔔 Componente de notificaciones */}
                 <div className="cursor-pointer"> 
                   <NotificationBell/>
                 </div>
 
-                {/* Botón de cerrar sesión - siempre visible */}
+                {/* Botón de cerrar sesión */}
                 <button
                   onClick={openLogoutModal}
                   className="flex items-center gap-2 cursor-pointer bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
                   <LogOut size={18} />
-                  {isClient && isHomeRoute() && <span>Cerrar Sesión</span>}
+                  {isHomeRoute() && mounted && <span>Cerrar Sesión</span>}
                 </button>
               </div>
             </div>
@@ -354,13 +359,11 @@ export default function Navbar() {
       </nav>
 
       {/* Modal de confirmación */}
-      {isClient && (
-        <ConfirmLogoutModal
-          isOpen={showLogoutModal}
-          onClose={closeLogoutModal}
-          onConfirm={confirmLogout}
-        />
-      )}
+      <ConfirmLogoutModal
+        isOpen={showLogoutModal}
+        onClose={closeLogoutModal}
+        onConfirm={confirmLogout}
+      />
     </>
   );
 }

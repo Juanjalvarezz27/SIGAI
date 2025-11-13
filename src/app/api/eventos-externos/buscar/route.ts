@@ -1,3 +1,4 @@
+//Buscador para eventos externos
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 

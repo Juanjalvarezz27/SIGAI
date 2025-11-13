@@ -1,3 +1,4 @@
+//Crea y muestra los eventos externos 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prismadb';
@@ -259,7 +260,7 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // 🔔 NUEVO: Crear notificación para el usuario asignado
+      // NUEVO: Crear notificación para el usuario asignado
       await tx.notification.create({
         data: {
           userId: usuarioAsignado.id,

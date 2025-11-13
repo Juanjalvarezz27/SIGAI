@@ -1,3 +1,4 @@
+// Aceptar o Rechazar un evento 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -109,7 +110,7 @@ export async function POST(
         }
       });
 
-      // 🔔 NUEVO: Crear notificación para el usuario solicitante
+      // NUEVO: Crear notificación para el usuario solicitante
       await tx.notification.create({
         data: {
           userId: eventoExistente.usuarioSolicitante.id,

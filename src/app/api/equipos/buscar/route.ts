@@ -1,3 +1,4 @@
+//barra de busqueda de equipos
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

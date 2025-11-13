@@ -1,3 +1,4 @@
+//Reasignar un ticket de un usuario a otro
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';

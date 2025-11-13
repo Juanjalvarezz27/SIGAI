@@ -1,3 +1,4 @@
+//Obtener las estadisticas de equipos
 import { NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

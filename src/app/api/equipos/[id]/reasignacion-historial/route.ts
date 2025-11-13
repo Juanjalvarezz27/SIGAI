@@ -1,3 +1,4 @@
+//Obtener historial de reasignaciones
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

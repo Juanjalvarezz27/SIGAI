@@ -1,3 +1,4 @@
+//crear nueva marca
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

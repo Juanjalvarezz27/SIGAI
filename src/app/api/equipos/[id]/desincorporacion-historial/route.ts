@@ -1,3 +1,4 @@
+//obtener historial de desincorporaciones
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

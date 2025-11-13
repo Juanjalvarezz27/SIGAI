@@ -1,3 +1,4 @@
+//Obtener los estados de la base de datos
 import { NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

@@ -1,3 +1,4 @@
+//Crear nuevo sistema y obtenerlos sin filtrar estado
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getServerSession } from "next-auth"

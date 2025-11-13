@@ -1,3 +1,4 @@
+//Obtener y crear tipos de equipos
 import { NextRequest, NextResponse } from 'next/server'
 import prismadb from '@/lib/prismadb'
 

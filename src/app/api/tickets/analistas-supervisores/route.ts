@@ -1,3 +1,4 @@
+//Obtener analista o supervisor pero no el usuario actual
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
