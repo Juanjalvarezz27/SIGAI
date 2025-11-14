@@ -2,8 +2,9 @@
 
 import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Cpu, CheckCircle } from 'lucide-react';
+import { Cpu, CheckCircle, Info } from 'lucide-react';
 import SeleccionEquipos from './SeleccionEquipos';
+//import ModalMasInfo from './ModalMasInfo'; 
 import { EquipoSeleccionado, UsuarioCompleto } from '../../../types/eventos';
 
 interface ModalNuevoEventoProps {
@@ -23,6 +24,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showModalEquipos, setShowModalEquipos] = useState<boolean>(false);
+  const [showModalInfo, setShowModalInfo] = useState<boolean>(false); // Estado para el modal de info
   const [equiposSeleccionados, setEquiposSeleccionados] = useState<EquipoSeleccionado[]>([]);
   const [usuarioInfo, setUsuarioInfo] = useState<UsuarioCompleto | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
@@ -264,8 +266,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                     <p className="mt-1 text-xs text-gray-500">
                       Área: {usuarioInfo.area}
                     </p>
-                  </
->
+                  </>
                 ) : (
                   <p className="mt-1 text-sm text-red-500">Error cargando ubicación</p>
                 )}
@@ -322,9 +323,20 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Descripción (Opcional)
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Descripción (Opcional)
+                </label>
+                {/* Botón Más Info */}
+               {/* <button
+                  type="button"
+                  onClick={() => setShowModalInfo(true)}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                >
+                  <Info size={14} />
+                  Más info
+                </button> */}
+              </div>
               <textarea
                 value={formData.descripcion}
                 onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
@@ -411,6 +423,14 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
         equiposSeleccionados={equiposSeleccionados}
         onEquiposChange={handleEquiposSeleccionados}
       />
+
+      {/* Modal de más información */}
+{/*
+      <ModalMasInfo 
+        isOpen={showModalInfo}
+        onClose={() => setShowModalInfo(false)}
+      />
+*/}
     </>
   );
 }

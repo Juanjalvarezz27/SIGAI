@@ -66,10 +66,10 @@ export default function FormularioSoporteRedes({
       cedula: usuario.cedula,
       email: usuario.email,
       direccion: usuario.direccion ? {
-        id: 0, // Valor temporal ya que no está disponible en el tipo Usuario
+        id: usuario.direccion.id,
         direccion: usuario.direccion.direccion,
         piso: {
-          id: 0, // Valor temporal
+          id: usuario.direccion.piso.id,
           piso: usuario.direccion.piso.piso
         }
       } : undefined,
@@ -98,10 +98,10 @@ export default function FormularioSoporteRedes({
 
   // Manejar selección de usuario desde BarraBusquedaPersonal
   const handleUsuarioSeleccionado = async (usuario: Usuario) => {
-    // Para solicitantes, ya no necesitamos validar aquí porque el endpoint lo hace
-    // Pero mantenemos la validación por seguridad
+    // Validar que el usuario seleccionado sea de la misma dirección (solo para solicitantes)
     if (esSolicitante && direccionUsuarioActual) {
-      if (usuario.direccion?.piso.piso /* o la lógica de validación que uses */) {
+      // CORRECCIÓN: Comparar la dirección del usuario seleccionado con la dirección del usuario actual
+      if (usuario.direccion?.id !== direccionUsuarioActual) {
         alert('Solo puedes seleccionar usuarios de tu misma dirección')
         return
       }

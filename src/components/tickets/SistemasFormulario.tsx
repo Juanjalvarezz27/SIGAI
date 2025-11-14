@@ -6,6 +6,7 @@ import BarraBusquedaPersonal from "./BarraBusquedaPersonal"
 import SelectModal from "../../components/agregarPersonal/SelectModal"
 import { UsuarioBasico } from "../../../types/ticket"
 import { Usuario } from "../../../types/index"
+import axios from 'axios'
 
 interface Sistema {
   id: number
@@ -143,6 +144,8 @@ export default function SistemasFormulario({
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState<Sistema | null>(null)
   const [fallaSeleccionada, setFallaSeleccionada] = useState<Falla | null>(null)
   const [modalAbierto, setModalAbierto] = useState<'sistema' | 'falla' | null>(null)
+  const [direccionUsuarioActual, setDireccionUsuarioActual] = useState<number | null>(null)
+  const [cargandoDireccion, setCargandoDireccion] = useState(false)
 
   // Función para convertir Usuario a UsuarioBasico
   const convertirUsuarioABasico = (usuario: Usuario): UsuarioBasico => {
@@ -153,16 +156,35 @@ export default function SistemasFormulario({
       cedula: usuario.cedula,
       email: usuario.email,
       direccion: usuario.direccion ? {
-        id: 0, // Valor temporal ya que no está disponible en el tipo Usuario
+        id: usuario.direccion.id,
         direccion: usuario.direccion.direccion,
         piso: {
-          id: 0, // Valor temporal
+          id: usuario.direccion.piso.id,
           piso: usuario.direccion.piso.piso
         }
       } : undefined,
       area: usuario.area
     };
   };
+
+  // Obtener la dirección del usuario actual si es solicitante
+  useEffect(() => {
+    const obtenerDireccionUsuarioActual = async () => {
+      if (esSolicitante) {
+        try {
+          setCargandoDireccion(true)
+          const response = await axios.get('/api/auth/usuario-direccion')
+          setDireccionUsuarioActual(response.data.direccionId)
+        } catch (error) {
+          console.error('Error obteniendo dirección del usuario:', error)
+        } finally {
+          setCargandoDireccion(false)
+        }
+      }
+    }
+
+    obtenerDireccionUsuarioActual()
+  }, [esSolicitante])
 
   // Cargar sistemas al montar el componente
   useEffect(() => {
@@ -206,6 +228,14 @@ export default function SistemasFormulario({
 
   // Manejar selección de usuario
   const handleUsuarioSeleccionado = (usuario: Usuario) => {
+    // CORRECCIÓN: Validar dirección para solicitantes
+    if (esSolicitante && direccionUsuarioActual) {
+      if (usuario.direccion?.id !== direccionUsuarioActual) {
+        alert('Solo puedes seleccionar usuarios de tu misma dirección')
+        return
+      }
+    }
+
     const usuarioBasico = convertirUsuarioABasico(usuario);
     setUsuarioSeleccionado(usuarioBasico)
     onFormDataChange({
@@ -258,6 +288,7 @@ export default function SistemasFormulario({
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-700">
             <strong>Restricción:</strong> Solo puedes seleccionar usuarios de tu misma dirección.
+            {cargandoDireccion && " (Cargando información de dirección...)"}
           </p>
         </div>
       )}

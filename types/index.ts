@@ -37,8 +37,10 @@ export interface Usuario {
     rol: string
   }
   direccion: {
+    id: number
     direccion: string
     piso: {
+      id: number
       piso: string
     }
   }
