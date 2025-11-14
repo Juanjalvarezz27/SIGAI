@@ -1,4 +1,4 @@
-//Trae e rol del los usaurios
+//Trae el rol de los usaurios
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'

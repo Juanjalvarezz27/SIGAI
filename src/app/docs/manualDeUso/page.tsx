@@ -3,12 +3,12 @@
 import NavBar from '@/components/Navbar'
 import Title from '@/components/Title'
 import { useState } from 'react'
-import { 
-  FileText, 
-  Target, 
-  User, 
-  Settings, 
-  Search, 
+import {
+  FileText,
+  Target,
+  User,
+  Settings,
+  Search,
   Filter,
   Edit,
   Trash2,
@@ -18,20 +18,125 @@ import {
   LogIn,
   Menu,
   Calendar,
-  Shield
+  Shield,
+  PlayCircle,
+  Maximize2
 } from 'lucide-react'
 
 export default function ManualDeUso() {
   const [openSection, setOpenSection] = useState<string | null>(null)
+  const [fullscreenVideo, setFullscreenVideo] = useState<string | null>(null)
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section)
   }
 
+  const toggleFullscreen = (videoId: string) => {
+    setFullscreenVideo(fullscreenVideo === videoId ? null : videoId)
+  }
+
+  // Datos de preguntas frecuentes con el nuevo campo 'video'
+  const faqItems = [
+    { 
+      id: 'func-1', 
+      question: '¿Cómo inicio sesión?', 
+      role: 'Analista / Solicitante', 
+      answer: 'Dirígete a la página principal del sistema e ingresa tus datos de sesión (email y contraseña) y luego haz click en el botón de iniciar sesión.', 
+      icon: LogIn,
+      video: '/manualUsuarios/iniciarSesion.mp4' 
+    },
+    { 
+      id: 'func-2', 
+      question: '¿Cómo crear un ticket nuevo?', 
+      role: 'Solicitante', 
+      answer: 'Después de iniciar sesión, en la página de inicio, haz click en el botón de tickets para redirigir a su vista, ubica el botón de "+ Nuevo Ticket" y rellena el formulario correspondiente.', 
+      icon: FileText,
+      video: '/manualUsuarios/crearTicket.mp4'
+    },
+    { 
+      id: 'func-3', 
+      question: '¿Cómo solicito un evento externo?', 
+      role: 'Solicitante', 
+      answer: 'Después de iniciar sesión, en la página de inicio, haz click en el botón de eventos externos para redirigir a su vista, ubica el botón de "Solicitar Evento" y completa el formulario.', 
+      icon: Calendar,
+      video: '/manualUsuarios/eventoExterno.mp4'
+    },
+    { 
+      id: 'func-4', 
+      question: '¿Cómo edito mi perfil?', 
+      role: 'Analista / Solicitante', 
+      answer: 'Después de iniciar sesión, en la página de inicio, haz click en el botón de perfil. Ubica el botón de editar perfil y sigue el proceso de verificación.', 
+      icon: Settings,
+      video: '/manualUsuarios/editarPerfil.mp4'
+    },
+    { 
+      id: 'func-5', 
+      question: '¿Cómo filtro los equipos?', 
+      role: 'Analista', 
+      answer: 'Puedes filtrar por tipo de equipo, marca o modelo utilizando los botones de filtro disponibles en la sección de inventario.', 
+      icon: Filter,
+      video: '/manualUsuarios/filtrarEquipos.mp4'
+    },
+    { 
+      id: 'func-6', 
+      question: '¿Cómo busco equipos?', 
+      role: 'Analista', 
+      answer: 'Utiliza la barra de búsqueda con criterios como nombre de usuario, bien nacional o serial del equipo.', 
+      icon: Search,
+      video: '/manualUsuarios/buscarEquipos.mp4'
+    },
+    { 
+      id: 'func-7', 
+      question: '¿Cómo edito un equipo?', 
+      role: 'Analista', 
+      answer: 'Accede a la vista detallada del equipo y haz click en el botón de editar para modificar la información.', 
+      icon: Edit,
+      video: '/manualUsuarios/editarEquipo.mp4'
+    },
+    { 
+      id: 'func-8', 
+      question: '¿Cómo desincorporo un equipo?', 
+      role: 'Analista', 
+      answer: 'Desde la vista detallada del equipo, selecciona la opción de desincorporar y proporciona el motivo correspondiente.', 
+      icon: Trash2,
+      video: '/manualUsuarios/desincorporarEquipo.mp4'
+    },
+    { 
+      id: 'func-9', 
+      question: '¿Cómo cierro un ticket?', 
+      role: 'Analista', 
+      answer: 'En la vista de tickets asignados, selecciona el ticket y completa el proceso de cierre con la condición y observaciones necesarias.', 
+      icon: CheckCircle,
+      video: '/manualUsuarios/cerrarTicket.mp4'
+    }
+  ]
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <NavBar />
-      
+
+      {/* Modal de video en pantalla completa */}
+      {fullscreenVideo && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-6xl">
+            <button
+              onClick={() => setFullscreenVideo(null)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+            >
+              <Maximize2 className="w-6 h-6 rotate-45" />
+            </button>
+            <video 
+              controls 
+              autoPlay
+              className="w-full h-full rounded-lg shadow-2xl"
+            >
+              <source src={fullscreenVideo} type="video/mp4" />
+              Tu navegador no soporta el elemento de video.
+            </video>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="text-center mb-12 animate-fade-in-up">
           <Title text={'Manual de Usuario'} />
@@ -39,7 +144,7 @@ export default function ManualDeUso() {
             Guía completa para el uso del Sistema de Gestión de Analistas Informáticos (SIGAI) del Instituto Nacional de Higiene &quot;Rafael Rangel&quot;
           </p>
         </div>
-        
+
         {/* Descripción del sistema */}
         <div className="mb-12 bg-white rounded-2xl shadow-lg p-8 border border-gray-200 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
           <div className="flex items-center mb-6">
@@ -48,12 +153,12 @@ export default function ManualDeUso() {
             </div>
             <h2 className="text-3xl font-bold text-gray-800">Descripción del Sistema</h2>
           </div>
-          
+
           <div className="space-y-4 text-gray-700">
             <p className="text-lg leading-relaxed">
               El Sistema de gestión de analistas informáticos SIGAI es una plataforma web centralizada desarrollada para el Instituto Nacional de Higiene &quot;Rafael Rangel&quot;, diseñada para digitalizar, automatizar y optimizar los procesos internos de soporte técnico y administración de recursos tecnológicos.
             </p>
-            
+
             <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg my-6 animate-fade-in">
               <h3 className="font-semibold text-blue-800 mb-3 flex items-center">
                 <Target className="w-5 h-5 mr-2" />
@@ -111,7 +216,7 @@ export default function ManualDeUso() {
             </div>
             <h2 className="text-3xl font-bold">Objetivo Principal</h2>
           </div>
-          
+
           <div className="space-y-4 text-gray-200">
             <p className="text-lg leading-relaxed">
               Proporcionar una plataforma web centralizada, segura y escalable que integre de forma armónica la gestión de soporte técnico, activos informáticos y préstamos temporales.
@@ -152,7 +257,7 @@ export default function ManualDeUso() {
                   { id: 'solicitante-6', title: '6. Cambia contraseña', content: 'Actualiza tu contraseña desde la sección de perfil.', screen: 'Perfil', icon: Settings }
                 ].map((item, index) => (
                   <div key={item.id} className="border border-gray-200 rounded-xl hover:border-blue-300 transition-all duration-300 hover:shadow-md">
-                    <button 
+                    <button
                       className="w-full p-4 text-left font-medium text-gray-800 bg-white hover:bg-blue-50 rounded-xl flex justify-between items-center transition-colors duration-300 cursor-pointer"
                       onClick={() => toggleSection(item.id)}
                     >
@@ -213,7 +318,7 @@ export default function ManualDeUso() {
                   { id: 'analista-9', title: '8. Cambia contraseña', content: 'Actualiza tu contraseña de acceso.', screen: 'Perfil', icon: Settings }
                 ].map((item) => (
                   <div key={item.id} className="border border-gray-200 rounded-xl hover:border-orange-300 transition-all duration-300 hover:shadow-md">
-                    <button 
+                    <button
                       className="w-full p-4 text-left font-medium text-gray-800 bg-white hover:bg-orange-50 rounded-xl flex justify-between items-center transition-colors duration-300 cursor-pointer"
                       onClick={() => toggleSection(item.id)}
                     >
@@ -252,7 +357,7 @@ export default function ManualDeUso() {
           </div>
         </div>
 
-        {/* Funcionalidades */}
+        {/* Funcionalidades - CORREGIDO */}
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200 animate-fade-in-up" style={{animationDelay: '0.6s'}}>
           <div className="flex items-center mb-8">
             <div className="bg-gray-100 p-3 rounded-xl mr-4">
@@ -262,40 +367,63 @@ export default function ManualDeUso() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {[
-              { id: 'func-1', question: '¿Cómo inicio sesión?', role: 'Analista / Solicitante', answer: 'Dirígete a la página principal del sistema e ingresa tus datos de sesión (email y contraseña) y luego haz click en el botón de iniciar sesión.', icon: LogIn },
-              { id: 'func-2', question: '¿Cómo crear un ticket nuevo?', role: 'Solicitante', answer: 'Después de iniciar sesión, en la página de inicio, haz click en el botón de tickets para redirigir a su vista, ubica el botón de "+ Nuevo Ticket" y rellena el formulario correspondiente.', icon: FileText },
-              { id: 'func-3', question: '¿Cómo solicito un evento externo?', role: 'Solicitante', answer: 'Después de iniciar sesión, en la página de inicio, haz click en el botón de eventos externos para redirigir a su vista, ubica el botón de "Solicitar Evento" y completa el formulario.', icon: Calendar },
-              { id: 'func-4', question: '¿Cómo edito mi perfil?', role: 'Analista / Solicitante', answer: 'Después de iniciar sesión, en la página de inicio, haz click en el botón de perfil. Ubica el botón de editar perfil y sigue el proceso de verificación.', icon: Settings },
-              { id: 'func-5', question: '¿Cómo filtro los equipos?', role: 'Analista', answer: 'Puedes filtrar por tipo de equipo, marca o modelo utilizando los botones de filtro disponibles en la sección de inventario.', icon: Filter },
-              { id: 'func-6', question: '¿Cómo busco equipos?', role: 'Analista', answer: 'Utiliza la barra de búsqueda con criterios como nombre de usuario, bien nacional o serial del equipo.', icon: Search },
-              { id: 'func-7', question: '¿Cómo edito un equipo?', role: 'Analista', answer: 'Accede a la vista detallada del equipo y haz click en el botón de editar para modificar la información.', icon: Edit },
-              { id: 'func-8', question: '¿Cómo desincorporo un equipo?', role: 'Analista', answer: 'Desde la vista detallada del equipo, selecciona la opción de desincorporar y proporciona el motivo correspondiente.', icon: Trash2 },
-              { id: 'func-9', question: '¿Cómo cierro un ticket?', role: 'Analista', answer: 'En la vista de tickets asignados, selecciona el ticket y completa el proceso de cierre con la condición y observaciones necesarias.', icon: CheckCircle }
-            ].map((item) => (
+            {faqItems.map((item) => (
               <div key={item.id} className="border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-300 hover:shadow-md">
-                <button 
-                  className="w-full p-5 text-left bg-white hover:bg-gray-50 rounded-xl transition-colors duration-300 cursor-pointer"
-                  onClick={() => toggleSection(item.id)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <item.icon className="w-5 h-5 text-gray-600" />
-                        <h3 className="font-semibold text-gray-800 text-lg">{item.question}</h3>
+                <div className="p-5 bg-white rounded-xl">
+                  <button
+                    className="w-full text-left bg-white hover:bg-gray-50 rounded-xl transition-colors duration-300 cursor-pointer"
+                    onClick={() => toggleSection(item.id)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <item.icon className="w-5 h-5 text-gray-600" />
+                          <h3 className="font-semibold text-gray-800 text-lg">{item.question}</h3>
+                        </div>
+                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                          {item.role}
+                        </span>
                       </div>
-                      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
-                        {item.role}
-                      </span>
+                      <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${openSection === item.id ? 'rotate-180' : ''}`} />
                     </div>
-                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${openSection === item.id ? 'rotate-180' : ''}`} />
-                  </div>
+                  </button>
+                  
                   {openSection === item.id && (
-                    <div className="animate-slide-down mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="animate-slide-down mt-4 space-y-4">
                       <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+                      
+                      {/* Sección del video mejorada - CORREGIDA */}
+                      {item.video && (
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center">
+                              <PlayCircle className="w-5 h-5 text-blue-600 mr-2" />
+                              <span className="text-sm font-medium text-gray-700">Video demostrativo:</span>
+                            </div>
+                            <button
+                              onClick={() => toggleFullscreen(item.video!)}
+                              className="flex items-center text-xs text-blue-600 hover:text-blue-700 transition-colors px-3 py-1 rounded-md hover:bg-blue-50"
+                            >
+                              <Maximize2 className="w-4 h-4 mr-1" />
+                              Pantalla completa
+                            </button>
+                          </div>
+                          <div className="flex justify-center bg-black rounded-lg overflow-hidden">
+                            <video 
+                              controls 
+                              className="w-full max-w-lg aspect-video object-contain"
+                              preload="metadata"
+                              playsInline
+                            >
+                              <source src={item.video} type="video/mp4" />
+                              Tu navegador no soporta el elemento de video.
+                            </video>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
-                </button>
+                </div>
               </div>
             ))}
           </div>
