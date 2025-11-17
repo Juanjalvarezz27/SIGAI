@@ -1,4 +1,4 @@
-//Crea y muestra los eventos externos 
+//Crea y muestra los eventos externos
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prismadb';
@@ -158,21 +158,26 @@ export async function POST(request: NextRequest) {
     const body: CreateEventoData = await request.json();
     const { nombre, descripcion, fechaInicial, fechaFinal, equipos } = body;
 
-    // Validaciones de fecha
+    // Validaciones de fecha - SIMPLIFICADAS Y CORREGIDAS
     const fechaInicialDate = new Date(fechaInicial);
     const fechaFinalDate = new Date(fechaFinal);
     const ahora = new Date();
-    ahora.setHours(0, 0, 0, 0);
 
-    if (fechaInicialDate < ahora) {
+    // Obtener solo la parte de la fecha (sin horas) para comparación
+    const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const fechaInicialSolo = new Date(fechaInicialDate.getFullYear(), fechaInicialDate.getMonth(), fechaInicialDate.getDate());
+    const fechaFinalSolo = new Date(fechaFinalDate.getFullYear(), fechaFinalDate.getMonth(), fechaFinalDate.getDate());
+
+    // Comparar las fechas sin horas
+    if (fechaInicialSolo < hoy) {
       return NextResponse.json({ error: 'La fecha inicial no puede ser anterior a la fecha actual' }, { status: 400 });
     }
 
-    if (fechaFinalDate < ahora) {
+    if (fechaFinalSolo < hoy) {
       return NextResponse.json({ error: 'La fecha final no puede ser anterior a la fecha actual' }, { status: 400 });
     }
 
-    if (fechaInicialDate > fechaFinalDate) {
+    if (fechaInicialSolo > fechaFinalSolo) {
       return NextResponse.json({ error: 'La fecha final debe ser posterior o igual a la fecha inicial' }, { status: 400 });
     }
 
@@ -260,7 +265,7 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // NUEVO: Crear notificación para el usuario asignado
+      // Crear notificación para el usuario asignado
       await tx.notification.create({
         data: {
           userId: usuarioAsignado.id,

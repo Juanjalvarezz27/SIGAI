@@ -2,9 +2,9 @@
 
 import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Cpu, CheckCircle, Info } from 'lucide-react';
+import { Cpu, CheckCircle, XCircle } from 'lucide-react';
 import SeleccionEquipos from './SeleccionEquipos';
-//import ModalMasInfo from './ModalMasInfo'; 
+//import ModalMasInfo from './ModalMasInfo';
 import { EquipoSeleccionado, UsuarioCompleto } from '../../../types/eventos';
 
 interface ModalNuevoEventoProps {
@@ -20,17 +20,23 @@ interface FormData {
   fechaFinal: string;
 }
 
+interface ErrorMessage {
+  type: 'error' | 'success';
+  message: string;
+}
+
 export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: ModalNuevoEventoProps) {
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showModalEquipos, setShowModalEquipos] = useState<boolean>(false);
-  const [showModalInfo, setShowModalInfo] = useState<boolean>(false); // Estado para el modal de info
+  //const [showModalInfo, setShowModalInfo] = useState<boolean>(false);
   const [equiposSeleccionados, setEquiposSeleccionados] = useState<EquipoSeleccionado[]>([]);
   const [usuarioInfo, setUsuarioInfo] = useState<UsuarioCompleto | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
-  
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage | null>(null);
+
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
     descripcion: '',
@@ -44,7 +50,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
   useEffect(() => {
     const fetchUserInfo = async (): Promise<void> => {
       if (!session) return;
-      
+
       setIsLoadingUser(true);
       try {
         const response = await fetch('/api/usuario/datos-completos');
@@ -69,15 +75,13 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
   // Efecto para el mensaje de éxito y scroll automático
   useEffect(() => {
     if (showSuccess && modalRef.current) {
-      // Hacer scroll al principio del modal
       modalRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-      
+
       const timer = setTimeout(() => {
         setShowSuccess(false);
         setSuccessMessage('');
         onClose();
         onEventCreated();
-        // Reset form
         setFormData({ nombre: '', descripcion: '', fechaInicial: '', fechaFinal: '' });
         setEquiposSeleccionados([]);
       }, 3000);
@@ -85,31 +89,48 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
     }
   }, [showSuccess, onClose, onEventCreated]);
 
+  // Efecto para auto-ocultar mensajes de error
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
   // Función para obtener la fecha mínima (hoy)
   const getMinDate = (): string => {
     const now = new Date();
     return now.toISOString().split('T')[0];
   };
 
-  // Función para validar fechas
+  // Función para mostrar errores
+  const showError = (message: string): void => {
+    setErrorMessage({ type: 'error', message });
+    if (modalRef.current) {
+      modalRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Función para validar fechas - SIMPLIFICADA Y CORREGIDA
   const validarFechas = (fechaInicial: string, fechaFinal: string): string | null => {
     if (!fechaInicial || !fechaFinal) return null;
 
-    const ahora = new Date();
-    ahora.setHours(0, 0, 0, 0);
+    const hoy = new Date().toISOString().split('T')[0]; // Solo la fecha en formato YYYY-MM-DD
     
-    const fechaInicialDate = new Date(fechaInicial);
-    const fechaFinalDate = new Date(fechaFinal);
-
-    if (fechaInicialDate < ahora) {
+    // Si la fecha inicial es anterior a hoy
+    if (fechaInicial < hoy) {
       return 'La fecha inicial no puede ser anterior a la fecha actual';
     }
 
-    if (fechaFinalDate < ahora) {
+    // Si la fecha final es anterior a hoy
+    if (fechaFinal < hoy) {
       return 'La fecha final no puede ser anterior a la fecha actual';
     }
 
-    if (fechaInicialDate > fechaFinalDate) {
+    // Si la fecha final es anterior a la fecha inicial
+    if (fechaFinal < fechaInicial) {
       return 'La fecha final debe ser posterior o igual a la fecha inicial';
     }
 
@@ -120,27 +141,30 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    
+
+    // Limpiar mensajes anteriores
+    setErrorMessage(null);
+
     // Validaciones básicas
     if (!formData.nombre.trim()) {
-      alert('El nombre del evento es requerido');
+      showError('El nombre del evento es requerido');
       return;
     }
 
     if (!formData.fechaInicial || !formData.fechaFinal) {
-      alert('Las fechas inicial y final son requeridas');
+      showError('Las fechas inicial y final son requeridas');
       return;
     }
 
     // Validar fechas
     const errorFecha = validarFechas(formData.fechaInicial, formData.fechaFinal);
     if (errorFecha) {
-      alert(errorFecha);
+      showError(errorFecha);
       return;
     }
 
     if (equiposSeleccionados.length === 0) {
-      alert('Debe seleccionar al menos un equipo');
+      showError('Debe seleccionar al menos un equipo');
       return;
     }
 
@@ -170,11 +194,11 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
         setShowSuccess(true);
       } else {
         const errorData: { error?: string } = await response.json();
-        alert(`Error: ${errorData.error || 'No se pudo crear el evento'}`);
+        showError(`Error: ${errorData.error || 'No se pudo crear el evento'}`);
       }
     } catch (error) {
       console.error('Error creando evento:', error);
-      alert('Error al crear el evento. Por favor, intente nuevamente.');
+      showError('Error al crear el evento. Por favor, intente nuevamente.');
     } finally {
       setIsLoading(false);
     }
@@ -191,6 +215,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
     setEquiposSeleccionados([]);
     setShowSuccess(false);
     setSuccessMessage('');
+    setErrorMessage(null);
     onClose();
   };
 
@@ -199,17 +224,22 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
       ...prev,
       [campo]: valor
     }));
+    
+    // Limpiar error cuando el usuario modifica las fechas
+    if (errorMessage?.message.includes('fecha')) {
+      setErrorMessage(null);
+    }
   };
 
   return (
     <>
       <div className="fixed inset-0 bg-black/[0.5] flex items-center justify-center z-50">
-        <div 
+        <div
           ref={modalRef}
           className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         >
           <h2 className="text-xl font-bold mb-4">Nuevo Evento Externo</h2>
-          
+
           {/* Mensaje de éxito */}
           {showSuccess && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 animate-fade-in">
@@ -219,6 +249,23 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                 <p className="text-green-600 text-sm">{successMessage}</p>
                 <p className="text-green-500 text-xs mt-1">El modal se cerrará automáticamente...</p>
               </div>
+            </div>
+          )}
+
+          {/* Mensaje de error */}
+          {errorMessage && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 animate-fade-in">
+              <XCircle className="text-red-600" size={30} />
+              <div>
+                <p className="text-red-800 font-medium">Error</p>
+                <p className="text-red-600 text-sm">{errorMessage.message}</p>
+              </div>
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="ml-auto text-red-400 hover:text-red-600 transition-colors"
+              >
+                <XCircle size={20} />
+              </button>
             </div>
           )}
 
@@ -327,15 +374,6 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                 <label className="block text-sm font-medium text-gray-700">
                   Descripción (Opcional)
                 </label>
-                {/* Botón Más Info */}
-               {/* <button
-                  type="button"
-                  onClick={() => setShowModalInfo(true)}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                >
-                  <Info size={14} />
-                  Más info
-                </button> */}
               </div>
               <textarea
                 value={formData.descripcion}
@@ -357,7 +395,7 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
                   {totalEquipos} equipo(s) seleccionado(s)
                 </span>
               </div>
-              
+
               <button
                 type="button"
                 onClick={() => setShowModalEquipos(true)}
@@ -423,14 +461,6 @@ export default function ModalNuevoEvento({ isOpen, onClose, onEventCreated }: Mo
         equiposSeleccionados={equiposSeleccionados}
         onEquiposChange={handleEquiposSeleccionados}
       />
-
-      {/* Modal de más información */}
-{/*
-      <ModalMasInfo 
-        isOpen={showModalInfo}
-        onClose={() => setShowModalInfo(false)}
-      />
-*/}
     </>
   );
 }
