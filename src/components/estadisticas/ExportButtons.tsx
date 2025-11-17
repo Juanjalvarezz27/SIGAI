@@ -243,8 +243,9 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
     const colorGrisClaro = [245, 245, 245]
     const colorGrisMedio = [220, 220, 220]
     
-    // Variable para almacenar la imagen del cintillo
+    // Variables para almacenar las imágenes
     let cintilloBase64: string | null = null
+    let logoBase64: string | null = null
 
     // Función para cargar imagen como Base64 desde URL pública
     const cargarImagenComoBase64 = async (url: string): Promise<string> => {
@@ -294,6 +295,19 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       return cintilloBase64
     }
 
+    // Función para cargar el logo una sola vez
+    const cargarLogo = async (): Promise<string> => {
+      if (logoBase64) return logoBase64
+      
+      try {
+        logoBase64 = await cargarImagenComoBase64('/logo.png')
+      } catch (error) {
+        console.error('Error cargando logo:', error)
+        logoBase64 = LOGO_BASE64
+      }
+      return logoBase64
+    }
+
     // Función para agregar cintillo SOLO en la primera página
     const agregarCintillo = async () => {
       if (!primeraPagina) return // Solo agregar en primera página
@@ -326,48 +340,32 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       }
     }
 
-    // Función para agregar logo al final
-    const agregarLogoFinal = async () => {
+    // Función para agregar logo SOLO en la última página
+    const agregarLogoUltimaPagina = async () => {
       try {
-        // Intentar cargar el logo
-        let logoBase64
-        try {
-          logoBase64 = await cargarImagenComoBase64('/logo.png')
-        } catch (error) {
-          console.log('Usando fallback para logo')
-          logoBase64 = LOGO_BASE64
-        }
+        const logoImg = await cargarLogo()
         
-        // Agregar espacio antes del logo
-        yPosition += 20
+        // Posicionar el logo y el texto correctamente
+        const textoPaginaY = pageHeight - 10 // Texto en la parte más baja
+        const logoY = textoPaginaY - 35 // Logo 35px arriba del texto (ajusta este número según necesites)
         
-        // Agregar línea separadora
-        doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
-        doc.line(margin, yPosition, pageWidth - margin, yPosition)
-        yPosition += 15
-        
-        // Agregar logo centrado con dimensiones específicas
-        if (logoBase64 && logoBase64.startsWith('data:image/')) {
-          const logoWidth = 30
-          const logoHeight = 40
+        // Agregar logo centrado
+        if (logoImg && logoImg.startsWith('data:image/')) {
+          const logoWidth = 20
+          const logoHeight = 25
           const logoX = (pageWidth - logoWidth) / 2
-          doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight)
-          yPosition += logoHeight + 5
+          doc.addImage(logoImg, 'PNG', logoX, logoY, logoWidth, logoHeight)
         }
-        
-        // Texto debajo del logo
-        doc.setFontSize(10)
-        doc.setTextColor(100, 100, 100)
-        doc.setFont('helvetica', 'normal')
-        doc.text('Sistema de Gestión de TI', pageWidth / 2, yPosition, { align: 'center' })
         
       } catch (error) {
         console.error('Error agregando logo:', error)
-        // Fallback: texto simple
-        yPosition += 20
-        doc.setFontSize(10)
-        doc.setTextColor(100, 100, 100)
-        doc.text('Sistema de Gestión de TI', pageWidth / 2, yPosition, { align: 'center' })
+        // Fallback: usar el logo base64
+        const textoPaginaY = pageHeight - 10
+        const logoY = textoPaginaY - 35
+        const logoWidth = 20
+        const logoHeight = 25
+        const logoX = (pageWidth - logoWidth) / 2
+        doc.addImage(LOGO_BASE64, 'PNG', logoX, logoY, logoWidth, logoHeight)
       }
     }
     
@@ -377,9 +375,16 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       doc.setFont('helvetica', 'normal')
     }
     
-    // Función para agregar pie de página
-    const addFooter = () => {
+    // Función para agregar pie de página con número de página
+    const addFooter = async (esUltimaPagina: boolean = false) => {
       const footerY = pageHeight - 10
+      
+      // AGREGAR LOGO SOLO EN LA ÚLTIMA PÁGINA
+      if (esUltimaPagina) {
+        await agregarLogoUltimaPagina()
+      }
+      
+      // Texto de página (siempre se muestra)
       doc.setFontSize(7)
       doc.setTextColor(100, 100, 100)
       doc.text(
@@ -390,10 +395,13 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       )
     }
     
-    // Función para verificar si necesita nueva página (CORREGIDA)
-    const checkPageBreak = (requiredSpace: number) => {
-      if (yPosition + requiredSpace > pageHeight - margin) {
-        addFooter()
+    // Función para verificar si necesita nueva página
+    const checkPageBreak = async (requiredSpace: number) => {
+      // Reservar espacio para el footer
+      const footerSpace = 20
+      
+      if (yPosition + requiredSpace > pageHeight - margin - footerSpace) {
+        await addFooter(false) // No es la última página
         doc.addPage()
         currentPage++
         primeraPagina = false // Ya no es la primera página
@@ -410,12 +418,12 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
     }
 
     // Función optimizada para agregar sección con mejor manejo de texto
-    const agregarSeccion = (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+    const agregarSeccion = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
       // Espacio antes de cada sección aumentado para mejor separación
       yPosition += 10
       
       // Título de sección
-      checkPageBreak(25) // Más espacio para el título
+      await checkPageBreak(25) // Más espacio para el título
       doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
       doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F') // Altura aumentada
       doc.setTextColor(255, 255, 255)
@@ -428,7 +436,8 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       resetTextColor()
       doc.setFontSize(9) // Tamaño aumentado para mejor legibilidad
 
-      datos.forEach((fila, filaIndex) => {
+      for (let filaIndex = 0; filaIndex < datos.length; filaIndex++) {
+        const fila = datos[filaIndex]
         const maxDescWidth = (pageWidth - margin * 2) * 0.35 // 35% para descripción
         const maxValorWidth = (pageWidth - margin * 2) * 0.55 // 55% para valor (más espacio)
         
@@ -440,7 +449,7 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         const alturaValor = valorLines.length * 4.5
         const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6) // Mínimo 15px, más padding
 
-        checkPageBreak(alturaFila + 5)
+        await checkPageBreak(alturaFila + 5)
 
         // Color de fondo alternado más sutil
         if (filaIndex % 2 === 0) {
@@ -471,7 +480,7 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         doc.setFont('helvetica', 'normal')
 
         yPosition += alturaFila + 2 // Espacio entre filas aumentado
-      })
+      }
 
       yPosition += 8 // Espacio aumentado entre secciones
     }
@@ -482,7 +491,7 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
 
       // Título principal - Solo en primera página
       if (primeraPagina) {
-        checkPageBreak(30)
+        await checkPageBreak(30)
         doc.setFontSize(16) // Tamaño aumentado
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
@@ -500,7 +509,7 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       }
 
       // Contenido de las secciones
-      config.secciones?.forEach((seccion: SeccionPDF, seccionIndex: number) => {
+      for (const seccion of config.secciones || []) {
         // Convertir datos de la sección al formato esperado
         const datosSeccion = seccion.datos.map(fila => {
           const keys = Object.keys(fila)
@@ -511,15 +520,11 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         })
 
         // Usar la función mejorada agregarSeccion
-        agregarSeccion(seccion.titulo, datosSeccion)
-      })
+        await agregarSeccion(seccion.titulo, datosSeccion)
+      }
       
-      // Agregar logo al final del documento
-      checkPageBreak(80) // Espacio suficiente para el logo
-      await agregarLogoFinal()
-      
-      // Agregar pie de página final
-      addFooter()
+      // AGREGAR FOOTER FINAL CON LOGO (SOLO EN LA ÚLTIMA PÁGINA)
+      await addFooter(true) // true indica que es la última página
       
       doc.save(`${config.nombreArchivo}.pdf`)
     } catch (error) {

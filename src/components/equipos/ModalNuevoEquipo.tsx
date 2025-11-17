@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react" // Agregar useRef
 import { X, CheckCircle } from "lucide-react"
 import axios from "axios"
 import MiniModalBusqueda from "./MiniModalBusqueda"
@@ -84,6 +84,10 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
   const [errores, setErrores] = useState<string[]>([])
   const [mensajeExito, setMensajeExito] = useState<string>("")
 
+  // Referencias para scroll automático
+  const mensajeExitoRef = useRef<HTMLDivElement>(null)
+  const mensajeErrorRef = useRef<HTMLDivElement>(null)
+
   // Estados para el formulario
   const [formData, setFormData] = useState<EquipoFormData>({
     bienNacional: "",
@@ -136,6 +140,26 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
       }
     }
   }, [isOpen])
+
+  // Efecto para hacer scroll al mensaje de éxito
+  useEffect(() => {
+    if (mensajeExito && mensajeExitoRef.current) {
+      mensajeExitoRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, [mensajeExito])
+
+  // Efecto para hacer scroll al mensaje de error
+  useEffect(() => {
+    if (errores.length > 0 && mensajeErrorRef.current) {
+      mensajeErrorRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, [errores])
 
   // Efecto para mostrar mensaje de éxito por 5 segundos
   useEffect(() => {
@@ -512,8 +536,12 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
 
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Mensaje de éxito con ref para scroll automático */}
           {mensajeExito && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div
+              ref={mensajeExitoRef}
+              className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+            >
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-10 h-10 text-green-500 flex-shrink-0" />
                 <div>
@@ -526,8 +554,12 @@ export default function ModalNuevoEquipo({ isOpen, onClose, onEquipoCreado }: Mo
             </div>
           )}
 
+          {/* Mensaje de error con ref para scroll automático */}
           {errores.length > 0 && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div
+              ref={mensajeErrorRef}
+              className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md"
+            >
               <h4 className="font-medium text-red-800 mb-2">Por favor complete los siguientes campos:</h4>
               <ul className="list-disc list-inside text-red-700 text-sm">
                 {errores.map((error, index) => (

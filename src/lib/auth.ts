@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials): Promise<User | null> {
-        
+
         if (!credentials?.email || !credentials?.password) {
           console.log("Faltan credenciales")
           return null
@@ -33,11 +33,17 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
+          // VERIFICAR ESTADO DEL USUARIO
+          if (user.estado === "Deshabilitado") {
+            console.log("Usuario deshabilitado")
+            throw new Error("USUARIO_DESHABILITADO")
+          }
+
           if (!user.password) {
             console.log("Usuario sin contraseña")
             return null
           }
-          
+
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
@@ -56,24 +62,29 @@ export const authOptions: NextAuthOptions = {
             nombre: user.nombre,
             apellido: user.apellido || "",
             email: user.email || "",
-            rol: user.rol.rol, 
+            rol: user.rol.rol,
             rolId: user.rolId,
             direccionId: user.direccionId,
-            areaId: user.areaId || undefined
-          } as User
+            areaId: user.areaId || undefined,
+            estado: user.estado // Incluir estado en el token
+          } as unknown as User
         } catch (error) {
           console.error("Error en authorize:", error)
+          // Propagar el error específico de usuario deshabilitado
+          if (error instanceof Error && error.message === "USUARIO_DESHABILITADO") {
+            throw error
+          }
           return null
         }
       }
     })
   ],
-  
+
   session: {
     strategy: "jwt",
     maxAge: 4 * 60 * 60, // 4 horas
   },
-  
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -88,11 +99,11 @@ export const authOptions: NextAuthOptions = {
       return session
     }
   },
-  
+
   pages: {
     signIn: "/",
   },
-  
+
   debug: process.env.NODE_ENV === "development",
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
 }

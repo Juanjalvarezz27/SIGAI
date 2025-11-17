@@ -31,6 +31,7 @@ export default function CreateTicketModal({
   const [mensajeExito, setMensajeExito] = useState<string>("")
   const modalRef = useRef<HTMLDivElement>(null)
   const mensajeExitoRef = useRef<HTMLDivElement>(null)
+  const mensajeErrorRef = useRef<HTMLDivElement>(null)
 
   // Determinar si es solicitante (rolId 3)
   const esSolicitante = userRol?.rolId === 3;
@@ -63,6 +64,16 @@ export default function CreateTicketModal({
       })
     }
   }, [mensajeExito])
+
+  // Efecto para hacer scroll al mensaje de error
+  useEffect(() => {
+    if (errores.length > 0 && mensajeErrorRef.current) {
+      mensajeErrorRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, [errores])
 
   // Resetear formulario cuando se abre/cierra el modal
   useEffect(() => {
@@ -243,8 +254,12 @@ export default function CreateTicketModal({
             </div>
           )}
 
+          {/* Mensaje de error con ref para scroll automático */}
           {errores.length > 0 && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div
+              ref={mensajeErrorRef}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg animate-fade-in"
+            >
               <h4 className="font-medium text-red-800 mb-2">Por favor complete los siguientes campos:</h4>
               <ul className="list-disc list-inside text-red-700 text-sm space-y-1">
                 {errores.map((error, index) => (

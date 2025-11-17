@@ -27,6 +27,7 @@ import BotonEditarEquipo from "./BotonEditarEquipo";
 import ModalEditarEquipo from "./ModalEditarEquipo";
 import BotonDesincorporarEquipo from "./BotonDesincorporarEquipo";
 import ModalDesincorporarEquipo from "./ModalDesincorporarEquipo";
+import { useUserRol } from "../../app/hooks/useUserRol"; 
 
 interface VistaDetalleEquipoProps {
   equipo: Equipo;
@@ -141,8 +142,17 @@ export default function VistaDetalleEquipo({
   const [historialReasignaciones, setHistorialReasignaciones] = useState<ReasignacionHistorial[]>([]);
   const [cargandoHistorialReasignaciones, setCargandoHistorialReasignaciones] = useState(false);
 
+  // Usar el hook para obtener el rol del usuario
+  const { userRol, loading: loadingUserRol } = useUserRol();
+
   // Verificar si el equipo está desincorporado (Status Desincorporados)
   const estaDesincorporado = equipo.status?.id === 3;
+
+  // Función para verificar si el usuario es admin (rolId 1)
+  const esAdmin = () => {
+    if (loadingUserRol || !userRol) return false;
+    return userRol.rolId === 1;
+  };
 
   // Cargar equipos del usuario cuando el equipo tenga usuario asignado
   useEffect(() => {
@@ -361,27 +371,31 @@ export default function VistaDetalleEquipo({
               loading={loading}
             />
 
-            {/* Botón de desincorporar/habilitar */}
-            {!estaDesincorporado ? (
-              <BotonDesincorporarEquipo
-                onClick={() => setModalDesincorporarAbierto(true)}
-                loading={loading || loadingDesincorporar}
-              />
-            ) : (
-              <button
-                onClick={handleHabilitarEquipo}
-                disabled={loading || loadingDesincorporar}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 cursor-pointer hover:bg-green-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-              >
-                {loadingDesincorporar ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Incorporando...
-                  </>
+            {/* Botón de desincorporar/habilitar - Solo visible para admin */}
+            {esAdmin() && (
+              <>
+                {!estaDesincorporado ? (
+                  <BotonDesincorporarEquipo
+                    onClick={() => setModalDesincorporarAbierto(true)}
+                    loading={loading || loadingDesincorporar}
+                  />
                 ) : (
-                  'Incorporar Equipo'
+                  <button
+                    onClick={handleHabilitarEquipo}
+                    disabled={loading || loadingDesincorporar}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 cursor-pointer hover:bg-green-700 text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                  >
+                    {loadingDesincorporar ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Incorporando...
+                      </>
+                    ) : (
+                      'Incorporar Equipo'
+                    )}
+                  </button>
                 )}
-              </button>
+              </>
             )}
 
             <button
@@ -644,6 +658,7 @@ export default function VistaDetalleEquipo({
           )}
         </div>
 
+        {/* Resto del código permanece igual... */}
         {/* Historial de Reasignaciones */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">

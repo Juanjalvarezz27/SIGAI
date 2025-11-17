@@ -26,6 +26,7 @@ import { Ticket, Equipo } from "../../../types/ticket"
 import CerrarTicketModal from "./CerrarTicketModal"
 import ReasignarTicketModal from "./ReasignarTicketModal"
 import ExportarPDFModal from "./ExportarPDFModal"
+import { useUserRol } from "../../app/hooks/useUserRol" 
 
 interface TicketsListProps {
   tickets: Ticket[]
@@ -52,13 +53,13 @@ interface TicketExpandido {
   reasignaciones: boolean;
 }
 
-export default function TicketsList({ 
-  tickets, 
-  loading = false, 
-  error = '', 
-  onTicketClosed, 
+export default function TicketsList({
+  tickets,
+  loading = false,
+  error = '',
+  onTicketClosed,
   onTicketReasigned,
-  puedeReasignar = false 
+  puedeReasignar = false
 }: TicketsListProps) {
   const [ticketsExpandidos, setTicketsExpandidos] = useState<Record<number, TicketExpandido>>({})
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
@@ -67,6 +68,16 @@ export default function TicketsList({
   const [isReasignarModalOpen, setIsReasignarModalOpen] = useState(false)
   const [selectedTicketExportar, setSelectedTicketExportar] = useState<Ticket | null>(null)
   const [isExportarModalOpen, setIsExportarModalOpen] = useState(false)
+
+  // Usar el hook para obtener el rol del usuario
+  const { userRol, loading: loadingUserRol } = useUserRol()
+
+  // Función para verificar si el usuario puede cerrar tickets
+  const puedeCerrar = () => {
+    if (loadingUserRol || !userRol) return false
+    // El usuario NO puede cerrar si es solicitante (rolId 3)
+    return userRol.rolId !== 3
+  }
 
   const toggleSeccion = (ticketId: number, seccion: keyof TicketExpandido) => {
     setTicketsExpandidos(prev => ({
@@ -79,7 +90,7 @@ export default function TicketsList({
   }
 
   const handleCloseTicket = (ticket: Ticket) => {
-    if (ticket.estadoId === 1) {
+    if (ticket.estadoId === 1 && puedeCerrar()) {
       setSelectedTicket(ticket)
       setIsCloseModalOpen(true)
     }
@@ -271,18 +282,21 @@ export default function TicketsList({
                 {/* Botones de acción */}
                 <div className="mb-4">
                   <div className="flex gap-2">
-
                     {/* Botones para tickets abiertos */}
                     {ticket.estadoId === 1 && (
                       <>
-                        <button
-                          onClick={() => handleCloseTicket(ticket)}
-                          className="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          Cerrar
-                        </button>
-                        
+                        {/* Botón de Cerrar - Solo visible si el usuario puede cerrar */}
+                        {puedeCerrar() && (
+                          <button
+                            onClick={() => handleCloseTicket(ticket)}
+                            className="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Cerrar
+                          </button>
+                        )}
+
+                        {/* Botón de Reasignar - Solo visible si puedeReasignar es true */}
                         {puedeReasignar && (
                           <button
                             onClick={() => handleReasignarTicket(ticket)}
@@ -306,7 +320,7 @@ export default function TicketsList({
                   </div>
                 </div>
 
-                {/* Contenedor para las secciones desplegables con scroll si es necesario */}
+                {/* Resto del código permanece igual... */}
                 <div className="flex-1 overflow-hidden">
                   {/* Historial de reasignaciones desplegable */}
                   {reasignaciones.length > 0 && (
@@ -331,7 +345,7 @@ export default function TicketsList({
                       {estaExpandido.reasignaciones && (
                         <div className="mt-2 p-3 bg-white border border-purple-200 rounded-lg animate-slide-down">
                           <div className="space-y-4">
-                            {reasignaciones.map((reasignacion, index) => (
+                            {reasignaciones.map((reasignacion) => (
                               <div key={reasignacion.id} className="pb-4 border-b border-gray-100 last:border-b-0 last:pb-0">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                                   <div>
@@ -383,6 +397,7 @@ export default function TicketsList({
                     </div>
                   )}
 
+                  {/* El resto del código de las secciones desplegables permanece igual */}
                   {/* Descripción desplegable */}
                   <div className="mb-4">
                     <button

@@ -927,7 +927,7 @@ export async function def() {
       equipos: [{ bienNacional: "29750", serial: "CNG146692H" }, { bienNacional: "29735", serial: "3CQ144C264" }, { bienNacional: "25820", serial: "BAVT0BHH2E5T5" }, { id:1502 }, { bienNacional: "22963", serial: "20138478" }, { bienNacional: "27495", serial: "13355499220" }]
       },
       {
-      usuario: { nombre: "Richard", apellido: "Quijada", tipoAnalistaId: 2 ,rolId: 4, email:"analistaServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
+      usuario: { nombre: "Richard", apellido: "Quijada", cedula:"27421804", tipoAnalistaId: 2 ,rolId: 4, email:"analistaServidores@gmail.com", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Área de soporte" },
       equipos: [{ bienNacional: "31895", serial: "A00136205" }, { id:1194 }, { id:1195 }, { id:247 }, { bienNacional: "27728", serial: "C16D8BA000471" }, { bienNacional: "31380", serial: "0065818882892" }, { bienNacional: "31496", serial: "KA19021E000811" }, { bienNacional: "31611", serial: "221716347224" }, { id:1915 }]
       },
       {
