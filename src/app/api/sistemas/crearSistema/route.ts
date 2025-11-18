@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No tienes permisos para esta acción' }, { status: 403 })
     }
 
-    const { nombre } = await request.json()
+    const { nombre, descripcion } = await request.json()
 
     if (!nombre || !nombre.trim()) {
       return NextResponse.json(
@@ -73,10 +73,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crear el nuevo sistema
+    // Crear el nuevo sistema con descripción
     const nuevoSistema = await prisma.sistema.create({
       data: {
         nombre: nombre.trim(),
+        descripcion: descripcion?.trim() || "", // Campo descripción vacío por defecto
         estado: 'Activo'
       }
     })

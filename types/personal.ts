@@ -54,6 +54,7 @@ export interface ReasignacionHistorialEquipo {
     email: string | null
   }
 }
+
 export interface Usuario {
   id: number
   nombre: string
@@ -66,16 +67,18 @@ export interface Usuario {
     rol: string
   }
   direccion: {
+    id: number 
     direccion: string
     piso: {
+      id: number
       piso: string
     }
   }
   area: {
+    id?: number 
     nombre: string
   } | null
   equipos: Equipo[]
-  // Agregar información de deshabilitación
   deshabilitacionHistorial?: {
     motivo: string
     fechaDeshabilitacion: string

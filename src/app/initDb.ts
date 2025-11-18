@@ -1,30 +1,59 @@
+
+
 import prismadb from "@/lib/prismadb";
 import seedEquipos from "../../seeds/equiposSeed"
 import seedDirecciones from "../../seeds/direccionesSeed"
 import seedMarcasModelos from "../../seeds/marcasModelosSeed"
 import seedEspecificacionesAdicionales from "../../seeds/especificacionesAdicionalesSeed"
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs" 
 
 export async function def() {
-
   try {
-    
+    // VERIFICACIÓN INICIAL: Comprobar si ya existen datos
+    console.log("Verificando si la base de datos ya está inicializada...");
+
+    const existingRoles = await prismadb.rol.count();
+    const existingUsers = await prismadb.usuario.count();
+
+    // Si ya hay datos significativos, no ejecutar el seed
+    if (existingRoles > 0 || existingUsers > 0) {
+      console.log("La base de datos ya contiene datos. Saltando inicialización...");
+      return;
+    }
+
+    console.log("Inicializando base de datos...");
+
+    // Ejecutar seeds
     await seedEquipos(prismadb);
     await seedDirecciones(prismadb);
     await seedMarcasModelos(prismadb);
     await seedEspecificacionesAdicionales(prismadb);
 
-    // Crear roles
-    
-    await prismadb.rol.createMany({
-      data: [
-        { rol: "admin" },
-        { rol: "supervisor" },
-        { rol: "solicitante" },
-        { rol: "analista" },
-        { rol: "personal" },
-      ],
-    });
+    // CREAR ROLES
+    console.log("Creando roles...");
+    const roles = [
+      { rol: "admin" },
+      { rol: "supervisor" },
+      { rol: "solicitante" },
+      { rol: "analista" },
+      { rol: "personal" },
+    ];
+
+    let rolesCreados = 0;
+    for (const role of roles) {
+      const existingRole = await prismadb.rol.findFirst({
+        where: { rol: role.rol }
+      });
+
+      if (!existingRole) {
+        await prismadb.rol.create({
+          data: role
+        });
+        rolesCreados++;
+        console.log(`Rol creado: ${role.rol}`);
+      }
+    }
+    console.log(`Total de roles creados: ${rolesCreados}`);
 
     //  Registro de Usuarios
     const dataUsuarios = [
@@ -1386,6 +1415,7 @@ export async function def() {
       },
     ];
     
+
     // Crear Usuarios
     const createUsuarios = async () => {
       console.log("Iniciando creación de usuarios...");
@@ -1410,29 +1440,24 @@ export async function def() {
           const area = direccion.areas.find(a => a.nombre === dataUsuario.usuario.areaNombre);
           if (area) {
             areaId = area.id;
-          } else {
-            console.log(`Área no encontrada: ${dataUsuario.usuario.areaNombre}`);
           }
         }
 
-        // 3. HASHEAR CONTRASEÑA ANTES DE CREAR USUARIO
+        // 3. HASHEAR CONTRASEÑA - USANDO BCRYPTJS
         let hashedPassword = dataUsuario.usuario.password;
 
-        // Solo hashear si la contraseña existe y no está ya hasheada
         if (dataUsuario.usuario.password && !dataUsuario.usuario.password.startsWith('$2a$')) {
           try {
+            // bcryptjs es más compatible con Next.js
             hashedPassword = await bcrypt.hash(dataUsuario.usuario.password, 12);
             console.log(`Contraseña hasheada para: ${dataUsuario.usuario.nombre}`);
           } catch (error) {
             console.log(`Error hasheando contraseña para ${dataUsuario.usuario.nombre}:`, error);
-            // Mantener la contraseña original si hay error (fallback)
             hashedPassword = dataUsuario.usuario.password;
           }
-        } else if (dataUsuario.usuario.password) {
-          console.log(`Contraseña ya hasheada para: ${dataUsuario.usuario.nombre}`);
         }
 
-        // 4. Crear usuario usando el operador spread para incluir tipoAnalistaId y supervisorTipoId condicionalmente
+        // 4. Crear usuario
         const usuario = await prismadb.usuario.create({
           data: {
             nombre: dataUsuario.usuario.nombre,
@@ -1443,38 +1468,20 @@ export async function def() {
             rolId: dataUsuario.usuario.rolId,
             direccionId: direccion.id,
             areaId: areaId,
-            // Agregar tipoAnalistaId solo si existe
-            ...(dataUsuario.usuario.tipoAnalistaId !== undefined &&
-              dataUsuario.usuario.tipoAnalistaId !== null && {
-                tipoAnalistaId: dataUsuario.usuario.tipoAnalistaId,
-              }),
-            // Agregar supervisorTipoId solo si existe
-            ...(dataUsuario.usuario.supervisorTipoId !== undefined &&
-              dataUsuario.usuario.supervisorTipoId !== null && {
-                supervisorTipoId: dataUsuario.usuario.supervisorTipoId,
-              }),
+            ...(dataUsuario.usuario.tipoAnalistaId !== undefined && {
+              tipoAnalistaId: dataUsuario.usuario.tipoAnalistaId,
+            }),
+            ...(dataUsuario.usuario.supervisorTipoId !== undefined && {
+              supervisorTipoId: dataUsuario.usuario.supervisorTipoId,
+            }),
           },
         });
 
-        // Log informativo sobre los IDs asignados
-        const logs = [];
-        if (dataUsuario.usuario.tipoAnalistaId) {
-          logs.push(`tipoAnalistaId: ${dataUsuario.usuario.tipoAnalistaId}`);
-        }
-        if (dataUsuario.usuario.supervisorTipoId) {
-          logs.push(`supervisorTipoId: ${dataUsuario.usuario.supervisorTipoId}`);
-        }
-        
-        if (logs.length > 0) {
-          console.log(`Usuario creado con ${logs.join(' y ')}: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
-        } else {
-          console.log(`Usuario creado: ${usuario.nombre} ${usuario.apellido} (ID: ${usuario.id})`);
-        }
+        console.log(`Usuario creado: ${usuario.nombre} ${usuario.apellido}`);
 
-        // 5. Asignar equipos (tu código existente)
+        // 5. Asignar equipos
         let equiposAsignados = 0;
         for (const equipo of dataUsuario.equipos) {
-
           let result;
 
           // LÓGICA DUAL: Puedes usar ID directo O bienNacional/serial
@@ -1492,14 +1499,12 @@ export async function def() {
             }
           } else if (equipo.bienNacional && equipo.serial) {
             // Opción 2: Buscar por bienNacional y serial
-            const whereCondition = {
-              bienNacional: equipo.bienNacional,
-              serial: equipo.serial
-            };
-
             try {
               result = await prismadb.equipos.updateMany({
-                where: whereCondition,
+                where: {
+                  bienNacional: equipo.bienNacional,
+                  serial: equipo.serial
+                },
                 data: { usuarioId: usuario.id }
               });
 
@@ -1507,6 +1512,8 @@ export async function def() {
 
               if (result.count === 0) {
                 console.log(`Equipo no encontrado con bienNacional: ${equipo.bienNacional} y serial: ${equipo.serial}`);
+              } else {
+                console.log(`Equipo asignado: ${equipo.bienNacional} - ${equipo.serial}`);
               }
 
             } catch (error) {
@@ -1520,7 +1527,6 @@ export async function def() {
       }
     };
 
-    // EJECUTAR la función
     await createUsuarios();
     console.log("Script ejecutado exitosamente");
 

@@ -444,7 +444,7 @@ export default function UsuarioNuevoForm({
                   Cédula *
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   id="cedula"
                   name="cedula"
                   value={formData.cedula}

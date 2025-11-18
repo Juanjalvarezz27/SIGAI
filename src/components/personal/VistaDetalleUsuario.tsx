@@ -1,10 +1,12 @@
 "use client"
 
-import { User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Edit, X, Calendar, UserX, FileText } from "lucide-react"
-import { Usuario, Equipo } from "../../../types/personal"
+import { User, Mail, IdCard, MapPin, Briefcase, Building, Monitor, Cpu, HardDrive, Edit, X, Calendar, UserX, FileText, Plus } from "lucide-react"
+import { Usuario, Equipo } from "../../../types/index"
 import { useState, useEffect } from "react"
 import UsuarioActivoForm from "@/components/agregarPersonal/UsuarioActivoForm"
-import axios from "axios"
+import AsignacionEquipos from "../agregarPersonal/AsignacionEquipos" 
+import axios, { AxiosError } from "axios"
+import { useUserRol } from "../../app/hooks/useUserRol" 
 
 interface VistaDetalleUsuarioProps {
   usuario: Usuario
@@ -21,6 +23,30 @@ interface HistorialDeshabilitacion {
     nombre: string
     apellido: string | null
   }
+}
+
+interface EquipoConEspecificaciones {
+  bienNacional: string
+  serial: string
+  observaciones: string
+  tipoEquipoId: number
+  tipoEquipoNombre?: string
+  modelo: string
+  marca: string
+  statusId: number
+  estadoId: number
+  especificaciones?: {
+    memoriaRam: string
+    modulosRam: string
+    capacidadDisco: string
+    tipoDisco: string
+    procesador: string
+  }
+  id?: number
+}
+
+interface ApiErrorResponse {
+  error?: string
 }
 
 // Función para capitalizar la primera letra
@@ -53,12 +79,19 @@ export default function VistaDetalleUsuario({
   onHabilitar,
   loading = false
 }: VistaDetalleUsuarioProps) {
+  const { userRol, loading: loadingRol } = useUserRol()
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
   const [mensajeExito, setMensajeExito] = useState("")
   const [mensajeError, setMensajeError] = useState("")
   const [loadingEditar, setLoadingEditar] = useState(false)
   const [historialDeshabilitacion, setHistorialDeshabilitacion] = useState<HistorialDeshabilitacion | null>(null)
   const [cargandoHistorial, setCargandoHistorial] = useState(false)
+  const [mostrarAsignacionEquipos, setMostrarAsignacionEquipos] = useState(false)
+  const [equiposParaAsignar, setEquiposParaAsignar] = useState<EquipoConEspecificaciones[]>([])
+  const [asignandoEquipos, setAsignandoEquipos] = useState(false)
+
+  // Verificar si el usuario actual es admin
+  const esAdmin = userRol?.rolId === 1
 
   // Cargar información de deshabilitación cuando el usuario esté deshabilitado
   useEffect(() => {
@@ -118,6 +151,58 @@ export default function VistaDetalleUsuario({
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const tieneEquipos = usuario.equipos && usuario.equipos.length > 0
+
+  // Función para asignar equipos al usuario
+  const handleAsignarEquipos = async () => {
+    if (equiposParaAsignar.length === 0) {
+      manejarError('Debe agregar al menos un equipo para asignar')
+      return
+    }
+
+    setAsignandoEquipos(true)
+    try {
+      const datosActualizacion = {
+        usuarioId: usuario.id,
+        equipos: equiposParaAsignar
+      }
+
+      const response = await axios.put('/api/admin/actualizar-datos', datosActualizacion)
+
+      if (response.status === 200) {
+        const mensaje = response.data.equiposAgregados > 0
+          ? `${response.data.message} con ${response.data.equiposAgregados} equipo(s) asignado(s)`
+          : response.data.message
+
+        manejarExito(mensaje)
+        setMostrarAsignacionEquipos(false)
+        setEquiposParaAsignar([])
+        
+        // Recargar la página después de 2 segundos para mostrar los nuevos equipos
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<ApiErrorResponse>
+      console.error('Error asignando equipos:', axiosError)
+      manejarError(axiosError.response?.data?.error || 'Error al asignar los equipos')
+    } finally {
+      setAsignandoEquipos(false)
+    }
+  }
+
+  // Mostrar loading mientras se carga el rol
+  if (loadingRol) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-8 h-8 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -248,7 +333,7 @@ export default function VistaDetalleUsuario({
               <UserX size={20} />
               Información de Deshabilitación
             </h3>
-            
+
             {cargandoHistorial ? (
               <div className="flex justify-center py-4">
                 <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
@@ -284,7 +369,7 @@ export default function VistaDetalleUsuario({
                     <div>
                       <p className="text-sm font-medium text-gray-700">Deshabilitado por</p>
                       <p className="text-gray-900">
-                        {historialDeshabilitacion.deshabilitadoPor.nombre} 
+                        {historialDeshabilitacion.deshabilitadoPor.nombre}
                         {historialDeshabilitacion.deshabilitadoPor.apellido ? ` ${historialDeshabilitacion.deshabilitadoPor.apellido}` : ''}
                       </p>
                     </div>
@@ -301,8 +386,56 @@ export default function VistaDetalleUsuario({
 
         {/* Equipos asignados */}
         <div className="bg-[#F29F6D]/[0.4] border border-[#F29F6D] rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-4">Equipos Asignados</h3>
-          {usuario.equipos.length > 0 ? (
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Equipos Asignados</h3>
+            {/* Botón solo visible para administradores */}
+            {esAdmin && (
+              <button
+                onClick={() => setMostrarAsignacionEquipos(!mostrarAsignacionEquipos)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#001F3F] hover:bg-[#003366] text-white rounded-md transition-colors"
+                disabled={usuario.estado === 'Deshabilitado'}
+              >
+                <Plus size={16} />
+                {mostrarAsignacionEquipos ? 'Ocultar Asignación' : 'Asignar Equipos'}
+              </button>
+            )}
+          </div>
+
+          {/* Sección de asignación de equipos - Solo visible para administradores */}
+          {esAdmin && mostrarAsignacionEquipos && (
+            <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                Asignar Equipos a {usuario.nombre} {usuario.apellido}
+              </h4>
+              
+              <AsignacionEquipos
+                onEquiposChange={setEquiposParaAsignar}
+                disabled={asignandoEquipos}
+              />
+              
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => {
+                    setMostrarAsignacionEquipos(false)
+                    setEquiposParaAsignar([])
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+                  disabled={asignandoEquipos}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAsignarEquipos}
+                  disabled={equiposParaAsignar.length === 0 || asignandoEquipos}
+                  className="px-4 py-2 bg-[#001F3F] text-white hover:bg-[#003366] rounded-md transition-colors disabled:opacity-50"
+                >
+                  {asignandoEquipos ? 'Asignando...' : `Asignar ${equiposParaAsignar.length} Equipo(s)`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tieneEquipos ? (
             <div className="grid gap-4 md:grid-cols-2">
               {eliminarEquiposDuplicados(usuario.equipos).map((equipo) => (
                 <div key={equipo.id} className="bg-white border border-gray-200 rounded-lg p-4">
@@ -360,7 +493,15 @@ export default function VistaDetalleUsuario({
               ))}
             </div>
           ) : (
-            <p className="text-gray-600">No tiene equipos asignados</p>
+            <div className="text-center py-8 bg-white border border-gray-200 rounded-lg">
+              <Monitor size={48} className="text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-lg font-medium mb-2">
+                No tiene equipos asignados
+              </p>
+              <p className="text-gray-400 text-sm">
+                Este usuario no cuenta con equipos asignados en el sistema
+              </p>
+            </div>
           )}
         </div>
       </div>

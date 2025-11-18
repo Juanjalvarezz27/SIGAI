@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
 export default async function seedMarcasModelos(prisma: PrismaClient) {
+    // Verificar si ya existen modelos
+    const existingModelos = await prisma.modelo.count();
+    if (existingModelos > 0) {
+        console.log("Las marcas y modelos ya existen. Saltando creación.");
+        return;
+    }
+
+    console.log("Creando marcas y modelos...");
 
     // Data de las Marcas
     const marcas = [

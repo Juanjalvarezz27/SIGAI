@@ -67,9 +67,9 @@ const routes: Route[] = [
   },
   {
     path: "/home/eventosExternos",
-    label: "Eventos Externos",
+    label: "Eventos",
     icon: Calendar,
-    roles: ["admin", "supervisor", "solicitante"], // Ahora incluye admin y solicitante
+    roles: ["admin", "supervisor", "solicitante"], // incluye admin y solicitante
     supervisorTipoId: 1, // Requiere supervisorTipoId = 1 para supervisores
   },
   {

@@ -34,7 +34,7 @@ interface SistemasFormularioProps {
   esSolicitante?: boolean
 }
 
-// Modal personalizado para sistemas con 2 columnas
+// Modal simple para sistemas en 2 columnas
 function SistemasModal({
   isOpen,
   onClose,
@@ -78,10 +78,10 @@ function SistemasModal({
     <div className="fixed inset-0 bg-black/[0.5] flex items-center justify-center z-[60] p-4">
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+        className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
           <button
             onClick={onClose}
@@ -93,7 +93,7 @@ function SistemasModal({
         </div>
 
         {/* Lista de opciones en 2 columnas */}
-        <div className="overflow-y-auto flex-1 p-4">
+        <div className="overflow-y-auto flex-1 p-6">
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -101,7 +101,7 @@ function SistemasModal({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {options.map((option) => (
                 <button
                   key={option.id}
@@ -110,13 +110,20 @@ function SistemasModal({
                     onClose()
                   }}
                   disabled={disabled}
-                  className={`w-full text-left p-3 rounded-md transition-colors flex items-center justify-between ${
+                  className={`p-4 rounded-lg transition-colors flex items-center justify-between ${
                     selectedValue === option.id
                       ? 'bg-[#001F3F] text-white'
-                      : 'hover:bg-gray-100 text-gray-700'
+                      : 'hover:bg-gray-100 text-gray-700 border border-gray-200'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <span className="flex-1 text-sm">{option.nombre}</span>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      selectedValue === option.id ? 'bg-white/20' : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      <Monitor size={16} />
+                    </div>
+                    <span className="font-medium text-sm">{option.nombre}</span>
+                  </div>
                   {selectedValue === option.id && (
                     <Check size={16} className="ml-2 flex-shrink-0" />
                   )}
@@ -228,7 +235,6 @@ export default function SistemasFormulario({
 
   // Manejar selección de usuario
   const handleUsuarioSeleccionado = (usuario: Usuario) => {
-    // CORRECCIÓN: Validar dirección para solicitantes
     if (esSolicitante && direccionUsuarioActual) {
       if (usuario.direccion?.id !== direccionUsuarioActual) {
         alert('Solo puedes seleccionar usuarios de tu misma dirección')
@@ -253,7 +259,7 @@ export default function SistemasFormulario({
     onFormDataChange({
       ...formData,
       sistemaId: sistemaId.toString(),
-      fallaId: undefined // Reset falla cuando cambia el sistema
+      fallaId: undefined
     })
   }
 
@@ -425,7 +431,7 @@ export default function SistemasFormulario({
         </div>
       )}
 
-      {/* Modal para Sistemas (2 columnas) */}
+      {/* Modal para Sistemas en 2 columnas */}
       <SistemasModal
         isOpen={modalAbierto === 'sistema'}
         onClose={() => setModalAbierto(null)}

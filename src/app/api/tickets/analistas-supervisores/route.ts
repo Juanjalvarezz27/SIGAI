@@ -1,4 +1,4 @@
-//Obtener analista o supervisor pero no el usuario actual
+// Obtener analista o supervisor pero no el usuario actual
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -13,12 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const tipoTicketId = searchParams.get('tipoTicketId');
     const ticketId = searchParams.get('ticketId');
-
-    if (!tipoTicketId) {
-      return NextResponse.json({ error: 'tipoTicketId es requerido' }, { status: 400 });
-    }
 
     // Obtener el usuario actual para verificar si es supervisor
     const usuarioActual = await prismadb.usuario.findUnique({
@@ -36,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener el ticket actual para excluir al analista asignado
     let usuarioActualmenteAsignadoId: number | null = null;
-    
+
     if (ticketId) {
       const ticketActual = await prismadb.ticket.findUnique({
         where: { id: parseInt(ticketId) },
@@ -44,27 +39,22 @@ export async function GET(request: NextRequest) {
           usuarioCerradorId: true
         }
       });
-      
+
       if (ticketActual?.usuarioCerradorId) {
         usuarioActualmenteAsignadoId = ticketActual.usuarioCerradorId;
       }
     }
 
     // Condición base para excluir usuario actualmente asignado
-    const condicionExcluirUsuario = usuarioActualmenteAsignadoId 
+    const condicionExcluirUsuario = usuarioActualmenteAsignadoId
       ? { id: { not: usuarioActualmenteAsignadoId } }
       : {};
 
-    // Obtener analistas activos del tipo de ticket
+    // MODIFICADO: Obtener TODOS los analistas activos (rolId 4) sin filtrar por tipoAnalistaId
     const analistas = await prismadb.usuario.findMany({
       where: {
         estado: 'Activo',
-        tipoAnalistaId: parseInt(tipoTicketId),
-        rol: {
-          rol: {
-            in: ['Analista', 'analista']
-          }
-        },
+        rolId: 4, // Solo analistas
         ...condicionExcluirUsuario
       },
       select: {
@@ -82,15 +72,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Construir condiciones para supervisores
+    // MODIFICADO: Obtener TODOS los supervisores activos (rolId 2) sin filtrar por supervisorTipoId
     const condicionesBaseSupervisores = {
       estado: 'Activo',
-      supervisorTipoId: parseInt(tipoTicketId),
-      rol: {
-        rol: {
-          in: ['Supervisor', 'supervisor']
-        }
-      }
+      rolId: 2, // Solo supervisores
+      ...condicionExcluirUsuario
     };
 
     // Si el usuario actual es supervisor, excluirlo de la lista
@@ -98,14 +84,10 @@ export async function GET(request: NextRequest) {
     if (usuarioActual.rolId === 2) {
       condicionesFinalesSupervisores = {
         ...condicionesBaseSupervisores,
-        id: { not: usuarioActual.id },
-        ...condicionExcluirUsuario
+        id: { not: usuarioActual.id }
       };
     } else {
-      condicionesFinalesSupervisores = {
-        ...condicionesBaseSupervisores,
-        ...condicionExcluirUsuario
-      };
+      condicionesFinalesSupervisores = condicionesBaseSupervisores;
     }
 
     const supervisores = await prismadb.usuario.findMany({

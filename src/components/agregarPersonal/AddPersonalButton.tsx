@@ -4,7 +4,11 @@ import { useState } from "react"
 import { Users } from "lucide-react"
 import AddPersonalModal from "./AddPersonalToggle"
 
-export default function AddPersonalButton() {
+interface BotonNuevoUsuarioProps {
+  loading?: boolean
+}
+
+export default function BotonNuevoUsuario({ loading }: BotonNuevoUsuarioProps) {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 
   const openModal = () => setIsModalOpen(true)
@@ -12,7 +16,7 @@ export default function AddPersonalButton() {
 
   return (
     <>
-      <div 
+      <div
         onClick={openModal}
         className="flex items-center gap-4 p-3 bg-white/80 rounded-2xl hover:bg-white transform transition-all duration-200 hover:scale-105 cursor-pointer"
       >

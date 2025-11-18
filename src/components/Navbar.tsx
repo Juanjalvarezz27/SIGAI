@@ -102,7 +102,7 @@ export default function Navbar() {
     },
     {
       path: "/home/inventarioEquipos",
-      label: "Inventario de equipos",
+      label: "Equipos",
       icon: Package,
       roles: ["admin", "supervisor", "analista"],
     },
@@ -120,7 +120,7 @@ export default function Navbar() {
     },
     {
       path: "/home/eventosExternos",
-      label: "Eventos Externos",
+      label: "Eventos",
       icon: Calendar,
       roles: ["admin", "supervisor", "solicitante"],
       supervisorTipoId: 1,
@@ -185,22 +185,25 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await signOut({ 
-        redirect: true,
-        callbackUrl: "/"
-      });
-      
+      // Limpiar almacenamiento local primero
       if (typeof window !== "undefined") {
         localStorage.clear();
         sessionStorage.clear();
       }
+
+      // Cerrar sesión sin redirección automática
+      await signOut({
+        redirect: false // desactivar redirección automática
+      });
+
+      // Redirigir manualmente usando el router (igual que en NoAutorizado)
+      router.push('/');
       
     } catch (error) {
       console.error("Error en logout:", error);
       
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
+      // En caso de error, redirigir manualmente
+      router.push('/');
     }
   };
 
@@ -216,9 +219,9 @@ export default function Navbar() {
     setShowLogoutModal(false);
   };
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     closeLogoutModal();
-    handleLogout();
+    await handleLogout();
   };
 
   // Obtener botones filtrados por rol del usuario

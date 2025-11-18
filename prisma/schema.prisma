@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Direcciones {
-  id        Int      @id @default(autoincrement())
+  id        Int      @id @default(autoincrement()) 
   direccion String
   pisoId    Int
   areas     Area[]
@@ -327,9 +327,10 @@ model Estados {
 }
 
 model Sistema {
-  id      Int            @id @default(autoincrement())
-  nombre  String         @unique
-  estado  String         @default("Activo")
+  id                  Int            @id @default(autoincrement())
+  nombre              String         @unique
+  descripcion         String 
+  estado              String         @default("Activo")
   tickets TicketSistema[]
 
   @@map("sistemas")

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useSearchParams } from "next/navigation"
 import Navbar from "@/components/Navbar"
 import Title from "@/components/Title"
 import FiltroRoles from "@/components/FiltroRoles"
@@ -12,6 +13,7 @@ import PaginacionInferior from "@/components/personal/PaginacionInferior"
 import ListaUsuarios from "@/components/personal/ListaUsuarios"
 import BarraBusquedaPersonalizado from "@/components/personal/BarraBusquedaPersonalizado"
 import BotonNuevoUsuario from "@/components/personal/BotonNuevoUsuario"
+import AddPersonalModal from "@/components/agregarPersonal/AddPersonalToggle"
 import axios from "axios"
 import { Usuario, PaginationInfo } from "../../../../types/personal"
 import { CheckCircle } from "lucide-react"
@@ -42,13 +44,31 @@ export default function Personal() {
   const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
   const [rolFiltro, setRolFiltro] = useState<string>('todos')
   const [filtroUbicacion, setFiltroUbicacion] = useState<FiltroUbicacionTipo>(null)
-  
-  // Estados para el modal y mensajes
+
+  // Estados para los modales y mensajes
   const [modalAbierto, setModalAbierto] = useState<boolean>(false)
   const [usuarioADeshabilitar, setUsuarioADeshabilitar] = useState<Usuario | null>(null)
   const [deshabilitando, setDeshabilitando] = useState<boolean>(false)
   const [successMessage, setSuccessMessage] = useState<string>("")
   const [mostrarExitoEnModal, setMostrarExitoEnModal] = useState<boolean>(false)
+
+  // NUEVO ESTADO: Para controlar el modal de agregar usuario
+  const [modalAgregarUsuarioAbierto, setModalAgregarUsuarioAbierto] = useState<boolean>(false)
+
+  // NUEVO: Obtener parámetros de la URL
+  const searchParams = useSearchParams()
+
+  // NUEVO EFECTO: Detectar cuando el parámetro está presente y abrir el modal
+  useEffect(() => {
+    const agregarUsuarioParam = searchParams.get('agregarUsuario')
+    if (agregarUsuarioParam === 'true') {
+      setModalAgregarUsuarioAbierto(true)
+      // Limpiar el parámetro de la URL sin recargar la página
+      const url = new URL(window.location.href)
+      url.searchParams.delete('agregarUsuario')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams])
 
   // Función para cargar usuarios (actualizada para manejar múltiples pisos)
   const cargarUsuarios = useCallback(async (page: number, rol: string, ubicacionFiltro: FiltroUbicacionTipo) => {
@@ -138,6 +158,19 @@ export default function Personal() {
     setError('')
   }
 
+  // NUEVA FUNCIÓN: Para cerrar el modal de agregar usuario
+  const cerrarModalAgregarUsuario = () => {
+    setModalAgregarUsuarioAbierto(false)
+  }
+
+  // NUEVA FUNCIÓN: Para manejar éxito al crear usuario
+  const handleUsuarioCreado = (message: string) => {
+    // Recargar la lista de usuarios
+    cargarUsuarios(currentPage, rolFiltro, filtroUbicacion)
+    setSuccessMessage(message)
+    cerrarModalAgregarUsuario()
+  }
+
   // Función para volver a la lista
   const volverALista = () => {
     setModo('lista')
@@ -192,12 +225,12 @@ export default function Personal() {
       if (response.status === 200) {
         // Mostrar mensaje de éxito en el modal primero
         setMostrarExitoEnModal(true)
-        
+
         // Esperar 2 segundos con el modal abierto mostrando el éxito
         setTimeout(async () => {
           // Cerrar el modal después de 2 segundos
           cerrarModal()
-          
+
           // Mostrar mensaje de éxito global por 3 segundos
           setSuccessMessage(`Usuario ${usuarioADeshabilitar.nombre} ${usuarioADeshabilitar.apellido} deshabilitado exitosamente`)
 
@@ -292,7 +325,7 @@ export default function Personal() {
           />
         </div>
 
-        {/* Barra de búsqueda personalizada */}
+        {/* Barra de búsqueda personalizada - ACTUALIZADA */}
         <div className="mb-6">
           <BarraBusquedaPersonalizado
             onUsuarioSeleccionado={handleSeleccionarUsuario}
@@ -377,6 +410,13 @@ export default function Personal() {
         usuarioNombre={usuarioADeshabilitar ? `${usuarioADeshabilitar.nombre} ${usuarioADeshabilitar.apellido}` : ''}
         loading={deshabilitando}
         mostrarExito={mostrarExitoEnModal}
+      />
+
+      {/* MODAL DE AGREGAR USUARIO - ACTUALIZADO CON onSuccess */}
+      <AddPersonalModal
+        isOpen={modalAgregarUsuarioAbierto}
+        onClose={cerrarModalAgregarUsuario}
+        onSuccess={handleUsuarioCreado} 
       />
     </>
   )

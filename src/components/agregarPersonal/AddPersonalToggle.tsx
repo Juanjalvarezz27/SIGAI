@@ -9,10 +9,11 @@ import ActualizarDatosForm from "./ActualizarDatosForm"
 interface AddPersonalModalProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: (message: string) => void //  NUEVA PROP
 }
 
-export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalProps) {
-  const [modo, setModo] = useState<'activo' | 'nuevo' | 'actualizar'>('activo')
+export default function AddPersonalModal({ isOpen, onClose, onSuccess }: AddPersonalModalProps) {
+  const [modo, setModo] = useState<'activo' | 'nuevo' | 'actualizar'>('nuevo')
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
@@ -53,14 +54,22 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => {
-        onClose()
+        handleCloseWithSuccess()
       }, 5000)
 
       return () => clearTimeout(timer)
     }
-  }, [success, onClose])
+  }, [success])
 
   const handleClose = () => {
+    onClose()
+  }
+
+  //  NUEVA FUNCIÓN: Cerrar y notificar éxito
+  const handleCloseWithSuccess = () => {
+    if (onSuccess && success) {
+      onSuccess(success) //  Solo notificar si hay éxito
+    }
     onClose()
   }
 
@@ -112,6 +121,18 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
             <div className="bg-gray-100 rounded-lg p-1 flex ">
               <button
                 type="button"
+                onClick={() => setModo('nuevo')}
+                disabled={loading}
+                className={` cursor-pointer px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+                  modo === 'nuevo'
+                    ? 'bg-white text-[#001F3F] shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800 disabled:hover:text-gray-600'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Usuario Nuevo
+              </button>
+              <button
+                type="button"
                 onClick={() => setModo('activo')}
                 disabled={loading}
                 className={` cursor-pointer px-4 py-2 rounded-md font-medium transition-all duration-200 ${
@@ -133,18 +154,6 @@ export default function AddPersonalModal({ isOpen, onClose }: AddPersonalModalPr
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Actualizar Datos
-              </button>
-              <button
-                type="button"
-                onClick={() => setModo('nuevo')}
-                disabled={loading}
-                className={` cursor-pointer px-4 py-2 rounded-md font-medium transition-all duration-200 ${
-                  modo === 'nuevo'
-                    ? 'bg-white text-[#001F3F] shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800 disabled:hover:text-gray-600'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                Usuario Nuevo
               </button>
             </div>
           </div>

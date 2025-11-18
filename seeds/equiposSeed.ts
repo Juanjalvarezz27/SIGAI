@@ -1,48 +1,55 @@
 import { PrismaClient } from "@prisma/client";
 
 export default async function seedEquipos(prisma: PrismaClient) {
+  // Verificar si ya existen equipos
+  const existingEquipos = await prisma.equipos.count();
+  if (existingEquipos > 0) {
+    console.log("Los equipos ya existen. Saltando creación.");
+    return;
+  }
 
-    // Tipos de Equipos
+  console.log("Creando equipos...");
+  
   await prisma.tipoEquipo.createMany({
     data: [
       { nombre: "Ordenador" },
       { nombre: "Laptop" }, 
       { nombre: "AllInOne" },
       { nombre: "Audifonos" },
-      { nombre: "MaquinaDeEscribir" },
-      { nombre: "EstacionDeCalor" },
+      { nombre: "Maquina De Escribir" },
+      { nombre: "Estacion de calor" },
       { nombre: "Camara" },
       { nombre: "Cargador" },
       { nombre: "Consola" },
       { nombre: "Corneta" },
       { nombre: "Escaner" },
       { nombre: "Etiquetadora" },
-      { nombre: "ExtensorDeSeñal" },
+      { nombre: "Extensor de señal" },
       { nombre: "Fax" },
       { nombre: "Fotocopiadora" },
       { nombre: "Impresora" },
-      { nombre: "LectorDeCodigoDeBarras" },
+      { nombre: "Lector de codigo de barras" },
       { nombre: "Modem" },
       { nombre: "Monitor" },
       { nombre: "Mouse" },
       { nombre: "Pistola" },
-      { nombre: "ProtectorDeVoltaje" },
+      { nombre: "Protector de voltaje" },
       { nombre: "Regleta" },
       { nombre: "Regulador" },
-      { nombre: "ReproductorBluetooth" },
+      { nombre: "Reproductor Bluetooth" },
       { nombre: "Router" },
       { nombre: "Sumadora" },
       { nombre: "Switch" },
       { nombre: "Teclado" },
       { nombre: "Telefono" },
       { nombre: "Televisor" },
-      { nombre: "UnidadDeCDExterna" },
-      { nombre: "UnidadExtraible" },
-      { nombre: "UnidadExternaDVD" },
+      { nombre: "Unidad de CD externa" },
+      { nombre: "Unidad Extraible" },
+      { nombre: "Unidad externa DVD" },
       { nombre: "UPS" },
       { nombre: "VHS/DVD" },
       { nombre: "Video Beam" },
-      { nombre: "LectoraDeCD" },
+      { nombre: "Lectora de CD" },
       { nombre: "Adaptador" },
       { nombre: "Calculadora" },
       { nombre: "POE" },
@@ -60,23 +67,23 @@ export default async function seedEquipos(prisma: PrismaClient) {
       ],  skipDuplicates: true,
     });
 
-    // Crear los tipos de sistemas
-      await prisma.sistema.createMany({
+  // Crear los tipos de sistemas
+  await prisma.sistema.createMany({
     data: [
-      { nombre: "Oficina Virtual" },
-      { nombre: "Campus Virtual" },
-      { nombre: "Sisvifar" },
-      { nombre: "Control de Estudio" },
-      { nombre: "Sistema de citas" },
-      { nombre: "Servicio Medico" },
-      { nombre: "Gestion Ambiental" },
-      { nombre: "Seguridad Industrial" },
-      { nombre: "Intranet" },
-      { nombre: "Pagina Web" },
-      { nombre: "Siverc" },
-      { nombre: "Sigesp" },
-      { nombre: "Eval-2" },
-      { nombre: "Zimbra" }
+      { nombre: "Oficina Virtual", descripcion: "Servicios al usuario online" },
+      { nombre: "Campus Virtual", descripcion: "Sistema virtual para la educación" },
+      { nombre: "Sisvifar", descripcion: "Sistema de vigilancia de pulicidad de medicamentos" },
+      { nombre: "SIGESCON", descripcion: "Sistema de gestión de control de estudio" },
+      { nombre: "Sistema de citas", descripcion: "Sistema de citas de patrocinantes" },
+      { nombre: "Intranet", descripcion: "Intranet Higiene" },
+      { nombre: "Pagina Web", descripcion: "Pagina del instituto (INHRR)" },
+      { nombre: "Siverc", descripcion: "Sistema Venezolano de Registro Control de Medicamentos y Evaluación de Productos Sanitários" },
+      { nombre: "Sigesp", descripcion: "Sistema integral de gestión de empleados públicos" },
+      { nombre: "Eval-2", descripcion: "Sistema de diagnostico y toma de muestras" },
+      { nombre: "Zimbra", descripcion: "Correo institucional" },
+      { nombre: "SISCOVI", descripcion: "Sistema de control de visitantes" },
+      { nombre: "SIGAI", descripcion: "Sistema de gestión de analistas informáticos" },
+      { nombre: "SIMSA", descripcion: "Sistema integral de medicina, seguridad y ambiente" },
     ],
     skipDuplicates: true,
   });
@@ -91,7 +98,8 @@ export default async function seedEquipos(prisma: PrismaClient) {
     { nombre: "Deshabilitar modulos anteriores" },
     { nombre: "Agregar funcionalidades" },
     { nombre: "Deshabilitar Funcionalidades" },
-    { nombre: "Falla de sistema" }
+    { nombre: "Falla de sistema" }, 
+    { nombre: "Habilitar versiones anteriores" },
   ],
   skipDuplicates: true,
 });

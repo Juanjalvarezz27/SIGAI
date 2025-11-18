@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
 export default async function seedEspecificacionesAdicionales(prisma: PrismaClient) {
+  // Verificar si ya existen especificaciones adicionales
+  const existingEspecificaciones = await prisma.especificacionesAdicionales.count();
+  if (existingEspecificaciones > 0) {
+    console.log("Las especificaciones adicionales ya existen. Saltando creación.");
+    return;
+  }
+
+  console.log("Creando especificaciones adicionales...");
 
        await prisma.especificacionesAdicionales.createMany({
     data: [

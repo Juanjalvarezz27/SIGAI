@@ -1,19 +1,27 @@
 import { PrismaClient } from "@prisma/client";
 
 export default async function seedDirecciones(prisma: PrismaClient) {
+  // Verificar si ya existen direcciones
+  const existingDirecciones = await prisma.direcciones.count();
+  if (existingDirecciones > 0) {
+    console.log("Las direcciones ya existen. Saltando creación.");
+    return;
+  }
 
-    
-    // Crear los Pisos
-    await prisma.piso.createMany({
-          data: [
-            { piso: "Piso 1" },
-            { piso: "Piso 2" },
-            { piso: "Piso 3" },
-            { piso: "Planta baja" },
-            { piso: "Sotano" },
-            { piso: "Area externa" },
-          ],  skipDuplicates: true,
-    });
+  console.log("Creando direcciones...");
+
+  // Crear los Pisos
+  await prisma.piso.createMany({
+    data: [
+      { piso: "Piso 1" },
+      { piso: "Piso 2" },
+      { piso: "Piso 3" },
+      { piso: "Planta baja" },
+      { piso: "Sotano" },
+      { piso: "Area externa" },
+    ],
+    skipDuplicates: true,
+  });
     
     // Data de las Direcciones
     const direccionesData = [
@@ -394,18 +402,18 @@ export default async function seedDirecciones(prisma: PrismaClient) {
           },
     ]; 
     
-    // Crear cada dirección y sus áreas asociadas en la base de datos
-    for (const dir of direccionesData) {
-          await prisma.direcciones.create({
-            data: {
-              direccion: dir.direccion,
-              pisoId: dir.pisoId,
-              areas: {
-                create: dir.areas.map((nombre) => ({ nombre })),
-              },
-            },
-          });
-    }
+  // Crear cada dirección y sus áreas
+  for (const dir of direccionesData) {
+    await prisma.direcciones.create({
+      data: {
+        direccion: dir.direccion,
+        pisoId: dir.pisoId,
+        areas: {
+          create: dir.areas.map((nombre) => ({ nombre })),
+        },
+      },
+    });
+  }
 
-    console.log("Direcciónes creadas.");
+  console.log("Direcciones creadas.");
 }

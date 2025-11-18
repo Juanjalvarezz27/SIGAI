@@ -72,7 +72,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       longitud: nuevaContraseña.length >= 8,
       minuscula: /(?=.*[a-z])/.test(nuevaContraseña),
       numero: /(?=.*\d)/.test(nuevaContraseña),
-      especial: /(?=.*[@$!%*?&])/.test(nuevaContraseña),
+      especial: /(?=.*[@$#!%*?&])/.test(nuevaContraseña),
       noIgualActual: nuevaContraseña !== contraseñaActual && contraseñaActual !== ''
     })
   }, [formData.nuevaContraseña, formData.contraseñaActual])
@@ -281,7 +281,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     <div className="flex items-center gap-2">
                       <IconoValidacion valido={validacionContraseña.especial} />
                       <span className={validacionContraseña.especial ? "text-green-600" : "text-gray-600"}>
-                        Al menos un carácter especial (@$!%*?&)
+                        Al menos un carácter especial (@$!%*?#&)
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
