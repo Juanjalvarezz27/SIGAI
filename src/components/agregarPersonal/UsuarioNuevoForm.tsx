@@ -94,8 +94,8 @@ const capitalizarPrimeraLetra = (texto: string): string => {
 
 // Función simple para obtener roles permitidos según el rol del usuario
 function obtenerRolesPermitidos(rolId: number): number[] {
-  if (rolId === 1) return [2, 3, 4] // Admin: todos los roles
-  if (rolId === 2) return [3, 4]    // Supervisor: solo solicitante y analista
+  if (rolId === 1) return [2, 3, 4, 5] // Admin: todos los roles
+  if (rolId === 2) return [3, 4, 5]    // Supervisor: solo solicitante y analista
   return []                         // Otros: ningún rol
 }
 

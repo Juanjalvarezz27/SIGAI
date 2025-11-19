@@ -8,7 +8,7 @@ const prisma = new PrismaClient()
 // PATCH - Actualizar descripción de un sistema
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -33,7 +33,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'No tienes permisos para esta acción' }, { status: 403 })
     }
 
-    const sistemaId = parseInt(params.id)
+    const { id } = await params
+    const sistemaId = parseInt(id)
     
     if (isNaN(sistemaId)) {
       return NextResponse.json(

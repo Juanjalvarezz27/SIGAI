@@ -1523,7 +1523,7 @@ export async function def() {
             console.log(`Equipo sin formato válido:`, equipo);
           }
         }
-        console.log(`✅ Total equipos asignados a ${usuario.nombre}: ${equiposAsignados}`);
+        console.log(`✅ Total equipos asignados a ${usuario.nombre}: ${equiposAsignados}, (${usuario.id})`);
       }
     };
 

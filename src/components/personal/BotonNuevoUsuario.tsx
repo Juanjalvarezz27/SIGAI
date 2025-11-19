@@ -7,19 +7,26 @@ import { useSession } from "next-auth/react"
 
 interface BotonNuevoUsuarioProps {
   loading?: boolean
+  onAgregarUsuario?: () => void // PROP OPCIONAL PARA CONTROL EXTERNO
 }
 
-export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuarioProps) {
+export default function BotonNuevoUsuario({ loading = false, onAgregarUsuario }: BotonNuevoUsuarioProps) {
   const [modalAbierto, setModalAbierto] = useState(false)
   const [mensajeExito, setMensajeExito] = useState("")
   const [mensajeError, setMensajeError] = useState("")
   const { data: session } = useSession()
 
   const abrirModal = () => {
-    setModalAbierto(true)
-    setMensajeExito("")
-    setMensajeError("")
-    document.body.style.overflow = "hidden"
+    if (onAgregarUsuario) {
+      // Si hay una función externa, usarla
+      onAgregarUsuario()
+    } else {
+      // Si no, usar el estado local
+      setModalAbierto(true)
+      setMensajeExito("")
+      setMensajeError("")
+      document.body.style.overflow = "hidden"
+    }
   }
 
   const cerrarModal = () => {
@@ -32,7 +39,7 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
   const manejarExito = (mensaje: string) => {
     setMensajeExito(mensaje)
     setMensajeError("")
-    
+
     // Cerrar automáticamente después de 5 segundos
     setTimeout(() => {
       cerrarModal()
@@ -56,8 +63,8 @@ export default function BotonNuevoUsuario({ loading = false }: BotonNuevoUsuario
         Nuevo usuario
       </button>
 
-      {/* Modal para crear nuevo usuario */}
-      {modalAbierto && (
+      {/* Modal para crear nuevo usuario - SOLO se muestra si no hay control externo */}
+      {modalAbierto && !onAgregarUsuario && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
           <div

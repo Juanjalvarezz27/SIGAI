@@ -73,7 +73,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
       { nombre: "Oficina Virtual", descripcion: "Servicios al usuario online" },
       { nombre: "Campus Virtual", descripcion: "Sistema virtual para la educación" },
       { nombre: "Sisvifar", descripcion: "Sistema de vigilancia de pulicidad de medicamentos" },
-      { nombre: "SIGESCON", descripcion: "Sistema de gestión de control de estudio" },
+      { nombre: "SIGESCON", descripcion: "Sistema de gestión de control de estudio" }, //Modificar a control de estudios el titulo cuando se vaya Juan
       { nombre: "Sistema de citas", descripcion: "Sistema de citas de patrocinantes" },
       { nombre: "Intranet", descripcion: "Intranet Higiene" },
       { nombre: "Pagina Web", descripcion: "Pagina del instituto (INHRR)" },
@@ -88,22 +88,22 @@ export default async function seedEquipos(prisma: PrismaClient) {
     skipDuplicates: true,
   });
 
-    // Crear los tipos de fallas
-    await prisma.falla.createMany({
-  data: [
-    { nombre: "Crear nuevo usuario" },
-    { nombre: "Deshabilitar Usuario" },
-    { nombre: "Actualizar Usuario" },
-    { nombre: "Agregar nuevos modulos" },
-    { nombre: "Deshabilitar modulos anteriores" },
-    { nombre: "Agregar funcionalidades" },
-    { nombre: "Deshabilitar Funcionalidades" },
-    { nombre: "Falla de sistema" }, 
-    { nombre: "Habilitar versiones anteriores" },
-  ],
-  skipDuplicates: true,
-});
-    
+      // Crear los tipos de fallas
+      await prisma.falla.createMany({
+    data: [
+      { nombre: "Crear nuevo usuario" },
+      { nombre: "Deshabilitar Usuario" },
+      { nombre: "Actualizar Usuario" },
+      { nombre: "Agregar nuevos modulos" },
+      { nombre: "Deshabilitar modulos anteriores" },
+      { nombre: "Agregar funcionalidades" },
+      { nombre: "Deshabilitar Funcionalidades" },
+      { nombre: "Falla de sistema" }, 
+      { nombre: "Habilitar versiones anteriores" },
+    ],
+    skipDuplicates: true,
+  });
+      
 
     // Crear estados de los equipos
     await prisma.estados.createMany({
@@ -122,6 +122,29 @@ export default async function seedEquipos(prisma: PrismaClient) {
       ],
       skipDuplicates: true,
     });
+
+    // Crear los tipos de titulos
+    await prisma.titulo.createMany({
+    data: [
+      // Títulos para Sistemas (tipoTicketId: 3)
+      { nombre: "Servicios web", tipoTicketId: 3 },
+      { nombre: "Servicio de Desarrollo", tipoTicketId: 3 },
+      { nombre: "Servicio de sigesp", tipoTicketId: 3 },
+      
+      // Títulos para Redes y Servidores (tipoTicketId: 2)
+      { nombre: "Servicio de Redes y teléfonia", tipoTicketId: 2 },
+      { nombre: "Servicio de correo electrónico", tipoTicketId: 2 },
+      { nombre: "Servicio de internet", tipoTicketId: 2 },
+      { nombre: "Servicio de carpetas compartidas/nube", tipoTicketId: 2 },
+      
+      // Títulos para Soporte (tipoTicketId: 1)
+      { nombre: "Servicio eventos", tipoTicketId: 1 },
+      { nombre: "Servicio de impresión", tipoTicketId: 1 },
+      { nombre: "Servicio de soporte técnico", tipoTicketId: 1 },
+      { nombre: "Servicio de inventario", tipoTicketId: 1 }
+    ],
+    skipDuplicates: true,
+  });
 
     // Nuevos tipos de supervisores
     await prisma.supervisorTipo.createMany({

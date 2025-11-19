@@ -166,10 +166,19 @@ model TipoTicket {
   id     Int     @id @default(autoincrement())
   tipo   String
   tickets Ticket[]
+  titulos Titulo[] 
 
   @@map("tipo_ticket")
 }
 
+model Titulo {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  tipoTicketId Int
+  tipoTicket  TipoTicket @relation(fields: [tipoTicketId], references: [id])
+  
+  @@map("titulos")
+}
 model TicketEstado {
   id     Int     @id @default(autoincrement())
   estado String
