@@ -84,6 +84,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
       { nombre: "SISCOVI", descripcion: "Sistema de control de visitantes" },
       { nombre: "SIGAI", descripcion: "Sistema de gestión de analistas informáticos" },
       { nombre: "SIMSA", descripcion: "Sistema integral de medicina, seguridad y ambiente" },
+      { nombre: "App", descripcion: "Gestion de fichas farmacológicas" },
     ],
     skipDuplicates: true,
   });
