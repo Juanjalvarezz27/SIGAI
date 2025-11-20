@@ -241,7 +241,7 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center">
               <Image src={Logo} alt="Logo del INHRR" className="w-16" />
-              <h1 className="text-white text-xl font-bold ml-2">OTIC</h1>
+              <h1 className="text-white text-xl font-bold ml-2">OTicket</h1>
             </div>
 
             <div className="flex items-center gap-4">

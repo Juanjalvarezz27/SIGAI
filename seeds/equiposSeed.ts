@@ -82,7 +82,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
       { nombre: "Eval-2", descripcion: "Sistema de diagnostico y toma de muestras" },
       { nombre: "Zimbra", descripcion: "Correo institucional" },
       { nombre: "SISCOVI", descripcion: "Sistema de control de visitantes" },
-      { nombre: "SIGAI", descripcion: "Sistema de gestión de analistas informáticos" },
+      { nombre: "OTicket", descripcion: "Sistema de gestión de analistas informáticos" },
       { nombre: "SIMSA", descripcion: "Sistema integral de medicina, seguridad y ambiente" },
       { nombre: "App", descripcion: "Gestion de fichas farmacológicas" },
     ],
@@ -1726,7 +1726,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
       { tipo: "UnidadExtraible", marca: "TOSHIBA", modelo: "DTB540", bienNacional: "NO POSEE", serial: "43LDT0Z0TVHH", statusId: 1, estadoId: 1, observaciones: "4TB HDD" },
 
     //UnidadDeCDExterna
-      { tipo: "UnidadDeCDExterna", marca: "SEAGATE", modelo: "SRD0PV1", bienNacional: "31512", serial: "NA9RLLR1", statusId: 1, estadoId: 1, observaciones: "8000 HDD" },
+      { tipo: "UnidadDeCDExterna", marca: "SEAGATE", modelo: "SRD0PV1", bienNacional: "31512", serial: "NA9RLLR10", statusId: 1, estadoId: 1, observaciones: "8000 HDD" },
 
     //Switch
       { tipo: "Switch", marca: "CHECK POINT", modelo: "SBXW-166LAGE-6", bienNacional: "00004", serial: "8094210000217", statusId: 1, estadoId: 2, observaciones: null },
@@ -1760,7 +1760,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
       { tipo: "Router", marca: "TP-LINK", modelo: "ARCHER C6U", bienNacional: "32112", serial: "223B5B6000723", statusId: 1, estadoId: 1, observaciones: null },
 
     //ReproductorBluetooth
-      {tipo: "ReproductorBluetooth", marca: "PYLE", modelo: "PSBV200BT", bienNacional: "32092", serial: "262021661766", statusId: 1, estadoId: 2, observaciones: null},
+      {tipo: "ReproductorBluetooth", marca: "PYLE", modelo: "PSBV200BT", bienNacional: "32092", serial: "2620216617660", statusId: 1, estadoId: 2, observaciones: null},
 
     //Regulador
       {tipo: "Regulador", marca: "TONAL", modelo: "RTL-1000", bienNacional: "27584", serial: "13355496078", statusId: 2, estadoId: 2, observaciones: null},
@@ -1955,16 +1955,16 @@ export default async function seedEquipos(prisma: PrismaClient) {
       { tipo: "Modem", marca: "TP-LINK", modelo: "TIR825M", bienNacional: "31985", serial: "JX5AAN3003636", statusId: 1, estadoId: 2, observaciones: null },
 
     //LectorDeCodigoDeBarras
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "NO POSEE", bienNacional: "30355", serial: "1432000500713", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "NO POSEE", bienNacional: "30274", serial: "1434200506469", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "NO POSEE", bienNacional: "30275", serial: "1432000500733", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30350", serial: "1434100505623", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30339", serial: "1434300504855", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "NO POSEE", bienNacional: "30355", serial: "14320005007130", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "NO POSEE", bienNacional: "30274", serial: "14342005064690", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "NO POSEE", bienNacional: "30275", serial: "14320005007330", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30350", serial: "14341005056230", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30339", serial: "14343005048550", statusId: 1, estadoId: 2, observaciones: null },
       { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30333", serial: "1434300504876", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30349", serial: "143270050193", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30356", serial: "1434100503767", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30345", serial: "1432000600701", statusId: 1, estadoId: 2, observaciones: null },
-      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30265", serial: "1432900503375", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30349", serial: "1432700501930", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30356", serial: "14341005037670", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30345", serial: "14320006007010", statusId: 1, estadoId: 2, observaciones: null },
+      { tipo: "LectorDeCodigoDeBarras", marca: "MOTOROLA", modelo: "SYMBOL", bienNacional: "30265", serial: "14329005033750", statusId: 1, estadoId: 2, observaciones: null },
 
     //Impresora
       { tipo: "Impresora", marca: "CANON", modelo: "F189204", bienNacional: "022769", serial: "21THR20528", statusId: 2, estadoId: 2, observaciones: null },
@@ -2849,7 +2849,7 @@ export default async function seedEquipos(prisma: PrismaClient) {
 {tipo: "Regulador", marca: "APC", modelo: "LINE-R 300", bienNacional: "17850", serial: "KL0441120622", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "TONAL", modelo: "RT-1000", bienNacional: "27490", serial: "13355499225", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "KODE", modelo: "K-AVR1006", bienNacional: "24042", serial: "090701-0660", statusId: 1, estadoId: 1, observaciones: "ASIGNADO A MAGALY PARRA", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-{tipo: "LectoraDeCD", marca: "N/A", modelo: "B21-Y332", bienNacional: "32086", serial: "433423123", statusId: 1, estadoId: 1, observaciones: "ASIGNADO A MAYRA BLANCO", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
+{tipo: "LectoraDeCD", marca: "N/A", modelo: "B21-Y332", bienNacional: "32086", serial: "4334231230", statusId: 1, estadoId: 1, observaciones: "ASIGNADO A MAYRA BLANCO", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Telefono", marca: "AVAYA", modelo: "4610SW", bienNacional: "19030", serial: "76463452342", statusId: 1, estadoId: 1, observaciones: "EXT 1681", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Telefono", marca: "AVAYA", modelo: "4610SW", bienNacional: "19019", serial: "32131231231", statusId: 1, estadoId: 1, observaciones: "EXT 1683", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},    
 {tipo: "Telefono", marca: "AVAYA", modelo: "4610SW", bienNacional: "19033", serial: "3424234352", statusId: 1, estadoId: 1, observaciones: "ASIGNADO A MILAGROS HERNANDEZ. EXT 1677", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
@@ -3063,9 +3063,9 @@ export default async function seedEquipos(prisma: PrismaClient) {
 {tipo: "Regulador", marca: "AVETEK", modelo: "RPC PLUS", bienNacional: "14867", serial: "591451000532", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Teclado", marca: "HP", modelo: "KU-0316", bienNacional: "020150", serial: "B94540KGASX31MA", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "TONAL", modelo: "RTL-1000", bienNacional: "27573", serial: "13355495060", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-{tipo: "LectorDeCodigoDeBarras", marca: "SYMBOL", modelo: "NO POSEE", bienNacional: "30264", serial: "1434100505655", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
+{tipo: "LectorDeCodigoDeBarras", marca: "SYMBOL", modelo: "NO POSEE", bienNacional: "30264", serial: "14341005056550", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Teclado", marca: "GENIUS", modelo: "GK-100016", bienNacional: "27045", serial: "ZM2520001123", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-{tipo: "LectorDeCodigoDeBarras", marca: "SYMBOL", modelo: "NO POSEE", bienNacional: "30260", serial: "1434100505468", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
+{tipo: "LectorDeCodigoDeBarras", marca: "SYMBOL", modelo: "NO POSEE", bienNacional: "30260", serial: "14341005054680", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Teclado", marca: "VIT", modelo: "DOK-K5313", bienNacional: "27793", serial: "KBD624K1418A", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "AVETEK", modelo: "PEV-B", bienNacional: "11798", serial: "RP11299355", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "TONAL", modelo: "RTL-1000", bienNacional: "27484", serial: "133554988331", statusId: 1, estadoId: 1, observaciones: "EQUIPO DONADO POR RUSIA", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
@@ -3094,8 +3094,8 @@ export default async function seedEquipos(prisma: PrismaClient) {
 {tipo: "Regulador", marca: "PCLINE", modelo: "R 1200", bienNacional: "20219", serial: "3L0651X26585", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "ARAWAK", modelo: "PCGPCG1200S", bienNacional: "30103", serial: "423534432", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Sumadora", marca: "CANNON", modelo: "MP41DH", bienNacional: "12526", serial: "21324234", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-{tipo: "LectoraDeCD", marca: "ROOFULL", modelo: "B21-Y3", bienNacional: "32085", serial: "21312312321", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-{tipo: "LectoraDeCD", marca: "ROOFULL", modelo: "B21-Y3", bienNacional: "19240", serial: "1243432", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
+{tipo: "LectoraDeCD", marca: "ROOFULL", modelo: "B21-Y3", bienNacional: "32085", serial: "213123123210", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
+{tipo: "LectoraDeCD", marca: "ROOFULL", modelo: "B21-Y3", bienNacional: "19240", serial: "12434320", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Telefono", marca: "AVAYA", modelo: "4610SW IP", bienNacional: "21930", serial: "8123612733431", statusId: 1, estadoId: 2, observaciones: "NO POSEE EXTENSION", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Etiquetadora", marca: "ZEBRA", modelo: "TLP2844", bienNacional: "25791", serial: "932843274823", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "PCLINE", modelo: "R 300", bienNacional: "17818", serial: "KL044120614", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
@@ -3108,11 +3108,10 @@ export default async function seedEquipos(prisma: PrismaClient) {
 {tipo: "Telefono", marca: "AVAYA", modelo: "4621SW IP", bienNacional: "18915", serial: "061635010047", statusId: 1, estadoId: 1, observaciones: "EXT 1770", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "TONAL", modelo: "RTL-1000", bienNacional: "27434", serial: "13355498909", statusId: 1, estadoId: 2, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Regulador", marca: "CDP", modelo: "B-AVR1006", bienNacional: "20839", serial: "070527-1290912", statusId: 1, estadoId: 2, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
-{tipo: "Telefono", marca: "AVAYA", modelo: "4610SW IP", bienNacional: "19240", serial: "NO POSEE", statusId: 1, estadoId: 2, observaciones: "EXT 1519", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 {tipo: "Chromecast", marca: "GOOGLE", modelo: "GZRRNN", bienNacional: "31551", serial: "18101HFDD31R8S", statusId: 1, estadoId: 1, observaciones: "N/A", memoriaRam: "N/A", modulosRam: "N/A", capacidadDisco: "N/A", tipoDisco: "N/A", procesador: "N/A"},
 ] as const;
 
-// Definir interfaces específicas
+// Definir la interfaz EquipoBase
 interface EquipoBase {
   readonly tipo: string;
   readonly marca: string;
@@ -3143,12 +3142,18 @@ function esEquipoConEspecificaciones(eq: EquipoBase): boolean {
          'procesador' in eq;
 }
 
+// Contadores para el resumen
+let equiposCreados = 0;
+let equiposDuplicados = 0;
+let equiposSinTipo = 0;
+
 // Validar campos de equipos
 for (const eq of equiposData as unknown as EquipoBase[]) {
   const tipoEquipoDb = await prisma.tipoEquipo.findFirst({ 
     where: { nombre: eq.tipo } 
   });
   if (!tipoEquipoDb) {
+    equiposSinTipo++;
     continue;
   }
 
@@ -3174,6 +3179,30 @@ for (const eq of equiposData as unknown as EquipoBase[]) {
         marcaId: marcaDb.id,
       },
     });
+  }
+
+  // VERIFICAR SI EL EQUIPO YA EXISTE (DUPLICADO)
+  const equipoExistente = await prisma.equipos.findFirst({
+    where: {
+      OR: [
+        // Buscar por bienNacional y serial (ambos deben coincidir)
+        {
+          bienNacional: eq.bienNacional,
+          serial: eq.serial
+        },
+        // O solo por bienNacional si el serial es null/empty
+        ...(eq.serial ? [] : [{
+          bienNacional: eq.bienNacional,
+          serial: null
+        }])
+      ]
+    }
+  });
+
+  // Si el equipo ya existe, saltar a la siguiente iteración
+  if (equipoExistente) {
+    equiposDuplicados++;
+    continue;
   }
 
   // Comprobar si el tipo es uno de los especiales
@@ -3209,6 +3238,13 @@ for (const eq of equiposData as unknown as EquipoBase[]) {
   await prisma.equipos.create({
     data: dataEquipo,
   });
+  
+  equiposCreados++;
 }
 
-console.log("Equipos y tipos creados.");  }
+console.log("Equipos y tipos creados.");
+console.log(`📊 Resumen:
+  - Equipos creados: ${equiposCreados}
+  - Equipos duplicados omitidos: ${equiposDuplicados}
+  - Equipos sin tipo válido: ${equiposSinTipo}
+  - Total procesado: ${equiposData.length}`); }

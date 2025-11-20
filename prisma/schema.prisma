@@ -241,10 +241,10 @@ model TipoEquipo {
 
 model Equipos {
   id                Int          @id @default(autoincrement())
-  bienNacional      String?
-  serial            String?
+  bienNacional      String?      
+  serial            String?    
   observaciones     String?
-  tipoEquipoId      Int
+  tipoEquipoId      Int 
   modeloId          Int
   statusId          Int?
   estadoId          Int?
