@@ -44,7 +44,6 @@ interface EquiposListProps {
   tiposEquipo: TipoEquipo[]
   estados: Estado[]
   status: Status[]
-  onEditarEquipo: (index: number) => void
   onEliminarEquipo: (index: number) => void
   disabled?: boolean
 }
@@ -56,7 +55,6 @@ export default function EquiposList({
   tiposEquipo, 
   estados, 
   status, 
-  onEditarEquipo, 
   onEliminarEquipo, 
   disabled = false 
 }: EquiposListProps) {
@@ -86,14 +84,6 @@ export default function EquiposList({
                 {tipoEquipo || "Equipo"} {equipo.marca && `- ${equipo.marca}`} {equipo.modelo && `- ${equipo.modelo}`}
               </h4>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => onEditarEquipo(index)}
-                  disabled={disabled}
-                  className="text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-50"
-                >
-                  <Edit size={16} />
-                </button>
                 <button
                   type="button"
                   onClick={() => onEliminarEquipo(index)}

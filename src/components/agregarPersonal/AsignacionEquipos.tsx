@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Monitor } from "lucide-react"
+import { Plus, Monitor, Package } from "lucide-react"
 import axios from "axios"
 import EquiposList from "./asignacion-equipos/EquiposList"
 import EquipoModal from "./asignacion-equipos/EquipoModal"
+import ModalEquiposLibres from "./ModalEquiposLibres"
 
-// Interfaces
+// Interfaces corregidas
 interface TipoEquipo {
   id: number
   nombre: string
@@ -47,12 +48,52 @@ interface EquipoConEspecificaciones extends EquipoBase {
   id?: number
 }
 
+interface EquipoLibre {
+  id: number
+  bienNacional?: string
+  serial?: string
+  observaciones?: string
+  tipoEquipoId: number
+  modeloId: number
+  statusId?: number
+  estadoId?: number
+  especificacionesId?: number
+  tipoEquipo: {
+    id: number
+    nombre: string
+  }
+  modelo: {
+    id: number
+    nombre: string
+    marca: {
+      id: number
+      nombre: string
+    }
+  }
+  status?: {
+    id: number
+    estado: string
+  }
+  estado?: {
+    id: number
+    nombre: string
+  }
+  especificaciones?: {
+    id: number
+    memoriaRam?: string
+    modulosRam?: string
+    capacidadDisco?: string
+    tipoDisco?: string
+    procesador?: string
+  }
+}
+
 interface AsignacionEquiposProps {
   onEquiposChange: (equipos: EquipoConEspecificaciones[]) => void
   disabled?: boolean
 }
 
-// Hook personalizado para datos
+// Hook personalizado para datos (mantener igual)
 const useEquiposData = () => {
   const [tiposEquipo, setTiposEquipo] = useState<TipoEquipo[]>([])
   const [status, setStatus] = useState<Status[]>([])
@@ -92,7 +133,7 @@ const useEquiposData = () => {
   }
 }
 
-// Componente de Loading
+// Componente de Loading (mantener igual)
 const LoadingSpinner = () => {
   return (
     <div className="flex justify-center items-center py-8">
@@ -107,6 +148,7 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
   const { tiposEquipo, status, estados, cargandoDatos } = useEquiposData()
   const [equipos, setEquipos] = useState<EquipoConEspecificaciones[]>([])
   const [modalAbierto, setModalAbierto] = useState(false)
+  const [modalEquiposLibresAbierto, setModalEquiposLibresAbierto] = useState(false)
   const [equipoEditando, setEquipoEditando] = useState<number | null>(null)
 
   // Notificar cambios al componente padre
@@ -117,6 +159,10 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
   const agregarEquipo = () => {
     setEquipoEditando(null)
     setModalAbierto(true)
+  }
+
+  const abrirModalEquiposLibres = () => {
+    setModalEquiposLibresAbierto(true)
   }
 
   const editarEquipo = (index: number) => {
@@ -147,9 +193,34 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
       }
       setEquipos(prev => [...prev, nuevoEquipo])
     }
-    
+
     setModalAbierto(false)
     setEquipoEditando(null)
+  }
+
+  const handleEquiposLibresSeleccionados = (equiposLibres: EquipoLibre[]) => {
+    const nuevosEquipos: EquipoConEspecificaciones[] = equiposLibres.map(equipoLibre => ({
+      id: equipoLibre.id, // Usar el ID real del equipo
+      bienNacional: equipoLibre.bienNacional || "",
+      serial: equipoLibre.serial || "",
+      observaciones: equipoLibre.observaciones || "",
+      tipoEquipoId: equipoLibre.tipoEquipo.id,
+      tipoEquipoNombre: equipoLibre.tipoEquipo.nombre,
+      modelo: equipoLibre.modelo.nombre,
+      marca: equipoLibre.modelo.marca.nombre,
+      statusId: equipoLibre.status?.id || 1,
+      estadoId: equipoLibre.estado?.id || 1,
+      especificaciones: equipoLibre.especificaciones ? {
+        memoriaRam: equipoLibre.especificaciones.memoriaRam || "",
+        modulosRam: equipoLibre.especificaciones.modulosRam || "",
+        capacidadDisco: equipoLibre.especificaciones.capacidadDisco || "",
+        tipoDisco: equipoLibre.especificaciones.tipoDisco || "",
+        procesador: equipoLibre.especificaciones.procesador || ""
+      } : undefined
+    }))
+
+    setEquipos(prev => [...prev, ...nuevosEquipos])
+    setModalEquiposLibresAbierto(false)
   }
 
   const handleCerrarModal = () => {
@@ -168,15 +239,26 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
           <Monitor className="w-5 h-5 text-[#001F3F]" />
           Asignación de Equipos
         </h3>
-        <button
-          type="button"
-          onClick={agregarEquipo}
-          disabled={disabled}
-          className="flex items-center gap-2 px-3 py-2 bg-[#001F3F] hover:bg-[#003366] text-white rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus size={16} />
-          Agregar Equipo
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={abrirModalEquiposLibres}
+            disabled={disabled}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          >
+            <Package size={16} />
+            Asignar Equipos Libres
+          </button>
+          <button
+            type="button"
+            onClick={agregarEquipo}
+            disabled={disabled}
+            className="flex items-center gap-2 px-4 py-2 bg-[#001F3F] hover:bg-[#003366] text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          >
+            <Plus size={16} />
+            Crear Nuevo Equipo
+          </button>
+        </div>
       </div>
 
       <EquiposList
@@ -184,7 +266,6 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
         tiposEquipo={tiposEquipo}
         estados={estados}
         status={status}
-        onEditarEquipo={editarEquipo}
         onEliminarEquipo={eliminarEquipo}
         disabled={disabled}
       />
@@ -201,6 +282,13 @@ export default function AsignacionEquipos({ onEquiposChange, disabled = false }:
           disabled={disabled}
         />
       )}
+
+      <ModalEquiposLibres
+        isOpen={modalEquiposLibresAbierto}
+        onClose={() => setModalEquiposLibresAbierto(false)}
+        onEquiposSeleccionados={handleEquiposLibresSeleccionados}
+        disabled={disabled}
+      />
     </div>
   )
 }
