@@ -10,6 +10,8 @@ import AsignacionEquipos from "./AsignacionEquipos"
 interface FormData {
   cedula: string
   email: string
+  nombre: string
+  apellido: string
 }
 
 interface EquipoConEspecificaciones {
@@ -54,7 +56,9 @@ export default function ActualizarDatosForm({
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null)
   const [formData, setFormData] = useState<FormData>({
     cedula: '',
-    email: ''
+    email: '',
+    nombre: '',
+    apellido: ''
   })
   const [equipos, setEquipos] = useState<EquipoConEspecificaciones[]>([])
   const [mostrarAsignacionEquipos, setMostrarAsignacionEquipos] = useState(false)
@@ -72,7 +76,9 @@ export default function ActualizarDatosForm({
     setUsuarioSeleccionado(null)
     setFormData({
       cedula: '',
-      email: ''
+      email: '',
+      nombre: '',
+      apellido: ''
     })
     setEquipos([])
     setMostrarAsignacionEquipos(false)
@@ -82,7 +88,9 @@ export default function ActualizarDatosForm({
     setUsuarioSeleccionado(usuario)
     setFormData({
       cedula: '', // Siempre vacío si ya tiene cédula
-      email: usuario.email || ''
+      email: usuario.email || '',
+      nombre: usuario.nombre || '',
+      apellido: usuario.apellido || ''
     })
   }
 
@@ -109,28 +117,25 @@ export default function ActualizarDatosForm({
       return
     }
 
-    // Si el usuario ya tiene cédula, solo validar el email
-    if (usuarioSeleccionado.cedula) {
-      // Validar que si se ingresa email, tenga formato válido
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        onError('El formato del email no es válido')
-        scrollToTop()
-        return
-      }
-    } else {
-      // Si no tiene cédula, validar que al menos un campo tenga datos
-      if (!formData.cedula && !formData.email) {
-        onError('Debes ingresar al menos la cédula o el email')
-        scrollToTop()
-        return
-      }
+    // Validaciones para campos que requieren formato específico
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      onError('El formato del email no es válido')
+      scrollToTop()
+      return
+    }
 
-      // Validar que si se ingresa email, tenga formato válido
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        onError('El formato del email no es válido')
-        scrollToTop()
-        return
-      }
+    // Validar que al menos un campo tenga datos para actualizar
+    const hayDatosParaActualizar = 
+      formData.cedula || 
+      formData.email || 
+      formData.nombre || 
+      formData.apellido || 
+      equipos.length > 0
+
+    if (!hayDatosParaActualizar) {
+      onError('Debes ingresar al menos un dato para actualizar')
+      scrollToTop()
+      return
     }
 
     onLoadingChange(true)
@@ -142,6 +147,8 @@ export default function ActualizarDatosForm({
         usuarioId: usuarioSeleccionado.id,
         cedula: usuarioSeleccionado.cedula ? usuarioSeleccionado.cedula : (formData.cedula || null),
         email: formData.email || null,
+        nombre: formData.nombre || null,
+        apellido: formData.apellido || null,
         equipos: equipos.length > 0 ? equipos : undefined
       }
 
@@ -151,7 +158,7 @@ export default function ActualizarDatosForm({
         const mensaje = response.data.equiposAgregados > 0
           ? `${response.data.message} con ${response.data.equiposAgregados} equipo(s) agregado(s)`
           : response.data.message
-        
+
         onSuccess(mensaje)
         scrollToTop()
         setTimeout(() => {
@@ -168,11 +175,12 @@ export default function ActualizarDatosForm({
   }
 
   // Determinar si el formulario es válido
-  const isFormValid = usuarioSeleccionado &&
-    (usuarioSeleccionado.cedula
-      ? !formData.email || /\S+@\S+\.\S+/.test(formData.email) // Si tiene cédula, email debe ser válido si se ingresa
-      : (formData.cedula || formData.email) && (formData.email ? /\S+@\S+\.\S+/.test(formData.email) : true) // Si no tiene cédula, validar como antes
-    )
+  const isFormValid = usuarioSeleccionado && (
+    // Validar que al menos un campo tenga datos
+    (formData.cedula || formData.email || formData.nombre || formData.apellido || equipos.length > 0) &&
+    // Validar formato de email si se ingresa
+    (formData.email ? /\S+@\S+\.\S+/.test(formData.email) : true)
+  )
 
   return (
     <div ref={formRef} className="overflow-y-auto flex-1">
@@ -222,7 +230,7 @@ export default function ActualizarDatosForm({
           <div className="space-y-4 w-11/12 mx-auto">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Actualizar Datos del Usuario
+                Datos Actuales del Usuario
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
@@ -251,6 +259,30 @@ export default function ActualizarDatosForm({
                   <div className="p-2 bg-gray-100 rounded-md border border-gray-300">
                     <p className="text-gray-700">
                       {usuarioSeleccionado.email || 'No tiene email registrado'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Campo Nombre Actual */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre Actual
+                  </label>
+                  <div className="p-2 bg-gray-100 rounded-md border border-gray-300">
+                    <p className="text-gray-700">
+                      {usuarioSeleccionado.nombre || 'No tiene nombre registrado'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Campo Apellido Actual */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Apellido Actual
+                  </label>
+                  <div className="p-2 bg-gray-100 rounded-md border border-gray-300">
+                    <p className="text-gray-700">
+                      {usuarioSeleccionado.apellido || 'No tiene apellido registrado'}
                     </p>
                   </div>
                 </div>
@@ -289,7 +321,7 @@ export default function ActualizarDatosForm({
                   />
                   {usuarioSeleccionado.cedula && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Solo se puede actualizar el email
+                      Solo se puede actualizar el email, nombre y apellido
                     </p>
                   )}
                 </div>
@@ -310,14 +342,48 @@ export default function ActualizarDatosForm({
                     disabled={loading}
                   />
                 </div>
+
+                {/* Campo Nuevo Nombre */}
+                <div>
+                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
+                    Nuevo Nombre
+                  </label>
+                  <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
+                    placeholder={usuarioSeleccionado.nombre ? "Dejar vacío para mantener actual" : "Ingresa el nuevo nombre"}
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Campo Nuevo Apellido */}
+                <div>
+                  <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-2">
+                    Nuevo Apellido
+                  </label>
+                  <input
+                    type="text"
+                    id="apellido"
+                    name="apellido"
+                    value={formData.apellido}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
+                    placeholder={usuarioSeleccionado.apellido ? "Dejar vacío para mantener actual" : "Ingresa el nuevo apellido"}
+                    disabled={loading}
+                  />
+                </div>
               </div>
 
               {/* Nota informativa */}
               <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
                 <p className="text-sm text-blue-700">
                   <strong>Nota:</strong> {usuarioSeleccionado.cedula
-                    ? 'Solo puedes actualizar el email. La cédula no se puede modificar una vez registrada.'
-                    : 'Puedes actualizar solo la cédula, solo el email, o ambos campos. Los campos que dejes vacíos mantendrán su valor actual.'}
+                    ? 'Solo puedes actualizar el email, nombre y apellido. La cédula no se puede modificar una vez registrada.'
+                    : 'Puedes actualizar la cédula, email, nombre y/o apellido. Los campos que dejes vacíos mantendrán su valor actual.'}
                 </p>
               </div>
             </div>
@@ -340,7 +406,7 @@ export default function ActualizarDatosForm({
 
               {mostrarAsignacionEquipos && (
                 <div className="mt-4">
-                  <AsignacionEquipos 
+                  <AsignacionEquipos
                     onEquiposChange={setEquipos}
                     disabled={loading}
                   />

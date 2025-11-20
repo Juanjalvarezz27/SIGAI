@@ -25,7 +25,6 @@ async function Perfil () {
 
   // Rutas disponibles para analista - usando nombres de iconos
   const analistaRoutes = [
-    { path: "/home/trabajos", label: "Trabajos", iconName: "Warehouse" as const },
     { path: "/home/inventarioEquipos", label: "Inventario", iconName: "Package" as const },
     { path: "/home/tickets", label: "Tickets", iconName: "Ticket" as const }
   ];

@@ -1,4 +1,3 @@
-// actualizar datos
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -29,7 +28,48 @@ interface ActualizarDatosRequest {
   usuarioId: number
   cedula?: string | null
   email?: string | null
+  nombre?: string | null
+  apellido?: string | null
   equipos?: EquipoData[]
+}
+
+// Función auxiliar para limpiar los datos antes de enviar a Prisma
+const limpiarDatosActualizacion = (datos: {
+  cedula?: string | null
+  email?: string | null
+  nombre?: string | null
+  apellido?: string | null
+}): {
+  cedula?: string
+  email?: string
+  nombre?: string
+  apellido?: string
+} => {
+  const datosLimpios: {
+    cedula?: string
+    email?: string
+    nombre?: string
+    apellido?: string
+  } = {}
+
+  // Solo incluir campos que no sean null o undefined
+  if (datos.cedula !== null && datos.cedula !== undefined) {
+    datosLimpios.cedula = datos.cedula
+  }
+
+  if (datos.email !== null && datos.email !== undefined) {
+    datosLimpios.email = datos.email
+  }
+
+  if (datos.nombre !== null && datos.nombre !== undefined) {
+    datosLimpios.nombre = datos.nombre
+  }
+
+  if (datos.apellido !== null && datos.apellido !== undefined) {
+    datosLimpios.apellido = datos.apellido
+  }
+
+  return datosLimpios
 }
 
 export async function PUT(request: NextRequest) {
@@ -41,7 +81,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body: ActualizarDatosRequest = await request.json()
-    const { usuarioId, cedula, email, equipos } = body
+    const { usuarioId, cedula, email, nombre, apellido, equipos } = body
 
     // Validaciones
     if (!usuarioId) {
@@ -51,7 +91,13 @@ export async function PUT(request: NextRequest) {
     // Verificar que el usuario existe
     const usuarioExistente = await prismadb.usuario.findUnique({
       where: { id: usuarioId },
-      select: { id: true, email: true, cedula: true }
+      select: { 
+        id: true, 
+        email: true, 
+        cedula: true,
+        nombre: true,
+        apellido: true
+      }
     })
 
     if (!usuarioExistente) {
@@ -59,33 +105,30 @@ export async function PUT(request: NextRequest) {
     }
 
     // Preparar datos para actualizar
-    const datosActualizar: {
-      cedula?: string | null
-      email?: string | null
-    } = {}
-
-    // Solo actualizar cédula si se proporciona
-    if (cedula !== undefined) {
-      datosActualizar.cedula = cedula
+    const datosActualizar = {
+      cedula,
+      email,
+      nombre,
+      apellido
     }
 
-    // Solo actualizar email si se proporciona y validar que no esté en uso
-    if (email !== undefined) {
-      if (email && email !== usuarioExistente.email) {
-        const emailExistente = await prismadb.usuario.findUnique({
-          where: { email }
-        })
-
-        if (emailExistente && emailExistente.id !== usuarioId) {
-          return NextResponse.json({ error: 'El email ya está en uso' }, { status: 400 })
-        }
-      }
-      datosActualizar.email = email
-    }
+    // Limpiar datos para Prisma (remover null values)
+    const datosLimpios = limpiarDatosActualizacion(datosActualizar)
 
     // Si no hay nada que actualizar y no hay equipos para agregar
-    if (Object.keys(datosActualizar).length === 0 && (!equipos || equipos.length === 0)) {
+    if (Object.keys(datosLimpios).length === 0 && (!equipos || equipos.length === 0)) {
       return NextResponse.json({ error: 'No hay datos para actualizar' }, { status: 400 })
+    }
+
+    // Validar email único si se está actualizando
+    if (datosLimpios.email && datosLimpios.email !== usuarioExistente.email) {
+      const emailExistente = await prismadb.usuario.findUnique({
+        where: { email: datosLimpios.email }
+      })
+
+      if (emailExistente && emailExistente.id !== usuarioId) {
+        return NextResponse.json({ error: 'El email ya está en uso' }, { status: 400 })
+      }
     }
 
     // Actualizar usuario y equipos dentro de una transacción
@@ -93,10 +136,17 @@ export async function PUT(request: NextRequest) {
       let usuarioActualizado = usuarioExistente
 
       // Actualizar datos del usuario si hay cambios
-      if (Object.keys(datosActualizar).length > 0) {
+      if (Object.keys(datosLimpios).length > 0) {
         usuarioActualizado = await tx.usuario.update({
           where: { id: usuarioId },
-          data: datosActualizar
+          data: datosLimpios,
+          select: {
+            id: true,
+            email: true,
+            cedula: true,
+            nombre: true,
+            apellido: true
+          }
         })
       }
 
@@ -105,7 +155,7 @@ export async function PUT(request: NextRequest) {
       if (equipos && equipos.length > 0) {
         for (const equipoData of equipos) {
           let especificacionesId = null
-          
+
           // Validar campos obligatorios del equipo
           if (!equipoData.marca || !equipoData.modelo || !equipoData.statusId || !equipoData.estadoId) {
             throw new Error('Todos los campos obligatorios del equipo deben ser completados')
@@ -116,7 +166,7 @@ export async function PUT(request: NextRequest) {
           if (!tipoEquipoId && equipoData.tipoEquipoNombre) {
             // Buscar si el tipo ya existe
             const tipoExistente = await tx.tipoEquipo.findFirst({
-              where: { 
+              where: {
                 nombre: {
                   equals: equipoData.tipoEquipoNombre,
                   mode: 'insensitive'
@@ -166,7 +216,7 @@ export async function PUT(request: NextRequest) {
           // Buscar o crear modelo
           let modeloId: number
           const modeloExistente = await tx.modelo.findFirst({
-            where: { 
+            where: {
               nombre: equipoData.modelo,
               marca: {
                 nombre: equipoData.marca
@@ -181,7 +231,7 @@ export async function PUT(request: NextRequest) {
             // Buscar o crear marca
             let marcaId: number
             const marcaExistente = await tx.marca.findFirst({
-              where: { 
+              where: {
                 nombre: {
                   equals: equipoData.marca,
                   mode: 'insensitive'
@@ -200,7 +250,7 @@ export async function PUT(request: NextRequest) {
 
             // Crear modelo
             const nuevoModelo = await tx.modelo.create({
-              data: { 
+              data: {
                 nombre: equipoData.modelo,
                 marcaId: marcaId
               }
@@ -240,25 +290,25 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    const mensaje = resultado.equiposCreados > 0 
+    const mensaje = resultado.equiposCreados > 0
       ? `Datos actualizados correctamente y ${resultado.equiposCreados} equipo(s) agregado(s)`
       : 'Datos actualizados correctamente'
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: mensaje,
       equiposAgregados: resultado.equiposCreados
     })
 
   } catch (error: unknown) {
     console.error('Error actualizando datos del usuario:', error)
-    
+
     if (error instanceof Error) {
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
       )
     }
-    
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

@@ -35,6 +35,59 @@ interface VerMisEquiposButtonProps {
   userId?: number
 }
 
+// Función para eliminar equipos duplicados basada en datos clave
+const eliminarEquiposDuplicados = (equipos: Equipo[]): Equipo[] => {
+  const equiposUnicos: Equipo[] = []
+  const clavesVistas = new Set<string>()
+
+  equipos.forEach(equipo => {
+    // Crear una clave única basada en los datos del equipo
+    const clave = crearClaveUnica(equipo)
+    
+    if (!clavesVistas.has(clave)) {
+      clavesVistas.add(clave)
+      equiposUnicos.push(equipo)
+    }
+  })
+
+  return equiposUnicos
+}
+
+// Función para crear una clave única basada en los datos del equipo
+const crearClaveUnica = (equipo: Equipo): string => {
+  // Usamos los campos que identifican un equipo único
+  const partes: string[] = []
+
+  // Serial es el identificador más importante
+  if (equipo.serial) {
+    partes.push(`serial:${equipo.serial.trim().toLowerCase()}`)
+  }
+
+  // Bien nacional como segundo identificador
+  if (equipo.bienNacional) {
+    partes.push(`bien:${equipo.bienNacional.trim().toLowerCase()}`)
+  }
+
+  // Si no hay serial ni bien nacional, usamos tipo + modelo + especificaciones
+  if (partes.length === 0) {
+    partes.push(`tipo:${equipo.tipoEquipo.nombre.trim().toLowerCase()}`)
+    partes.push(`modelo:${equipo.modelo.nombre.trim().toLowerCase()}`)
+    partes.push(`marca:${equipo.modelo.marca.nombre.trim().toLowerCase()}`)
+    
+    // Incluir especificaciones si están disponibles
+    if (equipo.especificaciones) {
+      if (equipo.especificaciones.procesador) {
+        partes.push(`cpu:${equipo.especificaciones.procesador.trim().toLowerCase()}`)
+      }
+      if (equipo.especificaciones.memoriaRam) {
+        partes.push(`ram:${equipo.especificaciones.memoriaRam.trim().toLowerCase()}`)
+      }
+    }
+  }
+
+  return partes.join('|')
+}
+
 export default function VerMisEquiposButton({ userId }: VerMisEquiposButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [equipos, setEquipos] = useState<Equipo[]>([])
@@ -55,7 +108,13 @@ export default function VerMisEquiposButton({ userId }: VerMisEquiposButtonProps
       const response = await fetch(`/api/equipos/usuario/${userId}`)
       if (response.ok) {
         const data = await response.json()
-        setEquipos(data.equipos || [])
+        const equiposSinDuplicados = eliminarEquiposDuplicados(data.equipos || [])
+        
+        // Log para debugging (puedes removerlo después)
+        console.log('Equipos originales:', data.equipos?.length)
+        console.log('Equipos sin duplicados:', equiposSinDuplicados.length)
+        
+        setEquipos(equiposSinDuplicados)
       } else {
         setError("Error al cargar los equipos")
       }
@@ -76,13 +135,13 @@ export default function VerMisEquiposButton({ userId }: VerMisEquiposButtonProps
   return (
     <>
       {/* Botón Ver Mis Equipos */}
-        <button
-            onClick={abrirModal}
-            className="flex flex-col items-center justify-center gap-1 px-6 py-6 bg-[#A0C4FF]  text-[#001F3F] rounded-2xl transform transition-all duration-200 hover:scale-105 cursor-pointer font-medium w-full"
-        >
-            <h1 className="text-xl font-bold">Mis Equipos</h1>
-            <Monitor className="w-14 h-14 mt-3" />
-        </button>
+      <button
+        onClick={abrirModal}
+        className="flex flex-col items-center justify-center gap-1 px-6 py-6 bg-[#A0C4FF] text-[#001F3F] rounded-2xl transform transition-all duration-200 hover:scale-105 cursor-pointer font-medium w-full"
+      >
+        <h1 className="text-xl font-bold">Mis Equipos</h1>
+        <Monitor className="w-14 h-14 mt-3" />
+      </button>
 
       {/* Modal */}
       {isModalOpen && (
