@@ -124,15 +124,11 @@ export default function ModalEquiposLibres({
   const [searchTerm, setSearchTerm] = useState("")
   const [error, setError] = useState("")
   const [equiposExpandidos, setEquiposExpandidos] = useState<Set<number>>(new Set())
-  const [isVisible, setIsVisible] = useState(false)
 
-  // Controlar visibilidad con animación
+  // Cargar equipos libres
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true)
       cargarEquiposLibres()
-    } else {
-      setIsVisible(false)
     }
   }, [isOpen])
 
@@ -172,7 +168,7 @@ export default function ModalEquiposLibres({
   }
 
   const toggleExpandirEquipo = (equipoId: number, e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation() // Prevenir propagación del evento
     setEquiposExpandidos(prev => {
       const nuevoSet = new Set(prev)
       if (nuevoSet.has(equipoId)) {
@@ -185,7 +181,7 @@ export default function ModalEquiposLibres({
   }
 
   const handleCheckboxClick = (equipo: EquipoLibre, e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation() // Prevenir propagación del evento
     if (!disabled) {
       toggleEquipoSeleccionado(equipo)
     }
@@ -200,7 +196,7 @@ export default function ModalEquiposLibres({
   }
 
   const handleAsignarEquipos = (e: React.MouseEvent) => {
-    e.preventDefault()
+    e.preventDefault() // Prevenir submit del formulario padre
     onEquiposSeleccionados(equiposSeleccionados)
     setEquiposSeleccionados([])
     setSearchTerm("")
@@ -209,7 +205,7 @@ export default function ModalEquiposLibres({
   }
 
   const handleCerrar = (e: React.MouseEvent) => {
-    e.preventDefault()
+    e.preventDefault() // Prevenir submit del formulario padre
     setEquiposSeleccionados([])
     setSearchTerm("")
     setError("")
@@ -218,56 +214,47 @@ export default function ModalEquiposLibres({
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation()
+    e.stopPropagation() // Prevenir propagación
     setSearchTerm(e.target.value)
   }
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault()
+      e.preventDefault() // Prevenir submit del formulario padre
     }
   }
 
+  // Prevenir que los eventos del modal se propaguen al formulario padre
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      handleCerrar(e)
-    }
-  }
-
-  if (!isOpen && !isVisible) return null
+  if (!isOpen) return null
 
   return (
     <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 transition-all duration-300 ${
-        isVisible ? 'animate-fade-in' : 'opacity-0'
-      }`}
-      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={handleCerrar} // Cerrar al hacer click fuera
     >
       <div 
-        className={`bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all duration-300 ${
-          isVisible ? 'animate-fade-in-up scale-100' : 'opacity-0 scale-95 translate-y-4'
-        }`}
-        onClick={handleModalClick}
+        className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={handleModalClick} // Prevenir cierre al hacer click dentro
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0 animate-fade-in">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Package className="w-6 h-6 text-[#001F3F]" />
             <div>
-              <h3 className="text-xl font-semibold text-gray-800 font-montserrat">Asignar Equipos Libres</h3>
-              <p className="text-gray-600 text-sm font-poppins">
+              <h3 className="text-xl font-semibold text-gray-800">Asignar Equipos Libres</h3>
+              <p className="text-gray-600 text-sm">
                 Selecciona equipos disponibles para asignar
               </p>
             </div>
           </div>
           <button
             onClick={handleCerrar}
-            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer transition-transform hover:scale-110 duration-200"
-            type="button"
+            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+            type="button" // Especificar que es un botón, no submit
           >
             <X size={24} />
           </button>
@@ -276,7 +263,7 @@ export default function ModalEquiposLibres({
         {/* Contenido */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* Barra de búsqueda y contador */}
-          <div className="p-4 border-b border-gray-200 bg-[#F0F8FF] flex-shrink-0 animate-fade-in">
+          <div className="p-4 border-b border-gray-200 bg-[#F0F8FF] flex-shrink-0">
             <div className="flex items-center gap-4 mb-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -285,16 +272,16 @@ export default function ModalEquiposLibres({
                   value={searchTerm}
                   onChange={handleSearchChange}
                   onKeyDown={handleSearchKeyDown}
-                  className="w-full pl-10 pr-4 py-2 border border-[#A0C4FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent font-poppins transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2 border border-[#A0C4FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
                   placeholder="Buscar por bien nacional, serial o tipo de equipo..."
                   disabled={disabled || loading}
                 />
               </div>
-              <div className="bg-[#001F3F] text-white px-3 py-1 rounded-full text-sm font-medium font-poppins animate-fade-in">
+              <div className="bg-[#001F3F] text-white px-3 py-1 rounded-full text-sm font-medium">
                 {equiposSeleccionados.length} seleccionados
               </div>
             </div>
-            <div className="flex justify-between items-center text-sm text-[#003366] font-poppins">
+            <div className="flex justify-between items-center text-sm text-[#003366]">
               <span>{equiposFiltrados.length} equipos encontrados</span>
               <span>{equiposLibres.length} equipos libres en total</span>
             </div>
@@ -303,50 +290,49 @@ export default function ModalEquiposLibres({
           {/* Lista de equipos */}
           <div className="flex-1 overflow-y-auto p-6">
             {loading ? (
-              <div className="flex justify-center items-center py-12 animate-fade-in">
+              <div className="flex justify-center items-center py-12">
                 <div className="w-12 h-12 bg-[#A0C4FF] rounded-full flex items-center justify-center">
                   <div className="w-6 h-6 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
                 </div>
               </div>
             ) : error ? (
-              <div className="text-center py-8 text-red-600 animate-fade-in">
+              <div className="text-center py-8 text-red-600">
                 {error}
               </div>
             ) : equiposFiltrados.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 animate-fade-in">
+              <div className="text-center py-8 text-gray-500">
                 <Monitor className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p className="font-poppins">No se encontraron equipos libres</p>
+                <p>No se encontraron equipos libres</p>
                 {searchTerm && (
-                  <p className="text-sm mt-2 font-poppins">Intenta con otros términos de búsqueda</p>
+                  <p className="text-sm mt-2">Intenta con otros términos de búsqueda</p>
                 )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {equiposFiltrados.map((equipo, index) => (
+                {equiposFiltrados.map((equipo) => (
                   <div
                     key={equipo.id}
-                    className={`border-2 rounded-xl p-4 transition-all duration-300 transform hover:scale-[1.02] ${
+                    className={`border-2 rounded-xl p-4 transition-all duration-200 ${
                       estaSeleccionado(equipo.id)
                         ? 'border-[#001F3F] bg-[#A0C4FF]/20 ring-2 ring-[#A0C4FF]'
                         : 'border-gray-200 hover:border-[#A0C4FF] hover:shadow-lg'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} animate-fade-in-up`}
-                    style={{ animationDelay: `${index * 0.05}s` }}
+                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {/* Header con icono y controles */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         {/* Icono del tipo de equipo */}
-                        <div className="text-[#001F3F] transition-transform hover:scale-110 duration-200">
+                        <div className="text-[#001F3F]">
                           {getIconoPorTipo(equipo.tipoEquipo.nombre)}
                         </div>
                         
                         {/* Checkbox de selección */}
                         <div
                           onClick={(e) => handleCheckboxClick(equipo, e)}
-                          className={`w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                          className={`w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-colors ${
                             estaSeleccionado(equipo.id)
-                              ? 'bg-[#001F3F] border-[#001F3F] text-white scale-110'
-                              : 'border-gray-300 hover:border-[#001F3F] hover:scale-105'
+                              ? 'bg-[#001F3F] border-[#001F3F] text-white'
+                              : 'border-gray-300 hover:border-[#001F3F]'
                           } ${disabled ? 'cursor-not-allowed' : ''}`}
                         >
                           {estaSeleccionado(equipo.id) && <Check size={12} />}
@@ -356,18 +342,18 @@ export default function ModalEquiposLibres({
                       {/* Botón para expandir */}
                       <button
                         onClick={(e) => toggleExpandirEquipo(equipo.id, e)}
-                        className="flex items-center gap-1 text-sm text-[#001F3F] hover:text-[#003366] transition-all duration-200 px-2 py-1 rounded hover:bg-[#A0C4FF]/30 font-poppins"
+                        className="flex items-center gap-1 text-sm text-[#001F3F] hover:text-[#003366] transition-colors px-2 py-1 rounded hover:bg-[#A0C4FF]/30"
                         disabled={disabled}
-                        type="button"
+                        type="button" // Especificar que es un botón, no submit
                       >
                         {estaExpandido(equipo.id) ? (
                           <>
-                            <ChevronUp size={16} className="transition-transform duration-200" />
+                            <ChevronUp size={16} />
                             Menos
                           </>
                         ) : (
                           <>
-                            <ChevronDown size={16} className="transition-transform duration-200" />
+                            <ChevronDown size={16} />
                             Más
                           </>
                         )}
@@ -378,99 +364,99 @@ export default function ModalEquiposLibres({
                     <div className="space-y-3">
                       {/* Tipo de Equipo */}
                       <div>
-                        <p className="text-xs font-medium text-[#001F3F] font-montserrat">Tipo de Equipo</p>
-                        <p className="text-lg font-semibold text-gray-900 font-montserrat">{equipo.tipoEquipo.nombre}</p>
+                        <p className="text-xs font-medium text-[#001F3F]">Tipo de Equipo</p>
+                        <p className="text-lg font-semibold text-gray-900">{equipo.tipoEquipo.nombre}</p>
                       </div>
 
                       {/* Bien Nacional y Serial */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-[#F0F8FF] rounded-lg p-2 transition-all duration-200 hover:shadow-md">
-                          <p className="text-xs font-medium text-[#001F3F] font-poppins">Bien Nacional</p>
-                          <p className="text-sm font-semibold text-gray-900 font-poppins">
+                        <div className="bg-[#F0F8FF] rounded-lg p-2">
+                          <p className="text-xs font-medium text-[#001F3F]">Bien Nacional</p>
+                          <p className="text-sm font-semibold text-gray-900">
                             {equipo.bienNacional || "N/A"}
                           </p>
                         </div>
-                        <div className="bg-[#F0F8FF] rounded-lg p-2 transition-all duration-200 hover:shadow-md">
-                          <p className="text-xs font-medium text-[#001F3F] font-poppins">Serial</p>
-                          <p className="text-sm font-semibold text-gray-900 font-poppins">
+                        <div className="bg-[#F0F8FF] rounded-lg p-2">
+                          <p className="text-xs font-medium text-[#001F3F]">Serial</p>
+                          <p className="text-sm font-semibold text-gray-900">
                             {equipo.serial || "N/A"}
                           </p>
                         </div>
                       </div>
 
                       {/* Marca y Modelo */}
-                      <div className="bg-[#F0F8FF] rounded-lg p-2 transition-all duration-200 hover:shadow-md">
-                        <p className="text-xs font-medium text-[#001F3F] font-poppins">Marca y Modelo</p>
-                        <p className="text-sm font-semibold text-gray-900 font-poppins">
+                      <div className="bg-[#F0F8FF] rounded-lg p-2">
+                        <p className="text-xs font-medium text-[#001F3F]">Marca y Modelo</p>
+                        <p className="text-sm font-semibold text-gray-900">
                           {equipo.modelo.marca.nombre} {equipo.modelo.nombre}
                         </p>
                       </div>
                     </div>
 
-                    {/* Información expandida con animación */}
+                    {/* Información expandida */}
                     {estaExpandido(equipo.id) && (
-                      <div className="mt-4 pt-4 border-t border-gray-200 space-y-3 animate-slide-down">
+                      <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                         {/* Status y Estado */}
                         <div className="grid grid-cols-2 gap-3">
                           {equipo.status && (
-                            <div className="bg-[#F0F8FF] rounded-lg p-2 transition-all duration-200 hover:shadow-md">
-                              <p className="text-xs font-medium text-[#001F3F] font-poppins">Status</p>
-                              <p className="text-sm text-gray-900 font-poppins">{equipo.status.estado}</p>
+                            <div className="bg-[#F0F8FF] rounded-lg p-2">
+                              <p className="text-xs font-medium text-[#001F3F]">Status</p>
+                              <p className="text-sm text-gray-900">{equipo.status.estado}</p>
                             </div>
                           )}
                           {equipo.estado && (
-                            <div className="bg-[#F0F8FF] rounded-lg p-2 transition-all duration-200 hover:shadow-md">
-                              <p className="text-xs font-medium text-[#001F3F] font-poppins">Estado</p>
-                              <p className="text-sm text-gray-900 font-poppins">{equipo.estado.nombre}</p>
+                            <div className="bg-[#F0F8FF] rounded-lg p-2">
+                              <p className="text-xs font-medium text-[#001F3F]">Estado</p>
+                              <p className="text-sm text-gray-900">{equipo.estado.nombre}</p>
                             </div>
                           )}
                         </div>
 
                         {/* Especificaciones Técnicas */}
                         {equipo.especificaciones && (
-                          <div className="animate-fade-in">
-                            <p className="text-xs font-medium text-[#001F3F] mb-2 font-montserrat">Especificaciones Técnicas</p>
+                          <div>
+                            <p className="text-xs font-medium text-[#001F3F] mb-2">Especificaciones Técnicas</p>
                             <div className="space-y-2">
                               {equipo.especificaciones.procesador && (
-                                <div className="flex justify-between items-center text-sm font-poppins animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                                <div className="flex justify-between items-center text-sm">
                                   <span className="text-gray-600 flex items-center gap-1">
-                                    <Cpu className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                    <Cpu className="w-3 h-3" />
                                     Procesador:
                                   </span>
                                   <span className="font-medium text-gray-900">{equipo.especificaciones.procesador}</span>
                                 </div>
                               )}
                               {equipo.especificaciones.memoriaRam && (
-                                <div className="flex justify-between items-center text-sm font-poppins animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+                                <div className="flex justify-between items-center text-sm">
                                   <span className="text-gray-600 flex items-center gap-1">
-                                    <MemoryStick className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                    <MemoryStick className="w-3 h-3" />
                                     Memoria RAM:
                                   </span>
                                   <span className="font-medium text-gray-900">{equipo.especificaciones.memoriaRam}</span>
                                 </div>
                               )}
                               {equipo.especificaciones.modulosRam && (
-                                <div className="flex justify-between items-center text-sm font-poppins animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                                <div className="flex justify-between items-center text-sm">
                                   <span className="text-gray-600 flex items-center gap-1">
-                                    <MemoryStick className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                    <MemoryStick className="w-3 h-3" />
                                     Módulos RAM:
                                   </span>
                                   <span className="font-medium text-gray-900">{equipo.especificaciones.modulosRam}</span>
                                 </div>
                               )}
                               {equipo.especificaciones.capacidadDisco && (
-                                <div className="flex justify-between items-center text-sm font-poppins animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+                                <div className="flex justify-between items-center text-sm">
                                   <span className="text-gray-600 flex items-center gap-1">
-                                    <HardDrive className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                    <HardDrive className="w-3 h-3" />
                                     Capacidad Disco:
                                   </span>
                                   <span className="font-medium text-gray-900">{equipo.especificaciones.capacidadDisco}</span>
                                 </div>
                               )}
                               {equipo.especificaciones.tipoDisco && (
-                                <div className="flex justify-between items-center text-sm font-poppins animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                                <div className="flex justify-between items-center text-sm">
                                   <span className="text-gray-600 flex items-center gap-1">
-                                    <HardDrive className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                    <HardDrive className="w-3 h-3" />
                                     Tipo Disco:
                                   </span>
                                   <span className="font-medium text-gray-900">{equipo.especificaciones.tipoDisco}</span>
@@ -482,16 +468,16 @@ export default function ModalEquiposLibres({
 
                         {/* Observaciones */}
                         {equipo.observaciones && (
-                          <div className="animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
-                            <p className="text-xs font-medium text-[#001F3F] mb-1 font-montserrat">Observaciones</p>
-                            <p className="text-sm text-gray-600 bg-[#F0F8FF] rounded p-2 font-poppins transition-all duration-200 hover:shadow-md">
+                          <div>
+                            <p className="text-xs font-medium text-[#001F3F] mb-1">Observaciones</p>
+                            <p className="text-sm text-gray-600 bg-[#F0F8FF] rounded p-2">
                               {equipo.observaciones}
                             </p>
                           </div>
                         )}
 
                         {/* ID del equipo */}
-                        <div className="text-xs text-gray-500 text-center pt-2 border-t border-gray-200 font-poppins animate-fade-in">
+                        <div className="text-xs text-gray-500 text-center pt-2 border-t border-gray-200">
                           ID: {equipo.id}
                         </div>
                       </div>
@@ -504,24 +490,24 @@ export default function ModalEquiposLibres({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0 bg-[#F0F8FF] animate-fade-in">
-          <div className="text-sm text-[#001F3F] font-poppins">
+        <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0 bg-[#F0F8FF]">
+          <div className="text-sm text-[#001F3F]">
             {equiposSeleccionados.length} equipos seleccionados para asignar
           </div>
           <div className="flex gap-3">
             <button
               onClick={handleCerrar}
-              className="px-6 py-2 text-[#001F3F] bg-white border border-[#A0C4FF] rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer font-medium font-poppins hover:shadow-md transform hover:scale-105"
+              className="px-6 py-2 text-[#001F3F] bg-white border border-[#A0C4FF] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer font-medium"
               disabled={disabled}
-              type="button"
+              type="button" // Especificar que es un botón, no submit
             >
               Cancelar
             </button>
             <button
               onClick={handleAsignarEquipos}
               disabled={disabled || equiposSeleccionados.length === 0}
-              className="px-6 py-2 bg-[#001F3F] text-white rounded-lg hover:bg-[#003366] transition-all duration-200 cursor-pointer font-medium font-poppins hover:shadow-md transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              type="button"
+              className="px-6 py-2 bg-[#001F3F] text-white rounded-lg hover:bg-[#003366] transition-colors cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button" // Especificar que es un botón, no submit
             >
               Asignar {equiposSeleccionados.length} Equipo(s)
             </button>
