@@ -600,7 +600,7 @@ export async function def() {
       equipos: [{ bienNacional: "20814", serial: "MXL7270D" }, { bienNacional: "27694", serial: "KBD624K10968A" }, { bienNacional: "261447", serial: "V19LW-B" }, { bienNacional: "26986", serial: "21325238" }, { bienNacional: "8807", serial: "423432432342" }]
       },
       {
-      usuario: { nombre: "Aixa", apellido: "Vasquez", cedula:"20220489", rolId: 3, email:"aixa.vasquez@inhrr.gob.ve", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
+      usuario: { nombre: "Aixa", apellido: "Vasquez", cedula:"20220489", rolId: 2, email:"aixa.vasquez@inhrr.gob.ve", password:"1234", direccionNombre: "Dirección de tecnología e informatica", areaNombre: "Dirección de informatica" },
       equipos: [{ bienNacional: "27794", serial: "A000679533" }, { bienNacional: "29910", serial: "3CQ144C46W" }, { bienNacional: "31383", serial: "0065818882890" }, { bienNacional: "32020", serial: "230331-0560758" }, { bienNacional: "19024", serial: "42342234" }, { bienNacional: "28107", serial: "S25K342282" }]
       },
       {

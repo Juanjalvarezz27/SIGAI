@@ -417,41 +417,477 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       return Math.max(15, lines.length * 5 + 6) // Mínimo 15px, más padding
     }
 
-    // Función optimizada para agregar sección con mejor manejo de texto
-    const agregarSeccion = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
-      // Espacio antes de cada sección aumentado para mejor separación
+    // FUNCIÓN: Agregar sección con columnas de 4
+    const agregarSeccionCuatroColumnas = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+      // Espacio antes de cada sección
       yPosition += 10
       
-      // Título de sección
-      await checkPageBreak(25) // Más espacio para el título
+      // Título de sección CENTRADO
+      await checkPageBreak(25)
       doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F') // Altura aumentada
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
       doc.setTextColor(255, 255, 255)
-      doc.setFontSize(11) // Tamaño aumentado para mejor legibilidad
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
-      doc.text(titulo.toUpperCase(), margin, yPosition + 3)
+      doc.text(titulo.toUpperCase(), pageWidth / 2, yPosition + 3, { align: 'center' })
       yPosition += 12
 
-      // Contenido de la sección optimizado
+      // Configuración para 4 columnas
       resetTextColor()
-      doc.setFontSize(9) // Tamaño aumentado para mejor legibilidad
+      doc.setFontSize(8) // Tamaño de fuente más pequeño para 4 columnas
+      const anchoColumna = (pageWidth - (margin * 2) - 30) / 4 // -30 para espacio entre columnas
+      const espacioEntreColumnas = 10
+      
+      // Procesar datos en grupos de 4 para 4 columnas
+      for (let i = 0; i < datos.length; i += 4) {
+        const fila1 = datos[i]
+        const fila2 = datos[i + 1] // Puede ser undefined
+        const fila3 = datos[i + 2] // Puede ser undefined
+        const fila4 = datos[i + 3] // Puede ser undefined
+        
+        // Calcular altura para todas las filas (tomar la más alta)
+        const maxDescWidth = anchoColumna * 0.6 // 60% para descripción
+        const maxValorWidth = anchoColumna * 0.35 // 35% para valor
+        
+        const alturaFila1 = calcularAlturaFila(fila1.descripcion, maxDescWidth)
+        let alturaFila2 = 0
+        let alturaFila3 = 0
+        let alturaFila4 = 0
+        
+        if (fila2) alturaFila2 = calcularAlturaFila(fila2.descripcion, maxDescWidth)
+        if (fila3) alturaFila3 = calcularAlturaFila(fila3.descripcion, maxDescWidth)
+        if (fila4) alturaFila4 = calcularAlturaFila(fila4.descripcion, maxDescWidth)
+        
+        const alturaFila = Math.max(alturaFila1, alturaFila2, alturaFila3, alturaFila4, 15) // Mínimo 15px
+
+        await checkPageBreak(alturaFila + 5)
+
+        // Fondo para todas las celdas
+        if (i % 8 === 0 || i % 8 === 1 || i % 8 === 2 || i % 8 === 3) { // Alternar colores cada 4 filas
+          doc.setFillColor(255, 255, 255)
+        } else {
+          doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
+        }
+
+        // Primera columna
+        doc.rect(margin, yPosition, anchoColumna, alturaFila, 'F')
+        doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+        doc.rect(margin, yPosition, anchoColumna, alturaFila, 'S')
+
+        // Segunda columna (si existe)
+        if (fila2) {
+          doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'F')
+          doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'S')
+        }
+
+        // Tercera columna (si existe)
+        if (fila3) {
+          doc.rect(margin + (anchoColumna + espacioEntreColumnas) * 2, yPosition, anchoColumna, alturaFila, 'F')
+          doc.rect(margin + (anchoColumna + espacioEntreColumnas) * 2, yPosition, anchoColumna, alturaFila, 'S')
+        }
+
+        // Cuarta columna (si existe)
+        if (fila4) {
+          doc.rect(margin + (anchoColumna + espacioEntreColumnas) * 3, yPosition, anchoColumna, alturaFila, 'F')
+          doc.rect(margin + (anchoColumna + espacioEntreColumnas) * 3, yPosition, anchoColumna, alturaFila, 'S')
+        }
+
+        // CONTENIDO PRIMERA COLUMNA - CENTRADO VERTICALMENTE
+        resetTextColor()
+        
+        // Descripción (izquierda)
+        doc.setFont('helvetica', 'normal')
+        const descLines1 = doc.splitTextToSize(fila1.descripcion, maxDescWidth)
+        const textoY1 = yPosition + (alturaFila / 2) - ((descLines1.length * 4) / 2) + 3
+        descLines1.forEach((line: string, lineIndex: number) => {
+          doc.text(line, margin + 3, textoY1 + (lineIndex * 4))
+        })
+
+        // Valor (derecha, centrado horizontalmente en su espacio)
+        doc.setFont('helvetica', 'bold')
+        const valorLines1 = doc.splitTextToSize(fila1.valor, maxValorWidth)
+        const valorX1 = margin + maxDescWidth + 3
+        const textoValorY1 = yPosition + (alturaFila / 2) - ((valorLines1.length * 4) / 2) + 3
+        valorLines1.forEach((line: string, lineIndex: number) => {
+          const lineWidth = doc.getTextWidth(line)
+          const espacioDisponible = anchoColumna - maxDescWidth - 6
+          const xCentrado = valorX1 + (espacioDisponible - lineWidth) / 2
+          doc.text(line, xCentrado, textoValorY1 + (lineIndex * 4))
+        })
+
+        // CONTENIDO SEGUNDA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+        if (fila2) {
+          const col2X = margin + anchoColumna + espacioEntreColumnas
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines2 = doc.splitTextToSize(fila2.descripcion, maxDescWidth)
+          const textoY2 = yPosition + (alturaFila / 2) - ((descLines2.length * 4) / 2) + 3
+          descLines2.forEach((line: string, lineIndex: number) => {
+            doc.text(line, col2X + 3, textoY2 + (lineIndex * 4))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines2 = doc.splitTextToSize(fila2.valor, maxValorWidth)
+          const valorX2 = col2X + maxDescWidth + 3
+          const textoValorY2 = yPosition + (alturaFila / 2) - ((valorLines2.length * 4) / 2) + 3
+          valorLines2.forEach((line: string, lineIndex: number) => {
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 6
+            const xCentrado = valorX2 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY2 + (lineIndex * 4))
+          })
+        }
+
+        // CONTENIDO TERCERA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+        if (fila3) {
+          const col3X = margin + (anchoColumna + espacioEntreColumnas) * 2
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines3 = doc.splitTextToSize(fila3.descripcion, maxDescWidth)
+          const textoY3 = yPosition + (alturaFila / 2) - ((descLines3.length * 4) / 2) + 3
+          descLines3.forEach((line: string, lineIndex: number) => {
+            doc.text(line, col3X + 3, textoY3 + (lineIndex * 4))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines3 = doc.splitTextToSize(fila3.valor, maxValorWidth)
+          const valorX3 = col3X + maxDescWidth + 3
+          const textoValorY3 = yPosition + (alturaFila / 2) - ((valorLines3.length * 4) / 2) + 3
+          valorLines3.forEach((line: string, lineIndex: number) => {
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 6
+            const xCentrado = valorX3 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY3 + (lineIndex * 4))
+          })
+        }
+
+        // CONTENIDO CUARTA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+        if (fila4) {
+          const col4X = margin + (anchoColumna + espacioEntreColumnas) * 3
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines4 = doc.splitTextToSize(fila4.descripcion, maxDescWidth)
+          const textoY4 = yPosition + (alturaFila / 2) - ((descLines4.length * 4) / 2) + 3
+          descLines4.forEach((line: string, lineIndex: number) => {
+            doc.text(line, col4X + 3, textoY4 + (lineIndex * 4))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines4 = doc.splitTextToSize(fila4.valor, maxValorWidth)
+          const valorX4 = col4X + maxDescWidth + 3
+          const textoValorY4 = yPosition + (alturaFila / 2) - ((valorLines4.length * 4) / 2) + 3
+          valorLines4.forEach((line: string, lineIndex: number) => {
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 6
+            const xCentrado = valorX4 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY4 + (lineIndex * 4))
+          })
+        }
+
+        doc.setFont('helvetica', 'normal')
+        yPosition += alturaFila + 2
+      }
+
+      yPosition += 8 // Espacio entre secciones
+    }
+
+    // FUNCIÓN: Agregar sección con columnas de 3
+    const agregarSeccionTresColumnas = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+      // Espacio antes de cada sección
+      yPosition += 10
+      
+      // Título de sección CENTRADO
+      await checkPageBreak(25)
+      doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text(titulo.toUpperCase(), pageWidth / 2, yPosition + 3, { align: 'center' })
+      yPosition += 12
+
+      // Configuración para 3 columnas
+      resetTextColor()
+      doc.setFontSize(9)
+      const anchoColumna = (pageWidth - (margin * 2) - 20) / 3 // -20 para espacio entre columnas
+      const espacioEntreColumnas = 10
+      
+      // Procesar datos en grupos de 3 para 3 columnas
+      for (let i = 0; i < datos.length; i += 3) {
+        const fila1 = datos[i]
+        const fila2 = datos[i + 1] // Puede ser undefined
+        const fila3 = datos[i + 2] // Puede ser undefined
+        
+        // Calcular altura para todas las filas (tomar la más alta)
+        const maxDescWidth = anchoColumna * 0.6 // 60% para descripción
+        const maxValorWidth = anchoColumna * 0.35 // 35% para valor
+        
+        const alturaFila1 = calcularAlturaFila(fila1.descripcion, maxDescWidth)
+        let alturaFila2 = 0
+        let alturaFila3 = 0
+        
+        if (fila2) alturaFila2 = calcularAlturaFila(fila2.descripcion, maxDescWidth)
+        if (fila3) alturaFila3 = calcularAlturaFila(fila3.descripcion, maxDescWidth)
+        
+        const alturaFila = Math.max(alturaFila1, alturaFila2, alturaFila3, 15) // Mínimo 15px
+
+        await checkPageBreak(alturaFila + 5)
+
+        // Fondo para todas las celdas
+        if (i % 6 === 0 || i % 6 === 1 || i % 6 === 2) { // Alternar colores cada 3 filas
+          doc.setFillColor(255, 255, 255)
+        } else {
+          doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
+        }
+
+        // Primera columna
+        doc.rect(margin, yPosition, anchoColumna, alturaFila, 'F')
+        doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+        doc.rect(margin, yPosition, anchoColumna, alturaFila, 'S')
+
+        // Segunda columna (si existe)
+        if (fila2) {
+          doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'F')
+          doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'S')
+        }
+
+        // Tercera columna (si existe)
+        if (fila3) {
+          doc.rect(margin + (anchoColumna + espacioEntreColumnas) * 2, yPosition, anchoColumna, alturaFila, 'F')
+          doc.rect(margin + (anchoColumna + espacioEntreColumnas) * 2, yPosition, anchoColumna, alturaFila, 'S')
+        }
+
+        // CONTENIDO PRIMERA COLUMNA - CENTRADO VERTICALMENTE
+        resetTextColor()
+        
+        // Descripción (izquierda)
+        doc.setFont('helvetica', 'normal')
+        const descLines1 = doc.splitTextToSize(fila1.descripcion, maxDescWidth)
+        const textoY1 = yPosition + (alturaFila / 2) - ((descLines1.length * 4.5) / 2) + 3
+        descLines1.forEach((line: string, lineIndex: number) => {
+          doc.text(line, margin + 4, textoY1 + (lineIndex * 4.5))
+        })
+
+        // Valor (derecha, centrado horizontalmente en su espacio)
+        doc.setFont('helvetica', 'bold')
+        const valorLines1 = doc.splitTextToSize(fila1.valor, maxValorWidth)
+        const valorX1 = margin + maxDescWidth + 4
+        const textoValorY1 = yPosition + (alturaFila / 2) - ((valorLines1.length * 4.5) / 2) + 3
+        valorLines1.forEach((line: string, lineIndex: number) => {
+          const lineWidth = doc.getTextWidth(line)
+          const espacioDisponible = anchoColumna - maxDescWidth - 8
+          const xCentrado = valorX1 + (espacioDisponible - lineWidth) / 2
+          doc.text(line, xCentrado, textoValorY1 + (lineIndex * 4.5))
+        })
+
+        // CONTENIDO SEGUNDA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+        if (fila2) {
+          const col2X = margin + anchoColumna + espacioEntreColumnas
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines2 = doc.splitTextToSize(fila2.descripcion, maxDescWidth)
+          const textoY2 = yPosition + (alturaFila / 2) - ((descLines2.length * 4.5) / 2) + 3
+          descLines2.forEach((line: string, lineIndex: number) => {
+            doc.text(line, col2X + 4, textoY2 + (lineIndex * 4.5))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines2 = doc.splitTextToSize(fila2.valor, maxValorWidth)
+          const valorX2 = col2X + maxDescWidth + 4
+          const textoValorY2 = yPosition + (alturaFila / 2) - ((valorLines2.length * 4.5) / 2) + 3
+          valorLines2.forEach((line: string, lineIndex: number) => {
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 8
+            const xCentrado = valorX2 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY2 + (lineIndex * 4.5))
+          })
+        }
+
+        // CONTENIDO TERCERA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+        if (fila3) {
+          const col3X = margin + (anchoColumna + espacioEntreColumnas) * 2
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines3 = doc.splitTextToSize(fila3.descripcion, maxDescWidth)
+          const textoY3 = yPosition + (alturaFila / 2) - ((descLines3.length * 4.5) / 2) + 3
+          descLines3.forEach((line: string, lineIndex: number) => {
+            doc.text(line, col3X + 4, textoY3 + (lineIndex * 4.5))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines3 = doc.splitTextToSize(fila3.valor, maxValorWidth)
+          const valorX3 = col3X + maxDescWidth + 4
+          const textoValorY3 = yPosition + (alturaFila / 2) - ((valorLines3.length * 4.5) / 2) + 3
+          valorLines3.forEach((line: string, lineIndex: number) => {
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 8
+            const xCentrado = valorX3 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY3 + (lineIndex * 4.5))
+          })
+        }
+
+        doc.setFont('helvetica', 'normal')
+        yPosition += alturaFila + 2
+      }
+
+      yPosition += 8 // Espacio entre secciones
+    }
+
+    // FUNCIÓN: Agregar sección con columnas de 2
+    const agregarSeccionDosColumnas = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+      // Espacio antes de cada sección
+      yPosition += 10
+      
+      // Título de sección CENTRADO
+      await checkPageBreak(25)
+      doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text(titulo.toUpperCase(), pageWidth / 2, yPosition + 3, { align: 'center' })
+      yPosition += 12
+
+      // Configuración para 2 columnas
+      resetTextColor()
+      doc.setFontSize(9)
+      const anchoColumna = (pageWidth - (margin * 2) - 10) / 2 // -10 para espacio entre columnas
+      const espacioEntreColumnas = 10
+      
+      // Procesar datos en pares para 2 columnas
+      for (let i = 0; i < datos.length; i += 2) {
+        const fila1 = datos[i]
+        const fila2 = datos[i + 1] // Puede ser undefined
+        
+        // Calcular altura para ambas filas (tomar la más alta)
+        const maxDescWidth = anchoColumna * 0.7 // Más espacio para descripción
+        const maxValorWidth = anchoColumna * 0.25 // Menos espacio para valor
+        
+        const alturaFila1 = calcularAlturaFila(fila1.descripcion, maxDescWidth)
+        let alturaFila2 = 0
+        if (fila2) {
+          alturaFila2 = calcularAlturaFila(fila2.descripcion, maxDescWidth)
+        }
+        const alturaFila = Math.max(alturaFila1, alturaFila2, 15) // Mínimo 15px
+
+        await checkPageBreak(alturaFila + 5)
+
+        // Fondo para ambas celdas
+        if (i % 4 === 0 || i % 4 === 1) { // Alternar colores cada 2 filas
+          doc.setFillColor(255, 255, 255)
+        } else {
+          doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
+        }
+
+        // Primera columna
+        doc.rect(margin, yPosition, anchoColumna, alturaFila, 'F')
+        doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+        doc.rect(margin, yPosition, anchoColumna, alturaFila, 'S')
+
+        // Segunda columna (si existe)
+        if (fila2) {
+          doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'F')
+          doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'S')
+        }
+
+        // CONTENIDO PRIMERA COLUMNA - CENTRADO VERTICALMENTE
+        resetTextColor()
+        
+        // Descripción (izquierda)
+        doc.setFont('helvetica', 'normal')
+        const descLines1 = doc.splitTextToSize(fila1.descripcion, maxDescWidth)
+        const textoY1 = yPosition + (alturaFila / 2) - ((descLines1.length * 4.5) / 2) + 3
+        descLines1.forEach((line: string, lineIndex: number) => {
+          doc.text(line, margin + 4, textoY1 + (lineIndex * 4.5))
+        })
+
+        // Valor (derecha, centrado horizontalmente en su espacio)
+        doc.setFont('helvetica', 'bold')
+        const valorLines1 = doc.splitTextToSize(fila1.valor, maxValorWidth)
+        const valorX1 = margin + maxDescWidth + 4
+        const textoValorY1 = yPosition + (alturaFila / 2) - ((valorLines1.length * 4.5) / 2) + 3
+        valorLines1.forEach((line: string, lineIndex: number) => {
+          // Centrar el valor dentro de su espacio disponible
+          const lineWidth = doc.getTextWidth(line)
+          const espacioDisponible = anchoColumna - maxDescWidth - 8
+          const xCentrado = valorX1 + (espacioDisponible - lineWidth) / 2
+          doc.text(line, xCentrado, textoValorY1 + (lineIndex * 4.5))
+        })
+
+        // CONTENIDO SEGUNDA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+        if (fila2) {
+          const col2X = margin + anchoColumna + espacioEntreColumnas
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines2 = doc.splitTextToSize(fila2.descripcion, maxDescWidth)
+          const textoY2 = yPosition + (alturaFila / 2) - ((descLines2.length * 4.5) / 2) + 3
+          descLines2.forEach((line: string, lineIndex: number) => {
+            doc.text(line, col2X + 4, textoY2 + (lineIndex * 4.5))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines2 = doc.splitTextToSize(fila2.valor, maxValorWidth)
+          const valorX2 = col2X + maxDescWidth + 4
+          const textoValorY2 = yPosition + (alturaFila / 2) - ((valorLines2.length * 4.5) / 2) + 3
+          valorLines2.forEach((line: string, lineIndex: number) => {
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 8
+            const xCentrado = valorX2 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY2 + (lineIndex * 4.5))
+          })
+        }
+
+        doc.setFont('helvetica', 'normal')
+        yPosition += alturaFila + 2
+      }
+
+      yPosition += 8 // Espacio entre secciones
+    }
+
+    // FUNCIÓN: Sección una columna con contenido centrado
+    const agregarSeccionUnaColumna = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+      yPosition += 10
+      
+      // Título CENTRADO
+      await checkPageBreak(25)
+      doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
+      doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text(titulo.toUpperCase(), pageWidth / 2, yPosition + 3, { align: 'center' })
+      yPosition += 12
+
+      resetTextColor()
+      doc.setFontSize(9)
 
       for (let filaIndex = 0; filaIndex < datos.length; filaIndex++) {
         const fila = datos[filaIndex]
-        const maxDescWidth = (pageWidth - margin * 2) * 0.35 // 35% para descripción
-        const maxValorWidth = (pageWidth - margin * 2) * 0.55 // 55% para valor (más espacio)
+        const maxDescWidth = (pageWidth - margin * 2) * 0.7 // Más espacio para descripción
+        const maxValorWidth = (pageWidth - margin * 2) * 0.25 // Menos espacio para valor
         
         const descLines = doc.splitTextToSize(fila.descripcion, maxDescWidth)
         const valorLines = doc.splitTextToSize(fila.valor, maxValorWidth)
         
-        // Calcular altura dinámica basada en el contenido más largo
         const alturaDesc = descLines.length * 4.5
         const alturaValor = valorLines.length * 4.5
-        const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6) // Mínimo 15px, más padding
+        const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6)
 
         await checkPageBreak(alturaFila + 5)
 
-        // Color de fondo alternado más sutil
+        // Fondo alternado
         if (filaIndex % 2 === 0) {
           doc.setFillColor(255, 255, 255)
         } else {
@@ -459,46 +895,52 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         }
         doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'F')
 
-        // Borde más sutil
+        // Borde
         doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
         doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'S')
 
-        // Texto de descripción (alineado a la izquierda)
+        // CONTENIDO CENTRADO VERTICALMENTE
         resetTextColor()
+        
+        // Descripción (alineada a la izquierda)
         doc.setFont('helvetica', 'normal')
+        const textoY = yPosition + (alturaFila / 2) - ((descLines.length * 4.5) / 2) + 3
         descLines.forEach((line: string, lineIndex: number) => {
-          doc.text(line, margin + 4, yPosition + 6 + (lineIndex * 4.5))
+          doc.text(line, margin + 4, textoY + (lineIndex * 4.5))
         })
 
-        // Texto de valor (negrita y alineado a la izquierda con margen)
-        resetTextColor()
+        // Valor (centrado horizontalmente en su espacio)
         doc.setFont('helvetica', 'bold')
-        const valorX = margin + maxDescWidth + 8 // Espacio entre columnas aumentado
+        const valorX = margin + maxDescWidth + 4
+        const textoValorY = yPosition + (alturaFila / 2) - ((valorLines.length * 4.5) / 2) + 3
         valorLines.forEach((line: string, lineIndex: number) => {
-          doc.text(line, valorX, yPosition + 6 + (lineIndex * 4.5))
+          const lineWidth = doc.getTextWidth(line)
+          const espacioDisponible = (pageWidth - margin * 2) - maxDescWidth - 8
+          const xCentrado = valorX + (espacioDisponible - lineWidth) / 2
+          doc.text(line, xCentrado, textoValorY + (lineIndex * 4.5))
         })
-        doc.setFont('helvetica', 'normal')
 
-        yPosition += alturaFila + 2 // Espacio entre filas aumentado
+        doc.setFont('helvetica', 'normal')
+        yPosition += alturaFila + 2
       }
 
-      yPosition += 8 // Espacio aumentado entre secciones
+      yPosition += 8
     }
     
     try {
       // AGREGAR CINTILLO SOLO EN LA PRIMERA PÁGINA
       await agregarCintillo()
 
-      // Título principal - Solo en primera página
+      // Título principal - Solo en primera página (YA CENTRADO)
       if (primeraPagina) {
         await checkPageBreak(30)
-        doc.setFontSize(16) // Tamaño aumentado
+        doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
         doc.text(config.titulo.toUpperCase(), pageWidth / 2, yPosition, { align: 'center' })
         yPosition += 8
         
-        doc.setFontSize(11) // Tamaño aumentado
+        doc.setFontSize(11)
         const fechaGeneracion = `Generado el ${new Date().toLocaleDateString('es-ES', { 
           year: 'numeric', 
           month: 'long', 
@@ -508,9 +950,8 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
         yPosition += 12
       }
 
-      // Contenido de las secciones
+      // Contenido de las secciones - USAR COLUMNAS APROPIADAS SEGÚN EL TIPO
       for (const seccion of config.secciones || []) {
-        // Convertir datos de la sección al formato esperado
         const datosSeccion = seccion.datos.map(fila => {
           const keys = Object.keys(fila)
           return {
@@ -519,12 +960,26 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
           }
         })
 
-        // Usar la función mejorada agregarSeccion
-        await agregarSeccion(seccion.titulo, datosSeccion)
+        // Decidir si usar 1, 2, 3 o 4 columnas basado en el tipo de sección
+        const esSeccionCuatroColumnas = seccion.titulo.includes('Distribución por Tipo')
+        const esSeccionTresColumnas = seccion.titulo.includes('Distribución por') && !seccion.titulo.includes('Tipo')
+        const esSeccionDosColumnas = 
+          seccion.titulo.includes('Estadísticas Principales') ||
+          seccion.titulo.includes('Principal')
+
+        if (esSeccionCuatroColumnas && datosSeccion.length > 6) {
+          await agregarSeccionCuatroColumnas(seccion.titulo, datosSeccion)
+        } else if (esSeccionTresColumnas && datosSeccion.length > 4) {
+          await agregarSeccionTresColumnas(seccion.titulo, datosSeccion)
+        } else if (esSeccionDosColumnas && datosSeccion.length > 3) {
+          await agregarSeccionDosColumnas(seccion.titulo, datosSeccion)
+        } else {
+          await agregarSeccionUnaColumna(seccion.titulo, datosSeccion)
+        }
       }
       
       // AGREGAR FOOTER FINAL CON LOGO (SOLO EN LA ÚLTIMA PÁGINA)
-      await addFooter(true) // true indica que es la última página
+      await addFooter(true)
       
       doc.save(`${config.nombreArchivo}.pdf`)
     } catch (error) {
@@ -532,6 +987,8 @@ export default function ExportButtons({ tipoEstadistica }: ExportButtonsProps) {
       alert('Error al generar el PDF. Por favor, intente nuevamente.')
     }
   }
+
+  // ... (las funciones prepararConfiguracionExcel y prepararConfiguracionPDF se mantienen igual)
 
   const prepararConfiguracionExcel = (
     tipo: "personal" | "equipos" | "tickets" | "eventos", 

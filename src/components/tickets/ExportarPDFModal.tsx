@@ -353,41 +353,151 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         return Math.max(15, lines.length * 5 + 6) // Mínimo 15px, más padding
       }
 
-      // Función optimizada para agregar sección con mejor manejo de texto
-      const agregarSeccion = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
-        // Espacio antes de cada sección aumentado para mejor separación
+      // FUNCIÓN: Agregar sección con columnas de 2 y contenido centrado
+      const agregarSeccionDosColumnas = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+        // Espacio antes de cada sección
         yPosition += 10
         
-        // Título de sección
-        await checkPageBreak(25) // Más espacio para el título
+        // Título de sección CENTRADO
+        await checkPageBreak(25)
         doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
-        doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F') // Altura aumentada
+        doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
         doc.setTextColor(255, 255, 255)
-        doc.setFontSize(11) // Tamaño aumentado para mejor legibilidad
+        doc.setFontSize(11)
         doc.setFont('helvetica', 'bold')
-        doc.text(titulo.toUpperCase(), margin, yPosition + 3)
+        doc.text(titulo.toUpperCase(), pageWidth / 2, yPosition + 3, { align: 'center' })
         yPosition += 12
 
-        // Contenido de la sección optimizado
+        // Configuración para 2 columnas
         resetTextColor()
-        doc.setFontSize(9) // Tamaño aumentado para mejor legibilidad
+        doc.setFontSize(9)
+        const anchoColumna = (pageWidth - (margin * 2) - 10) / 2 // -10 para espacio entre columnas
+        const espacioEntreColumnas = 10
+        
+        // Procesar datos en pares para 2 columnas
+        for (let i = 0; i < datos.length; i += 2) {
+          const fila1 = datos[i]
+          const fila2 = datos[i + 1] // Puede ser undefined si hay número impar
+          
+          // Calcular altura para ambas filas (tomar la más alta)
+          const maxDescWidth = anchoColumna * 0.7 // Más espacio para descripción
+          const maxValorWidth = anchoColumna * 0.25 // Menos espacio para valor
+          
+          const alturaFila1 = calcularAlturaFila(fila1.descripcion, maxDescWidth)
+          let alturaFila2 = 0
+          if (fila2) {
+            alturaFila2 = calcularAlturaFila(fila2.descripcion, maxDescWidth)
+          }
+          const alturaFila = Math.max(alturaFila1, alturaFila2, 15) // Mínimo 15px
+
+          await checkPageBreak(alturaFila + 5)
+
+          // Fondo para ambas celdas
+          if (i % 4 === 0 || i % 4 === 1) { // Alternar colores cada 2 filas
+            doc.setFillColor(255, 255, 255)
+          } else {
+            doc.setFillColor(colorGrisClaro[0], colorGrisClaro[1], colorGrisClaro[2])
+          }
+
+          // Primera columna
+          doc.rect(margin, yPosition, anchoColumna, alturaFila, 'F')
+          doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
+          doc.rect(margin, yPosition, anchoColumna, alturaFila, 'S')
+
+          // Segunda columna (si existe)
+          if (fila2) {
+            doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'F')
+            doc.rect(margin + anchoColumna + espacioEntreColumnas, yPosition, anchoColumna, alturaFila, 'S')
+          }
+
+          // CONTENIDO PRIMERA COLUMNA - CENTRADO VERTICALMENTE
+          resetTextColor()
+          
+          // Descripción (izquierda)
+          doc.setFont('helvetica', 'normal')
+          const descLines1 = doc.splitTextToSize(fila1.descripcion, maxDescWidth)
+          const textoY1 = yPosition + (alturaFila / 2) - ((descLines1.length * 4.5) / 2) + 3
+          descLines1.forEach((line: string, lineIndex: number) => {
+            doc.text(line, margin + 4, textoY1 + (lineIndex * 4.5))
+          })
+
+          // Valor (derecha, centrado horizontalmente en su espacio)
+          doc.setFont('helvetica', 'bold')
+          const valorLines1 = doc.splitTextToSize(fila1.valor, maxValorWidth)
+          const valorX1 = margin + maxDescWidth + 4
+          const textoValorY1 = yPosition + (alturaFila / 2) - ((valorLines1.length * 4.5) / 2) + 3
+          valorLines1.forEach((line: string, lineIndex: number) => {
+            // Centrar el valor dentro de su espacio disponible
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = anchoColumna - maxDescWidth - 8
+            const xCentrado = valorX1 + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY1 + (lineIndex * 4.5))
+          })
+
+          // CONTENIDO SEGUNDA COLUMNA - CENTRADO VERTICALMENTE (si existe)
+          if (fila2) {
+            const col2X = margin + anchoColumna + espacioEntreColumnas
+            
+            // Descripción (izquierda)
+            doc.setFont('helvetica', 'normal')
+            const descLines2 = doc.splitTextToSize(fila2.descripcion, maxDescWidth)
+            const textoY2 = yPosition + (alturaFila / 2) - ((descLines2.length * 4.5) / 2) + 3
+            descLines2.forEach((line: string, lineIndex: number) => {
+              doc.text(line, col2X + 4, textoY2 + (lineIndex * 4.5))
+            })
+
+            // Valor (derecha, centrado horizontalmente en su espacio)
+            doc.setFont('helvetica', 'bold')
+            const valorLines2 = doc.splitTextToSize(fila2.valor, maxValorWidth)
+            const valorX2 = col2X + maxDescWidth + 4
+            const textoValorY2 = yPosition + (alturaFila / 2) - ((valorLines2.length * 4.5) / 2) + 3
+            valorLines2.forEach((line: string, lineIndex: number) => {
+              const lineWidth = doc.getTextWidth(line)
+              const espacioDisponible = anchoColumna - maxDescWidth - 8
+              const xCentrado = valorX2 + (espacioDisponible - lineWidth) / 2
+              doc.text(line, xCentrado, textoValorY2 + (lineIndex * 4.5))
+            })
+          }
+
+          doc.setFont('helvetica', 'normal')
+          yPosition += alturaFila + 2
+        }
+
+        yPosition += 8 // Espacio entre secciones
+      }
+
+      // FUNCIÓN: Sección una columna con contenido centrado
+      const agregarSeccionUnaColumna = async (titulo: string, datos: Array<{descripcion: string, valor: string}>) => {
+        yPosition += 10
+        
+        // Título CENTRADO
+        await checkPageBreak(25)
+        doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
+        doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.text(titulo.toUpperCase(), pageWidth / 2, yPosition + 3, { align: 'center' })
+        yPosition += 12
+
+        resetTextColor()
+        doc.setFontSize(9)
 
         for (let filaIndex = 0; filaIndex < datos.length; filaIndex++) {
           const fila = datos[filaIndex]
-          const maxDescWidth = (pageWidth - margin * 2) * 0.35 // 35% para descripción
-          const maxValorWidth = (pageWidth - margin * 2) * 0.55 // 55% para valor (más espacio)
+          const maxDescWidth = (pageWidth - margin * 2) * 0.7 // Más espacio para descripción
+          const maxValorWidth = (pageWidth - margin * 2) * 0.25 // Menos espacio para valor
           
           const descLines = doc.splitTextToSize(fila.descripcion, maxDescWidth)
           const valorLines = doc.splitTextToSize(fila.valor, maxValorWidth)
           
-          // Calcular altura dinámica basada en el contenido más largo
           const alturaDesc = descLines.length * 4.5
           const alturaValor = valorLines.length * 4.5
-          const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6) // Mínimo 15px, más padding
+          const alturaFila = Math.max(15, Math.max(alturaDesc, alturaValor) + 6)
 
           await checkPageBreak(alturaFila + 5)
 
-          // Color de fondo alternado más sutil
+          // Fondo alternado
           if (filaIndex % 2 === 0) {
             doc.setFillColor(255, 255, 255)
           } else {
@@ -395,45 +505,51 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
           }
           doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'F')
 
-          // Borde más sutil
+          // Borde
           doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
           doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaFila, 'S')
 
-          // Texto de descripción (alineado a la izquierda)
+          // CONTENIDO CENTRADO VERTICALMENTE
           resetTextColor()
+          
+          // Descripción (alineada a la izquierda)
           doc.setFont('helvetica', 'normal')
+          const textoY = yPosition + (alturaFila / 2) - ((descLines.length * 4.5) / 2) + 3
           descLines.forEach((line: string, lineIndex: number) => {
-            doc.text(line, margin + 4, yPosition + 6 + (lineIndex * 4.5))
+            doc.text(line, margin + 4, textoY + (lineIndex * 4.5))
           })
 
-          // Texto de valor (negrita y alineado a la izquierda con margen)
-          resetTextColor()
+          // Valor (centrado horizontalmente en su espacio)
           doc.setFont('helvetica', 'bold')
-          const valorX = margin + maxDescWidth + 8 // Espacio entre columnas aumentado
+          const valorX = margin + maxDescWidth + 4
+          const textoValorY = yPosition + (alturaFila / 2) - ((valorLines.length * 4.5) / 2) + 3
           valorLines.forEach((line: string, lineIndex: number) => {
-            doc.text(line, valorX, yPosition + 6 + (lineIndex * 4.5))
+            const lineWidth = doc.getTextWidth(line)
+            const espacioDisponible = (pageWidth - margin * 2) - maxDescWidth - 8
+            const xCentrado = valorX + (espacioDisponible - lineWidth) / 2
+            doc.text(line, xCentrado, textoValorY + (lineIndex * 4.5))
           })
-          doc.setFont('helvetica', 'normal')
 
-          yPosition += alturaFila + 2 // Espacio entre filas aumentado
+          doc.setFont('helvetica', 'normal')
+          yPosition += alturaFila + 2
         }
 
-        yPosition += 8 // Espacio aumentado entre secciones
+        yPosition += 8
       }
 
       // AGREGAR CINTILLO SOLO EN LA PRIMERA PÁGINA
       await agregarCintillo()
 
-      // Título principal - Solo en primera página
+      // Título principal - Solo en primera página (YA CENTRADO)
       if (primeraPagina) {
         await checkPageBreak(30)
-        doc.setFontSize(16) // Tamaño aumentado
+        doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2])
         doc.text(`TICKET #${ticket.id}`, pageWidth / 2, yPosition, { align: 'center' })
         yPosition += 8
         
-        doc.setFontSize(11) // Tamaño aumentado
+        doc.setFontSize(11)
         const tituloLines = doc.splitTextToSize(ticket.titulo, pageWidth - margin * 2)
         for (const line of tituloLines) {
           await checkPageBreak(5)
@@ -443,7 +559,7 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         yPosition += 12 // Espacio aumentado después del título
       }
 
-      // Información básica optimizada
+      // Información básica optimizada - USAR DOS COLUMNAS
       const infoBasica = [
         { descripcion: 'Título', valor: ticket.titulo },
         { descripcion: 'Estado', valor: ticket.estado.estado },
@@ -453,9 +569,9 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
           { descripcion: 'Cierre', valor: `${new Date(ticket.fecha_cierre).toLocaleDateString('es-ES')} ${new Date(ticket.fecha_cierre).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}` }
         ] : [])
       ]
-      await agregarSeccion('Información Básica', infoBasica)
+      await agregarSeccionDosColumnas('Información Básica', infoBasica)
 
-      // Información de asignación optimizada
+      // Información de asignación optimizada - USAR DOS COLUMNAS
       const infoAsignacion = [
         { descripcion: 'Creado por', valor: getNombreCompleto(ticket.usuarioCreador) },
         ...(ticket.usuarioCerrador ? [
@@ -469,24 +585,24 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
         ] : [])
       ]
       if (infoAsignacion.length > 1) {
-        await agregarSeccion('Asignación', infoAsignacion)
+        await agregarSeccionDosColumnas('Asignación', infoAsignacion)
       }
 
-      // Descripción - VERSION ORIGINAL (como antes)
+      // Descripción - MANTENER UNA COLUMNA (texto largo)
       await checkPageBreak(25)
       doc.setFillColor(colorAzul[0], colorAzul[1], colorAzul[2])
       doc.rect(margin - 2, yPosition - 5, pageWidth - (margin * 2) + 4, 15, 'F')
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
-      doc.text('DESCRIPCIÓN', margin, yPosition + 3)
+      doc.text('DESCRIPCIÓN', pageWidth / 2, yPosition + 3, { align: 'center' })
       yPosition += 12
 
       resetTextColor()
       doc.setFontSize(9)
       const descripcionLines = doc.splitTextToSize(ticket.descripcion, pageWidth - (margin * 2))
       
-      // Fondo para la descripción (versión original)
+      // Fondo para la descripción
       const alturaDescripcion = descripcionLines.length * 4.5 + 10
       await checkPageBreak(alturaDescripcion)
       
@@ -495,12 +611,14 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
       doc.setDrawColor(colorGrisMedio[0], colorGrisMedio[1], colorGrisMedio[2])
       doc.rect(margin, yPosition, pageWidth - (margin * 2), alturaDescripcion, 'S')
       
+      // Centrar verticalmente el texto de descripción
+      const textoDescY = yPosition + (alturaDescripcion / 2) - ((descripcionLines.length * 4.5) / 2) + 5
       descripcionLines.forEach((line: string, index: number) => {
-        doc.text(line, margin + 4, yPosition + 8 + (index * 4.5))
+        doc.text(line, margin + 4, textoDescY + (index * 4.5))
       })
       yPosition += alturaDescripcion + 10
 
-      // Usuario afectado optimizado
+      // Usuario afectado optimizado - USAR UNA COLUMNA (contenido grande)
       if (ticket.usuarioAfectado) {
         const usuarioAfectado = [
           { descripcion: 'Nombre', valor: getNombreCompleto(ticket.usuarioAfectado) },
@@ -514,10 +632,10 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             { descripcion: 'Área', valor: ticket.usuarioAfectado.area.nombre }
           ] : [])
         ]
-        await agregarSeccion('Usuario Afectado', usuarioAfectado)
+        await agregarSeccionUnaColumna('Usuario Afectado', usuarioAfectado)
       }
 
-      // Equipos afectados optimizados (formato compacto)
+      // Equipos afectados optimizados - USAR DOS COLUMNAS
       if (ticket.ticketEquipos && ticket.ticketEquipos.length > 0) {
         const equiposData: Array<{descripcion: string, valor: string}> = []
         ticket.ticketEquipos.forEach((ticketEquipo, index) => {
@@ -537,10 +655,10 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             }
           )
         })
-        await agregarSeccion('Equipos Afectados', equiposData)
+        await agregarSeccionDosColumnas('Equipos Afectados', equiposData)
       }
 
-      // Información de sistemas optimizada
+      // Información de sistemas optimizada - USAR UNA COLUMNA (contenido grande)
       if (ticket.TicketSistema && ticket.TicketSistema.length > 0) {
         const sistemasData: Array<{descripcion: string, valor: string}> = []
         ticket.TicketSistema.forEach((ticketSistema, index) => {
@@ -555,10 +673,10 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             }
           )
         })
-        await agregarSeccion('Sistemas', sistemasData)
+        await agregarSeccionUnaColumna('Sistemas', sistemasData)
       }
 
-      // Información de cierre optimizada
+      // Información de cierre optimizada - USAR DOS COLUMNAS
       if (ticket.estadoId === 2 && ticket.ticketCierre) {
         const cierreData = [
           { descripcion: 'Condición', valor: ticket.ticketCierre.condicion },
@@ -570,10 +688,10 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             { descripcion: 'Cerrado por', valor: getNombreCompleto(ticket.ticketCierre.usuarioCerrador) }
           ] : [])
         ]
-        await agregarSeccion('Cierre', cierreData)
+        await agregarSeccionDosColumnas('Cierre', cierreData)
       }
 
-      // Reasignaciones optimizadas (formato compacto)
+      // Reasignaciones optimizadas - USAR DOS COLUMNAS
       const reasignaciones = ticket.ticketReasignaciones || ticket.reasignaciones || []
       if (reasignaciones.length > 0) {
         const reasignacionesData: Array<{descripcion: string, valor: string}> = []
@@ -595,7 +713,7 @@ export default function ExportarPDFModal({ isOpen, onClose, ticket }: ExportarPD
             ] : [])
           )
         })
-        await agregarSeccion('Reasignaciones', reasignacionesData)
+        await agregarSeccionDosColumnas('Reasignaciones', reasignacionesData)
       }
 
       // AGREGAR FOOTER FINAL CON LOGO (SOLO EN LA ÚLTIMA PÁGINA)
