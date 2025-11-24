@@ -1,24 +1,23 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { 
-  X, 
-  Search, 
-  Monitor, 
-  Check, 
-  Package, 
-  ChevronDown, 
+import {
+  X,
+  Search,
+  Monitor,
+  Package,
+  ChevronDown,
   ChevronUp,
   Cpu,
   HardDrive,
   MemoryStick,
-  Smartphone,
   Printer,
   Mouse,
   Keyboard,
   Headphones,
   Server,
-  Network
+  Network,
+  Info
 } from "lucide-react"
 import axios from "axios"
 
@@ -72,17 +71,15 @@ interface EquipoLibre {
   }
 }
 
-interface ModalEquiposLibresProps {
+interface ModalVerEquiposLibresProps {
   isOpen: boolean
   onClose: () => void
-  onEquiposSeleccionados: (equipos: EquipoLibre[]) => void
-  disabled?: boolean
 }
 
 // Función para obtener el icono según el tipo de equipo
 const getIconoPorTipo = (tipoNombre: string) => {
   const tipo = tipoNombre.toLowerCase()
-  
+
   if (tipo.includes('laptop') || tipo.includes('portátil')) return <Laptop className="w-6 h-6" />
   if (tipo.includes('ordenador') || tipo.includes('computadora') || tipo.includes('desktop')) return <Monitor className="w-6 h-6" />
   if (tipo.includes('all in one') || tipo.includes('all-in-one')) return <Cpu className="w-6 h-6" />
@@ -95,7 +92,7 @@ const getIconoPorTipo = (tipoNombre: string) => {
   if (tipo.includes('red') || tipo.includes('network') || tipo.includes('switch') || tipo.includes('router')) return <Network className="w-6 h-6" />
   if (tipo.includes('disco') || tipo.includes('hard drive')) return <HardDrive className="w-6 h-6" />
   if (tipo.includes('memoria') || tipo.includes('ram')) return <MemoryStick className="w-6 h-6" />
-  
+
   return <Package className="w-6 h-6" />
 }
 
@@ -112,14 +109,11 @@ const Tablet = ({ className }: { className?: string }) => (
   </svg>
 )
 
-export default function ModalEquiposLibres({
+export default function ModalVerEquiposLibres({
   isOpen,
   onClose,
-  onEquiposSeleccionados,
-  disabled = false
-}: ModalEquiposLibresProps) {
+}: ModalVerEquiposLibresProps) {
   const [equiposLibres, setEquiposLibres] = useState<EquipoLibre[]>([])
-  const [equiposSeleccionados, setEquiposSeleccionados] = useState<EquipoLibre[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [error, setError] = useState("")
@@ -146,29 +140,19 @@ export default function ModalEquiposLibres({
     }
   }
 
-  // Filtrar equipos basado en la búsqueda (solo por bienNacional, serial o tipo)
+  // Filtrar equipos basado en la búsqueda
   const equiposFiltrados = equiposLibres.filter(equipo => {
     const searchLower = searchTerm.toLowerCase()
     return (
       equipo.bienNacional?.toLowerCase().includes(searchLower) ||
       equipo.serial?.toLowerCase().includes(searchLower) ||
-      equipo.tipoEquipo.nombre.toLowerCase().includes(searchLower)
+      equipo.tipoEquipo.nombre.toLowerCase().includes(searchLower) ||
+      equipo.modelo.marca.nombre.toLowerCase().includes(searchLower) ||
+      equipo.modelo.nombre.toLowerCase().includes(searchLower)
     )
   })
 
-  const toggleEquipoSeleccionado = (equipo: EquipoLibre) => {
-    setEquiposSeleccionados(prev => {
-      const yaSeleccionado = prev.find(e => e.id === equipo.id)
-      if (yaSeleccionado) {
-        return prev.filter(e => e.id !== equipo.id)
-      } else {
-        return [...prev, equipo]
-      }
-    })
-  }
-
-  const toggleExpandirEquipo = (equipoId: number, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevenir propagación del evento
+  const toggleExpandirEquipo = (equipoId: number) => {
     setEquiposExpandidos(prev => {
       const nuevoSet = new Set(prev)
       if (nuevoSet.has(equipoId)) {
@@ -180,81 +164,37 @@ export default function ModalEquiposLibres({
     })
   }
 
-  const handleCheckboxClick = (equipo: EquipoLibre, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevenir propagación del evento
-    if (!disabled) {
-      toggleEquipoSeleccionado(equipo)
-    }
-  }
-
-  const estaSeleccionado = (equipoId: number) => {
-    return equiposSeleccionados.some(e => e.id === equipoId)
-  }
-
   const estaExpandido = (equipoId: number) => {
     return equiposExpandidos.has(equipoId)
   }
 
-  const handleAsignarEquipos = (e: React.MouseEvent) => {
-    e.preventDefault() // Prevenir submit del formulario padre
-    onEquiposSeleccionados(equiposSeleccionados)
-    setEquiposSeleccionados([])
-    setSearchTerm("")
-    setEquiposExpandidos(new Set())
-    onClose()
-  }
-
-  const handleCerrar = (e: React.MouseEvent) => {
-    e.preventDefault() // Prevenir submit del formulario padre
-    setEquiposSeleccionados([])
+  const handleCerrar = () => {
     setSearchTerm("")
     setError("")
     setEquiposExpandidos(new Set())
     onClose()
   }
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation() // Prevenir propagación
-    setSearchTerm(e.target.value)
-  }
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault() // Prevenir submit del formulario padre
-    }
-  }
-
-  // Prevenir que los eventos del modal se propaguen al formulario padre
-  const handleModalClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-  }
-
   if (!isOpen) return null
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/[0.5] p-4"
-      onClick={handleCerrar} // Cerrar al hacer click fuera
-    >
-      <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col"
-        onClick={handleModalClick} // Prevenir cierre al hacer click dentro
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[0.5] p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <Package className="w-6 h-6 text-[#001F3F]" />
+            <Package className="w-6 h-6 text-blue-600" />
             <div>
-              <h3 className="text-xl font-semibold text-gray-800">Asignar Equipos Libres</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Equipos Libres - Solo Visualización</h3>
               <p className="text-gray-600 text-sm">
-                Selecciona equipos disponibles para asignar
+                Lista de equipos disponibles sin usuario asignado
               </p>
             </div>
           </div>
           <button
             onClick={handleCerrar}
             className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
-            type="button" // Especificar que es un botón, no submit
+            type="button"
           >
             <X size={24} />
           </button>
@@ -263,27 +203,29 @@ export default function ModalEquiposLibres({
         {/* Contenido */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* Barra de búsqueda y contador */}
-          <div className="p-4 border-b border-gray-200 bg-[#F0F8FF] flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 bg-blue-50 flex-shrink-0">
             <div className="flex items-center gap-4 mb-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={handleSearchChange}
-                  onKeyDown={handleSearchKeyDown}
-                  className="w-full pl-10 pr-4 py-2 border border-[#A0C4FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001F3F] focus:border-transparent"
-                  placeholder="Buscar por bien nacional, serial o tipo de equipo..."
-                  disabled={disabled || loading}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Buscar por bien nacional, serial, tipo, marca o modelo..."
+                  disabled={loading}
                 />
               </div>
-              <div className="bg-[#001F3F] text-white px-3 py-1 rounded-full text-sm font-medium">
-                {equiposSeleccionados.length} seleccionados
+              <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                {equiposFiltrados.length} encontrados
               </div>
             </div>
-            <div className="flex justify-between items-center text-sm text-[#003366]">
-              <span>{equiposFiltrados.length} equipos encontrados</span>
-              <span>{equiposLibres.length} equipos libres en total</span>
+            <div className="flex justify-between items-center text-sm text-blue-800">
+              <span>Total de equipos libres: {equiposLibres.length}</span>
+              <div className="flex items-center gap-1">
+                <Info size={14} />
+                <span>Haz clic en Más para ver detalles completos</span>
+              </div>
             </div>
           </div>
 
@@ -291,8 +233,8 @@ export default function ModalEquiposLibres({
           <div className="flex-1 overflow-y-auto p-6">
             {loading ? (
               <div className="flex justify-center items-center py-12">
-                <div className="w-12 h-12 bg-[#A0C4FF] rounded-full flex items-center justify-center">
-                  <div className="w-6 h-6 border-4 border-[#001F3F] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               </div>
             ) : error ? (
@@ -312,39 +254,25 @@ export default function ModalEquiposLibres({
                 {equiposFiltrados.map((equipo) => (
                   <div
                     key={equipo.id}
-                    className={`border-2 rounded-xl p-4 transition-all duration-200 ${
-                      estaSeleccionado(equipo.id)
-                        ? 'border-[#001F3F] bg-[#A0C4FF]/20 ring-2 ring-[#A0C4FF]'
-                        : 'border-gray-200 hover:border-[#A0C4FF] hover:shadow-lg'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className="border-2 border-blue-200 rounded-xl p-4 transition-all duration-200 hover:border-blue-400 hover:shadow-lg bg-white"
                   >
                     {/* Header con icono y controles */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         {/* Icono del tipo de equipo */}
-                        <div className="text-[#001F3F]">
+                        <div className="text-blue-600">
                           {getIconoPorTipo(equipo.tipoEquipo.nombre)}
                         </div>
-                        
-                        {/* Checkbox de selección */}
-                        <div
-                          onClick={(e) => handleCheckboxClick(equipo, e)}
-                          className={`w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-colors ${
-                            estaSeleccionado(equipo.id)
-                              ? 'bg-[#001F3F] border-[#001F3F] text-white'
-                              : 'border-gray-300 hover:border-[#001F3F]'
-                          } ${disabled ? 'cursor-not-allowed' : ''}`}
-                        >
-                          {estaSeleccionado(equipo.id) && <Check size={12} />}
+                        <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                          Libre
                         </div>
                       </div>
-                      
+
                       {/* Botón para expandir */}
                       <button
-                        onClick={(e) => toggleExpandirEquipo(equipo.id, e)}
-                        className="flex items-center gap-1 text-sm text-[#001F3F] hover:text-[#003366] transition-colors px-2 py-1 rounded hover:bg-[#A0C4FF]/30"
-                        disabled={disabled}
-                        type="button" // Especificar que es un botón, no submit
+                        onClick={() => toggleExpandirEquipo(equipo.id)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-100"
+                        type="button"
                       >
                         {estaExpandido(equipo.id) ? (
                           <>
@@ -364,20 +292,20 @@ export default function ModalEquiposLibres({
                     <div className="space-y-3">
                       {/* Tipo de Equipo */}
                       <div>
-                        <p className="text-xs font-medium text-[#001F3F]">Tipo de Equipo</p>
+                        <p className="text-xs font-medium text-blue-600">Tipo de Equipo</p>
                         <p className="text-lg font-semibold text-gray-900">{equipo.tipoEquipo.nombre}</p>
                       </div>
 
                       {/* Bien Nacional y Serial */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-[#F0F8FF] rounded-lg p-2">
-                          <p className="text-xs font-medium text-[#001F3F]">Bien Nacional</p>
+                        <div className="bg-blue-50 rounded-lg p-2">
+                          <p className="text-xs font-medium text-blue-600">Bien Nacional</p>
                           <p className="text-sm font-semibold text-gray-900">
                             {equipo.bienNacional || "N/A"}
                           </p>
                         </div>
-                        <div className="bg-[#F0F8FF] rounded-lg p-2">
-                          <p className="text-xs font-medium text-[#001F3F]">Serial</p>
+                        <div className="bg-blue-50 rounded-lg p-2">
+                          <p className="text-xs font-medium text-blue-600">Serial</p>
                           <p className="text-sm font-semibold text-gray-900">
                             {equipo.serial || "N/A"}
                           </p>
@@ -385,8 +313,8 @@ export default function ModalEquiposLibres({
                       </div>
 
                       {/* Marca y Modelo */}
-                      <div className="bg-[#F0F8FF] rounded-lg p-2">
-                        <p className="text-xs font-medium text-[#001F3F]">Marca y Modelo</p>
+                      <div className="bg-blue-50 rounded-lg p-2">
+                        <p className="text-xs font-medium text-blue-600">Marca y Modelo</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {equipo.modelo.marca.nombre} {equipo.modelo.nombre}
                         </p>
@@ -399,14 +327,14 @@ export default function ModalEquiposLibres({
                         {/* Status y Estado */}
                         <div className="grid grid-cols-2 gap-3">
                           {equipo.status && (
-                            <div className="bg-[#F0F8FF] rounded-lg p-2">
-                              <p className="text-xs font-medium text-[#001F3F]">Status</p>
+                            <div className="bg-blue-50 rounded-lg p-2">
+                              <p className="text-xs font-medium text-blue-600">Status</p>
                               <p className="text-sm text-gray-900">{equipo.status.estado}</p>
                             </div>
                           )}
                           {equipo.estado && (
-                            <div className="bg-[#F0F8FF] rounded-lg p-2">
-                              <p className="text-xs font-medium text-[#001F3F]">Estado</p>
+                            <div className="bg-blue-50 rounded-lg p-2">
+                              <p className="text-xs font-medium text-blue-600">Estado</p>
                               <p className="text-sm text-gray-900">{equipo.estado.nombre}</p>
                             </div>
                           )}
@@ -415,7 +343,7 @@ export default function ModalEquiposLibres({
                         {/* Especificaciones Técnicas */}
                         {equipo.especificaciones && (
                           <div>
-                            <p className="text-xs font-medium text-[#001F3F] mb-2">Especificaciones Técnicas</p>
+                            <p className="text-xs font-medium text-blue-600 mb-2">Especificaciones Técnicas</p>
                             <div className="space-y-2">
                               {equipo.especificaciones.procesador && (
                                 <div className="flex justify-between items-center text-sm">
@@ -469,8 +397,8 @@ export default function ModalEquiposLibres({
                         {/* Observaciones */}
                         {equipo.observaciones && (
                           <div>
-                            <p className="text-xs font-medium text-[#001F3F] mb-1">Observaciones</p>
-                            <p className="text-sm text-gray-600 bg-[#F0F8FF] rounded p-2">
+                            <p className="text-xs font-medium text-blue-600 mb-1">Observaciones</p>
+                            <p className="text-sm text-gray-600 bg-blue-50 rounded p-2">
                               {equipo.observaciones}
                             </p>
                           </div>
@@ -490,28 +418,14 @@ export default function ModalEquiposLibres({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0 bg-[#F0F8FF]">
-          <div className="text-sm text-[#001F3F]">
-            {equiposSeleccionados.length} equipos seleccionados para asignar
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleCerrar}
-              className="px-6 py-2 text-[#001F3F] bg-white border border-[#A0C4FF] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer font-medium"
-              disabled={disabled}
-              type="button" // Especificar que es un botón, no submit
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleAsignarEquipos}
-              disabled={disabled || equiposSeleccionados.length === 0}
-              className="px-6 py-2 bg-[#001F3F] text-white rounded-lg hover:bg-[#003366] transition-colors cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              type="button" // Especificar que es un botón, no submit
-            >
-              Asignar {equiposSeleccionados.length} Equipo(s)
-            </button>
-          </div>
+        <div className="flex justify-end p-6 border-t border-gray-200 flex-shrink-0 bg-blue-50">
+          <button
+            onClick={handleCerrar}
+            className="px-6 py-2 text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer font-medium"
+            type="button"
+          >
+            Cerrar Vista
+          </button>
         </div>
       </div>
     </div>

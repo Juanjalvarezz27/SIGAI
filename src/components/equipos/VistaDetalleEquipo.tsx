@@ -19,6 +19,7 @@ import {
   Calendar,
   User as UserIcon,
   RefreshCw,
+  Unlock,
 } from "lucide-react";
 import { Equipo } from "../../../types/equipos";
 import { useState, useEffect } from "react";
@@ -27,7 +28,9 @@ import BotonEditarEquipo from "./BotonEditarEquipo";
 import ModalEditarEquipo from "./ModalEditarEquipo";
 import BotonDesincorporarEquipo from "./BotonDesincorporarEquipo";
 import ModalDesincorporarEquipo from "./ModalDesincorporarEquipo";
-import { useUserRol } from "../../app/hooks/useUserRol"; 
+import BotonLiberarEquipo from "./BotonLiberarEquipo";
+import ModalLiberarEquipo from "./ModalLiberarEquipo";
+import { useUserRol } from "../../app/hooks/useUserRol";
 
 interface VistaDetalleEquipoProps {
   equipo: Equipo;
@@ -135,7 +138,9 @@ export default function VistaDetalleEquipo({
   const [cargandoEquipos, setCargandoEquipos] = useState(false);
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
   const [modalDesincorporarAbierto, setModalDesincorporarAbierto] = useState(false);
+  const [modalLiberarAbierto, setModalLiberarAbierto] = useState(false);
   const [loadingDesincorporar, setLoadingDesincorporar] = useState(false);
+  const [loadingLiberar, setLoadingLiberar] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [historialDesincorporacion, setHistorialDesincorporacion] = useState<HistorialDesincorporacion[]>([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
@@ -293,6 +298,29 @@ export default function VistaDetalleEquipo({
     }
   };
 
+  const handleLiberarEquipo = async () => {
+    try {
+      setLoadingLiberar(true);
+
+      const response = await axios.post(`/api/equipos/${equipo.id}/liberar`);
+
+      if (response.status === 200) {
+        // Mostrar mensaje de éxito y cerrar modal
+        setSuccessMessage("Equipo liberado con éxito");
+        setModalLiberarAbierto(false);
+        setLoadingLiberar(false);
+      }
+    } catch (error: unknown) {
+      console.error('Error liberando equipo:', error);
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.error || 'Error al liberar el equipo');
+      } else {
+        alert('Error al liberar el equipo');
+      }
+      setLoadingLiberar(false);
+    }
+  };
+
   // Formatear fecha para mostrar
   const formatearFecha = (fecha: string) => {
     return new Date(fecha).toLocaleDateString('es-ES', {
@@ -370,6 +398,14 @@ export default function VistaDetalleEquipo({
               onClick={() => setModalEditarAbierto(true)}
               loading={loading}
             />
+
+            {/* Botón de Liberar Equipo - Solo visible si el equipo tiene usuario asignado y no está desincorporado */}
+            {equipo.usuario && !estaDesincorporado && (
+              <BotonLiberarEquipo
+                onClick={() => setModalLiberarAbierto(true)}
+                loading={loading || loadingLiberar}
+              />
+            )}
 
             {/* Botón de desincorporar/habilitar - Solo visible para admin */}
             {esAdmin() && (
@@ -658,7 +694,6 @@ export default function VistaDetalleEquipo({
           )}
         </div>
 
-        {/* Resto del código permanece igual... */}
         {/* Historial de Reasignaciones */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
@@ -704,7 +739,7 @@ export default function VistaDetalleEquipo({
                       <div>
                         <p className="text-sm text-gray-600">Usuario Anterior</p>
                         <p className="font-medium">
-                          {reasignacion.usuarioAnterior 
+                          {reasignacion.usuarioAnterior
                             ? `${reasignacion.usuarioAnterior.nombre} ${reasignacion.usuarioAnterior.apellido}`
                             : 'Sin usuario asignado'
                           }
@@ -720,7 +755,7 @@ export default function VistaDetalleEquipo({
                       <div>
                         <p className="text-sm text-gray-600">Usuario Nuevo</p>
                         <p className="font-medium">
-                          {reasignacion.usuarioNuevo 
+                          {reasignacion.usuarioNuevo
                             ? `${reasignacion.usuarioNuevo.nombre} ${reasignacion.usuarioNuevo.apellido}`
                             : 'Sin usuario asignado'
                           }
@@ -958,6 +993,15 @@ export default function VistaDetalleEquipo({
         onConfirm={handleDesincorporarEquipo}
         equipoNombre={`${equipo.tipoEquipo.nombre} - ${equipo.modelo.marca.nombre} ${equipo.modelo.nombre}`}
         loading={loadingDesincorporar}
+      />
+
+      {/* Modal de Liberar Equipo */}
+      <ModalLiberarEquipo
+        isOpen={modalLiberarAbierto}
+        onClose={() => setModalLiberarAbierto(false)}
+        onConfirm={handleLiberarEquipo}
+        equipoNombre={`${equipo.tipoEquipo.nombre} - ${equipo.modelo.marca.nombre} ${equipo.modelo.nombre}`}
+        loading={loadingLiberar}
       />
     </>
   );

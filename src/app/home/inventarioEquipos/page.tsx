@@ -13,7 +13,9 @@ import VistaDetalleEquipo from "@/components/equipos/VistaDetalleEquipo"
 import PaginacionSuperior from "@/components/equipos/PaginacionSuperior"
 import PaginacionInferior from "@/components/equipos/PaginacionInferior"
 import BotonNuevoEquipo from "@/components/equipos/BotonNuevoEquipo"
+import BotonVerEquiposLibres from "@/components/equipos/BotonVerEquiposLibres" // Nuevo import
 import ModalNuevoEquipo from "@/components/equipos/ModalNuevoEquipo"
+import ModalVerEquiposLibres from "@/components/equipos/ModalVerEquiposLibres" // Nuevo import
 import axios from "axios"
 import { Equipo, PaginationInfo } from "../../../../types/equipos"
 
@@ -30,6 +32,7 @@ export default function InventarioEquipos() {
   const [modeloFiltro, setModeloFiltro] = useState<string>('')
   const [modo, setModo] = useState<'lista' | 'detalle'>('lista')
   const [modalNuevoEquipoAbierto, setModalNuevoEquipoAbierto] = useState(false)
+  const [modalVerEquiposLibresAbierto, setModalVerEquiposLibresAbierto] = useState(false) // Nuevo estado
   const [miRol, setMiRol] = useState({ rolId: 0, rol: '', loading: true })
 
   // Obtener mi rol al cargar el componente
@@ -163,16 +166,23 @@ export default function InventarioEquipos() {
         {/* Vista de lista de equipos */}
         {modo === 'lista' && (
           <>
-          <div className="flex justify-center mx-auto gap-4">
-            {/* Toggle de Status */}
-            <FiltroStatusToggle
-              statusSeleccionado={statusFiltro}
-              onStatusChange={handleStatusChange}
-              loading={loading}
-            />
+            <div className="flex justify-center mx-auto gap-4">
+              {/* Toggle de Status */}
+              <FiltroStatusToggle
+                statusSeleccionado={statusFiltro}
+                onStatusChange={handleStatusChange}
+                loading={loading}
+              />
 
-            {/* Botón Nuevo Equipo */}
-              <div className="mt-2">
+              {/* Botones de acción */}
+              <div className="flex gap-3 ">
+                {/* Botón Ver Equipos Libres - Siempre visible */}
+                <BotonVerEquiposLibres
+                  onClick={() => setModalVerEquiposLibresAbierto(true)}
+                  loading={loading}
+                />
+
+                {/* Botón Nuevo Equipo - Solo para usuarios autorizados */}
                 {puedeCrearEquipos && (
                   <BotonNuevoEquipo
                     onClick={() => setModalNuevoEquipoAbierto(true)}
@@ -268,6 +278,12 @@ export default function InventarioEquipos() {
             onEquipoCreado={handleEquipoCreado}
           />
         )}
+
+        {/* Modal de Ver Equipos Libres - Siempre visible */}
+        <ModalVerEquiposLibres
+          isOpen={modalVerEquiposLibresAbierto}
+          onClose={() => setModalVerEquiposLibresAbierto(false)}
+        />
       </div>
     </>
   )
