@@ -371,8 +371,8 @@ export default function TicketsList({
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
-                                  <div className="flex items-center gap-1">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-md text-gray-800">
+                                  <div className="flex items-center gap-1 font-semibold">
                                     <UserCheck className="w-3 h-3" />
                                     <span>Por: {reasignacion.supervisor ? getNombreCompleto(reasignacion.supervisor) : 'No especificado'}</span>
                                   </div>

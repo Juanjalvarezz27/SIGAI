@@ -1,6 +1,7 @@
 "use client"
 
-import { Users, UserCheck, UserCog, UserX, UserSearch, List } from 'lucide-react'
+import { Users, UserCheck, UserCog, UserX, UserSearch, List, UserStar } from 'lucide-react'
+import { useUserRol } from '../app/hooks/useUserRol'
 
 interface FiltroRolesProps {
   rolSeleccionado: string
@@ -15,76 +16,108 @@ export default function FiltroRoles({
   loading = false,
   esSupervisor = false
 }: FiltroRolesProps) {
-  // Roles para admin (completo)
-  const rolesAdmin = [
-    { 
-      id: 'todos', 
-      nombre: 'Todos', 
+  const { userRol, loading: loadingRol } = useUserRol()
+  const esAdmin = userRol?.rolId === 1
+
+  // Roles base para no-admins
+  const rolesBase = [
+    {
+      id: 'todos',
+      nombre: 'Todos',
       valor: 'todos',
       icono: List
     },
-    { 
-      id: 'personal', 
-      nombre: 'Personal', 
+    {
+      id: 'personal',
+      nombre: 'Personal',
       valor: '5',
       icono: Users
     },
-    { 
-      id: 'supervisor', 
-      nombre: 'Supervisor', 
+    {
+      id: 'supervisor',
+      nombre: 'Supervisor',
       valor: '2',
       icono: UserCheck
     },
-    { 
-      id: 'solicitante', 
-      nombre: 'Solicitante', 
+    {
+      id: 'solicitante',
+      nombre: 'Solicitante',
       valor: '3',
       icono: UserSearch
     },
-    { 
-      id: 'analista', 
-      nombre: 'Analista', 
+    {
+      id: 'analista',
+      nombre: 'Analista',
       valor: '4',
       icono: UserCog
     },
-    { 
-      id: 'deshabilitados', 
-      nombre: 'Deshabilitados', 
+    {
+      id: 'deshabilitados',
+      nombre: 'Deshabilitados',
       valor: 'deshabilitados',
       icono: UserX
     }
   ]
 
+  // Roles para admin (incluye el rol de admin)
+  const rolesAdmin = [
+    ...rolesBase.slice(0, 1), // "Todos"
+    {
+      id: 'admin',
+      nombre: 'Admin',
+      valor: '1',
+      icono: UserStar
+    },
+    ...rolesBase.slice(1) // El resto de los roles
+  ]
+
   // Roles para supervisor (limitado)
   const rolesSupervisor = [
-    { 
-      id: 'todos', 
-      nombre: 'Todos', 
+    {
+      id: 'todos',
+      nombre: 'Todos',
       valor: 'todos',
       icono: List
     },
-    { 
-      id: 'solicitante', 
-      nombre: 'Solicitante', 
+    {
+      id: 'solicitante',
+      nombre: 'Solicitante',
       valor: '3',
       icono: UserSearch
     },
-    { 
-      id: 'analista', 
-      nombre: 'Analista', 
+    {
+      id: 'analista',
+      nombre: 'Analista',
       valor: '4',
       icono: UserCog
     },
-    { 
-      id: 'deshabilitados', 
-      nombre: 'Deshabilitados', 
+    {
+      id: 'deshabilitados',
+      nombre: 'Deshabilitados',
       valor: 'deshabilitados',
       icono: UserX
     }
   ]
 
   // Elegir los roles según el tipo de usuario
-  const roles = esSupervisor ? rolesSupervisor : rolesAdmin
+  let roles = rolesBase
+  if (esSupervisor) {
+    roles = rolesSupervisor
+  } else if (esAdmin) {
+    roles = rolesAdmin
+  }
+
+  if (loadingRol) {
+    return (
+      <div className="flex flex-col items-center mb-3 -mt-6">
+        <div className="bg-gray-200 rounded-lg p-2 flex flex-wrap justify-center gap-1">
+          <div className="px-4 py-2 rounded-md font-medium text-gray-400">
+            Cargando roles...
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center mb-3 -mt-6">
